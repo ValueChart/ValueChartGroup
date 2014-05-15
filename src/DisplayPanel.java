@@ -25,6 +25,7 @@ public class DisplayPanel extends JComponent {
 //    boolean topChoices = false;
     private TablePane rootPane;
     private int colWidth = ValueChart.DEFAULT_COL_WIDTH;
+    private int prefHeight = -1;
     private Vector<ChartEntry> entryList;
     private int userWidth = ValueChart.DEFAULT_USER_COL_WIDTH;
     private int padding = ValueChart.DEFAULT_PADDING_WIDTH;
@@ -124,11 +125,19 @@ public class DisplayPanel extends JComponent {
 
         dim.width = colWidth * entryList.size();
         setPreferredSize(dim);
-        setMaximumSize(new Dimension(colWidth * entryList.size() + colWidth * 2, 10000));
+        setMaximumSize(new Dimension(colWidth * entryList.size(), 10000));
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(colWidth * entryList.size() + colWidth * 2, getHeight());
+        return new Dimension(colWidth * entryList.size(), (prefHeight < 0 ? getHeight() : prefHeight));
+    }
+    
+    public void setPrefHeight(int height) {
+        prefHeight = height;
+    }
+    
+    public int getPrefHeight() {
+        return prefHeight;
     }
 
     public void setScore(boolean s) {
@@ -153,7 +162,7 @@ public class DisplayPanel extends JComponent {
         g.setColor(Color.white);
         int align_right = 0;//totalWidth - numEntries*colWidth;//
 //        g.fillRect(align_right + colWidth, 0, numEntries * colWidth, totalHeight);
-        g.fillRect(align_right + colWidth, 0, numEntries * colWidth, totalHeight);
+        g.fillRect(align_right, 0, numEntries * colWidth, totalHeight);
         if (rootPane == null) {
             return;
         }
@@ -164,7 +173,7 @@ public class DisplayPanel extends JComponent {
         int[] ypos = new int[numEntries * noOfUsers];	//position of x, starts all at 0
        
       //for each objective, get the (array)domain value of each alternative
-        int h = 0, x = align_right + colWidth;
+        int h = 0, x = align_right;
         int avgH = 0;
         int j = 0;
         //for each alternative

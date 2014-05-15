@@ -28,7 +28,7 @@ public class ValueChart extends JPanel {
     static public final int DEFAULT_PADDING_WIDTH = 9;//9
     //*%* Changed display height to make it relative to the screen size
 //    static public final int DEFAULT_DISPLAY_HEIGHT = 500;
-    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .44);
+    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .48);
     //*%*
     static public final int DEFAULT_DISPLAY = 1,
             SIDE_DISPLAY = 2,
@@ -55,6 +55,7 @@ public class ValueChart extends JPanel {
     DisplayPanel displayPanel;
     EntryNamePanel displayEntryNames;
     JPanel displayWithNames;
+    JPanel pnlDisp;
     DisplayDialog dialog;
     Reader initReader = null;
     ResizeHandler resizeHandler;
@@ -435,7 +436,7 @@ public class ValueChart extends JPanel {
         displayPanel.setRootPane(mainPane);
         displayPanel.setEntries(entryList);
 
-        JPanel pnlDisp = new JPanel();
+        pnlDisp = new JPanel();
         pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
         if (displayType == SIDE_DISPLAY) {
             pnlDisp.add(Box.createHorizontalGlue());
@@ -451,6 +452,7 @@ public class ValueChart extends JPanel {
 
         displayWithNames = new JPanel();
         displayWithNames.setLayout(new BoxLayout(displayWithNames, BoxLayout.Y_AXIS));
+        displayWithNames.add(Box.createVerticalGlue());
         displayWithNames.add(pnlDisp);
 
         //int mainWidth = (entryList.size()+mainPane.getDepth())*colWidth;
@@ -482,10 +484,12 @@ public class ValueChart extends JPanel {
         } else {
             displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
             displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
-            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, displayHeight));//- and rev x, y
+            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, displayHeight-50));//- and rev x, y
+         // seems to work with -50 to get rid of unnecessary padding. TODO resize is weird
         }
         
         mainPane.updateSizesAndHeights();
+        alignDisplayPanel();
 
         if (displayType == SEPARATE_DISPLAY) {
             dialog = new DisplayDialog(chartFrame, "Total Scores", displayWithNames);
@@ -1457,6 +1461,8 @@ public class ValueChart extends JPanel {
             if (mainPane != null) {
                 mainPane.updateSizesAndHeights();
                 mainPane.revalidate();
+                alignDisplayPanel();
+                pnlDisp.revalidate();
             }
         }
     }
@@ -1592,4 +1598,14 @@ public class ValueChart extends JPanel {
         }
     }
 
+    public void alignDisplayPanel() {
+        displayPanel.setPrefHeight(mainPane.getHeight());
+        displayPanel.setMaximumSize(displayPanel.getPreferredSize());
+        displayPanel.setMinimumSize(displayPanel.getPreferredSize());
+        pnlDisp.setPreferredSize(mainPane.getSize());
+        pnlDisp.setMaximumSize(mainPane.getSize());
+        //displayPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 10));
+        //displayWithNames.setBorder(BorderFactory.createLineBorder(Color.CYAN, 10));
+        //pnlDisp.setBorder(BorderFactory.createLineBorder(Color.RED, 10));
+    }
 }
