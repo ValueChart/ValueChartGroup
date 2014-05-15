@@ -1,103 +1,73 @@
-color MidBlue 0.27 0.44 0.84
+color area 0.0039 0.4 0.3686
+color skytrain-distance 0.4039 0.6627 0.8118
+color size 0.4039 0.0 0.05098
+color internet-access 0.8902 0.1020 0.1098
+color rate 0.9961 0.7686 0.3098
+
 
 attributes
-	attributes LionsGate 1.0				
-		Cost 0.2 {5.0 1.0, 4.0 0.75, 3.0 0.5, 2.0 0.25, 1.0 0.0}
-			color=MidBlue units=null 			
-		end
-		IRR 0.2 {"Best" 1.0, "Better" 0.75, "Good" 0.5, "Medium" 0.25, "Worst" 0.0}			
-			color=MidBlue
-		end
-		Sustainability 0.2 {"Best" 1.0, "Better" 0.75, "Good" 0.5, "Medium" 0.25, "Worst" 0.0}
-			color=MidBlue
-		end
-		Community 0.2 {5.0 1.0, 4.0 0.75, 3.0 0.5, 2.0 0.25, 1.0 0.0}
-			color=MidBlue units=null
-		end
-		Robustness 0.2 {5.0 1.0, 4.5 0.9, 4.0 0.8, 3.5 0.7, 3.0 0.6, 2.5 0.5, 2.0 0.4, 1.5 0.3, 1.0 0.2, 0.5 0.1, 0.0 0.0}
-			color=MidBlue units=null
-		end				
-	end
+	attributes Hotel 1.0
+		attributes location *
+			area 0.2 { "nightlife" 1.0, "beach" 0.5, "airport" 0.0 }
+				color=area end
+			skytrain-distance 0.2 { 1.0 1.0, 3.0 0.75, 5.0 0.5, 7.0 0.25, 9.0 0.0 }
+				color=skytrain-distance units=blocks end
+		 end
+		attributes room *
+			size 0.2 { 200.0 0.0, 250.0 0.25, 300.0 0.5, 350.0 0.75, 400.0 1.0}
+				color=size units=sq-ft end
+			internet-access 0.2 { "none" 0.0, "lowspeed" 0.5, "highspeed" 1.0 }
+				color=internet-access end
+		 end
+		rate 0.2 { 100.0 1.0, 125.0 0.5, 150.0 0.25, 200.0 0.1, 250.0 0.0}
+			color=rate units=CAD end
+	 end
 end
 
-entry "I'TIDAL"
-	Cost 5.0
-	IRR "Medium"
-	Sustainability "Better"
-	Community 5.0
-	Robustness 4.5
+entry "Sheraton"
+	area "nightlife"
+	skytrain-distance 7.0
+	size 300.0
+	internet-access "lowspeed"
+	rate 125.0
 end
 
-entry "LBO"
-	Cost 5.0
-	IRR "Good"
-	Sustainability "Medium"
-	Community 3.0
-	Robustness 4.0
+entry "Hilton"
+	area "nightlife"
+	skytrain-distance 2.0
+	size 200.0
+	internet-access "lowspeed"
+	rate 100.0
 end
 
-entry "NETWORK"
-	Cost 1.0
-	IRR "Best"
-	Sustainability "Best"
-	Community 4.0
-	Robustness 1.5
+entry "Shangri-la"
+	area "beach"
+	skytrain-distance 2.0
+	size 250.0
+	internet-access "highspeed"
+	rate 150
 end
 
-entry "ANT_COLONY"
-	Cost 3.0
-	IRR "Best"
-	Sustainability "Better"
-	Community 2.0
-	Robustness 2.5
+entry "Radisson"
+	area "airport"
+	skytrain-distance 8.0
+	size 200.0
+	internet-access "highspeed"
+	rate 130
 end
 
-entry "FLEA_M"
-	Cost 4.0
-	IRR "Worst"
-	Sustainability "Worst"
-	Community 5.0
-	Robustness 3.0
+entry "Hyatt"
+	area "airport"
+	skytrain-distance 1.0
+	size 225.0
+	internet-access "none"
+	rate 100.0
 end
 
-entry "PMM"
-	Cost 5.0
-	IRR "Better"
-	Sustainability "Medium"
-	Community 2.0
-	Robustness 4.0
+entry "Rosewood"
+	area "beach"
+	skytrain-distance 1.0
+	size 275.0
+	internet-access "none"
+	rate 110
 end
-
-entry "U_GARDEN"
-	Cost 5.0
-	IRR "Good"
-	Sustainability "Better"
-	Community 4.0
-	Robustness 5.0
-end
-
-entry "U_ECO"
-	Cost 4.0
-	IRR "Better"
-	Sustainability "Good"
-	Community 5.0
-	Robustness 3.5
-end
-
-entry "DD_A"
-	Cost 4.0
-	IRR "Medium"
-	Sustainability "Medium"
-	Community 1.0
-	Robustness 3.0
-end
-
-entry "DD_B"
-	Cost 4.0
-	IRR "Medium"
-	Sustainability "Medium"
-	Community 1.0
-	Robustness 2.5
-end
-
-

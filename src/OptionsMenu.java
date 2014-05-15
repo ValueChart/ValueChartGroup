@@ -1,3 +1,7 @@
+/*
+This class is for the menu options once you open a VC file. 
+File Edit View Window etc   
+ */
 import java.awt.AWTException;
 import java.awt.Font;
 import java.awt.Rectangle;
@@ -6,15 +10,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Properties;
-import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.activation.*;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -42,12 +42,6 @@ class OptionsMenu extends JMenuBar implements ActionListener{
     CheckBoxMenuEntry medMenuItem;
     CheckBoxMenuEntry lgMenuItem;
     CheckBoxMenuEntry xlgMenuItem;
-    CheckBoxMenuEntry logNoneMenuItem;
-    CheckBoxMenuEntry logMsgMenuItem;
-    CheckBoxMenuEntry logChangeMenuItem;
-    CheckBoxMenuEntry logAllMenuItem;
-    CheckBoxMenuEntry utilDispMenuItem;
-    MenuEntry logStateMenuItem;
     MenuEntry menuItem;  
     MenuEntry menuUndo;
     MenuEntry menuRedo;
@@ -69,9 +63,6 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         menu.addSeparator();
         menuItem = new MenuEntry("Save"); 
-        //Added to email the individual VC
-        menu.add(menuItem);
-        menuItem = new MenuEntry("Send"); 
         menu.add(menuItem);
         menuItem = new MenuEntry("Snapshot"); 
         menu.add(menuItem);
@@ -96,7 +87,7 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         menuItem = new MenuEntry("Value Function");  
         menu.add(menuItem);
-        menuItem = new MenuEntry("Weighting");  
+        menuItem = new MenuEntry("Initial Weighting");  
         menu.add(menuItem);  
         add(menu);
         
@@ -114,16 +105,12 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         domMenuItem = new CheckBoxMenuEntry("Domain Values");        
         submenu.add(domMenuItem);
         
-        scoreMenuItem = new CheckBoxMenuEntry("Total Score");  
+        scoreMenuItem = new CheckBoxMenuEntry("Total Score");
         scoreMenuItem.setSelected(true);
-        submenu.add(scoreMenuItem);         
+        submenu.add(scoreMenuItem);      
+        
         measureMenuItem = new CheckBoxMenuEntry("Score Measure");  
-        submenu.add(measureMenuItem);   
-        
-        utilDispMenuItem = new CheckBoxMenuEntry("Utility Weights");
-        utilDispMenuItem.setSelected(chart.displayUtilityWeights);
-        submenu.add(utilDispMenuItem);
-        
+        submenu.add(measureMenuItem);    
         menu.add(submenu);
         
         submenu = new MenuTitle("Chart Display");
@@ -156,21 +143,6 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
 
         add(menu);
-        
-        menu = new MenuTitle("Logging"); 
-        logNoneMenuItem = new CheckBoxMenuEntry("Log Off");
-        menu.add(logNoneMenuItem);
-        logMsgMenuItem = new CheckBoxMenuEntry("Log Actions");
-        menu.add(logMsgMenuItem);
-        logChangeMenuItem = new CheckBoxMenuEntry("Log Changes");
-        menu.add(logChangeMenuItem);
-        logAllMenuItem = new CheckBoxMenuEntry("Log All");
-        menu.add(logAllMenuItem);
-        menu.addSeparator();
-        logStateMenuItem = new MenuEntry("Log current state");
-        menu.add(logStateMenuItem);
-        add(menu);
-        
         setOpaque(true);
 
     }    
@@ -189,32 +161,15 @@ class OptionsMenu extends JMenuBar implements ActionListener{
     			defMenuItem.setSelected(true); break;} 
     	}
     	switch (chart.colWidth){
-            case SMALL: {
-                smMenuItem.setSelected(true); break;}
-            case MEDIUM: {
-                medMenuItem.setSelected(true); break;}
-            case LARGE: {
-                lgMenuItem.setSelected(true); break;}
-            case EXTRALARGE: {
-                xlgMenuItem.setSelected(true); break;}
+			case SMALL:{
+				smMenuItem.setSelected(true); break;}  
+			case MEDIUM:{
+				medMenuItem.setSelected(true); break;}   
+			case LARGE:{
+				lgMenuItem.setSelected(true); break;}  
+                        case EXTRALARGE:{
+                                xlgMenuItem.setSelected(true); break;} 
     	}
-    	switch (chart.log.getVerbosity()) {
-        	case LogUserAction.LOG_NONE: {
-        	    logNoneMenuItem.setSelected(true); break;}
-        	case LogUserAction.LOG_MSG: {
-                logMsgMenuItem.setSelected(true); break;}
-        	case LogUserAction.LOG_CHANGE: {
-                logChangeMenuItem.setSelected(true); break;}
-        	case LogUserAction.LOG_ALL: {
-                logAllMenuItem.setSelected(true); break;}
-    	}
-    }
-    
-    public void deselectLogItems() {
-        logNoneMenuItem.setSelected(false);
-        logMsgMenuItem.setSelected(false);
-        logChangeMenuItem.setSelected(false);
-        logAllMenuItem.setSelected(false);
     }
     
 	public void actionPerformed(ActionEvent ae) {
@@ -240,14 +195,11 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 			saveFile();
 		}	
 		
-		if ("Send".equals(ae.getActionCommand())){
-			sendFile();
-		}
-		
 		if ("Close".equals(ae.getActionCommand())){
 			System.exit(0);
 		}		
-			
+
+
 		if ("Undo".equals(ae.getActionCommand())){
 			chart.last_int.setRedo(chart.next_int);
 			chart.last_int.undo();
@@ -266,18 +218,18 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 		else if ("Value Function".equals(ae.getActionCommand())){
 			chart.showEditView(2);
 		}
-		else if ("Weighting".equals(ae.getActionCommand())){
-			chart.showEditView(4);
+		else if ("Initial Weighting".equals(ae.getActionCommand())){
+			chart.showEditView(3);
 		}		
 		else if ("Vertical".equals(ae.getActionCommand())){
-			chart.resetDisplay(1, chart.getColWidth(), true, chart.show_graph);		
+			chart.resetDisplay(1, chart.getColWidth(), true, chart.show_graph, ValueChart.COLORFORUSER,null);		
 		}		
 		else if ("Horizontal".equals(ae.getActionCommand())){
-			chart.resetDisplay(2, chart.getColWidth(), true, chart.show_graph);	
+			chart.resetDisplay(2, chart.getColWidth(), true, chart.show_graph,ValueChart.COLORFORUSER,null);	
 		}
 		
 		else if ("Separate".equals(ae.getActionCommand())){
-			chart.resetDisplay(3, chart.getColWidth(), true, chart.show_graph);	
+			chart.resetDisplay(3, chart.getColWidth(), true, chart.show_graph,ValueChart.COLORFORUSER,null);	
 		}
 		
 		else if ("Utility Graphs".equals(ae.getActionCommand())){
@@ -286,7 +238,7 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 			}
 			else
 				chart.show_graph = false;
-			chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph);
+			chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph,ValueChart.COLORFORUSER,null);
 		}
 		
 		else if ("Absolute Ratios".equals(ae.getActionCommand())){
@@ -319,165 +271,25 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 				chart.getDisplayPanel().setRuler(false);
 			chart.updateDisplay();
 		}			
-		else if ("Utility Weights".equals(ae.getActionCommand())){
-		    chart.displayUtilityWeights = !chart.displayUtilityWeights;
-		    chart.updateAll();
-		}
 		else if ("Small".equals(ae.getActionCommand())){
-			chart.resetDisplay(chart.displayType, 30, true, chart.show_graph);
+			chart.resetDisplay(chart.displayType, 30, true, chart.show_graph,ValueChart.COLORFORUSER,null);
 		}	
 		else if ("Medium".equals(ae.getActionCommand())){
-			chart.resetDisplay(chart.displayType, 40, true, chart.show_graph);			
+			chart.resetDisplay(chart.displayType, 40, true, chart.show_graph,ValueChart.COLORFORUSER,null);			
 		}		
 		else if ("Large".equals(ae.getActionCommand())){
-			chart.resetDisplay(chart.displayType, 50, true, chart.show_graph);			
+			chart.resetDisplay(chart.displayType, 50, true, chart.show_graph,ValueChart.COLORFORUSER,null);			
 		}	
 		else if ("Extra Large".equals(ae.getActionCommand())){
-			chart.resetDisplay(chart.displayType, 60, true, chart.show_graph);			
-		}	
-                
+			chart.resetDisplay(chart.displayType, 60, true, chart.show_graph,ValueChart.COLORFORUSER,null);			
+		}       
 		else if ("Open comparison view".equals(ae.getActionCommand())){
 			chart.setConnectingFields();
 			chart.compareDisplay(chart.displayType, chart.colWidth);
 		}
 
-		else if (logNoneMenuItem.getText().equals(ae.getActionCommand())){
-		    deselectLogItems();
-		    logNoneMenuItem.setSelected(true);
-		    chart.setLogVerbosity(LogUserAction.LOG_NONE);
-		}
-		else if (logMsgMenuItem.getText().equals(ae.getActionCommand())){
-            deselectLogItems();
-            logMsgMenuItem.setSelected(true);
-            chart.setLogVerbosity(LogUserAction.LOG_MSG);
-        }
-		else if (logChangeMenuItem.getText().equals(ae.getActionCommand())){
-            deselectLogItems();
-            logChangeMenuItem.setSelected(true);
-            chart.setLogVerbosity(LogUserAction.LOG_CHANGE);
-        }
-		else if (logAllMenuItem.getText().equals(ae.getActionCommand())){
-            deselectLogItems();
-            logAllMenuItem.setSelected(true);
-            chart.setLogVerbosity(LogUserAction.LOG_ALL);
-        }
-		else if (logStateMenuItem.getText().equals(ae.getActionCommand())){
-            chart.logState();
-        }
-		
 	}
 	
-	//Method to email the individual ValueChart
-	void sendFile() {
-		//Getting the list of vc files
-        File f = new File(".");
-        String files[] = f.list(); 
-        Vector tempFiles = new Vector();
-        for(int i = 0; i<files.length;i++){
-        	if(files[i].endsWith(".vc")){
-        		tempFiles.add(files[i]);
-        	}        	
-        }
-        Object vcFiles[] = new Object[tempFiles.size()];
-        for(int i =0;i<tempFiles.size();i++){
-        	vcFiles[i] = tempFiles.get(i);
-        }        
-        String selectedVC = (String)JOptionPane.showInputDialog(
-                this,
-                "Select your ValueChart:",
-                "Email ValueChart",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                vcFiles,
-                vcFiles[0]);
-        
-        //Send mail on OK
-		if ((selectedVC!= null) && (selectedVC.length() > 0)){
-			
-//			sendEmail(selectedVC);
-			// Recipient's email ID needs to be mentioned.
-		      String to = "sanzana05@gmail.com";
-
-		      // Sender's email ID needs to be mentioned
-		      final String from = "valuechartsplus@gmail.com";
-		      
-		      //Sender's password
-		      final String pwd = "charts@v";
-
-		      // Assuming you are sending email from localhost
-		      String host = "smtp.gmail.com";
-
-		      // Get system properties
-//		      Properties properties = System.getProperties();
-		      Properties props = new Properties();
-
-		      // Setup mail server
-//		      properties.setProperty("mail.smtp.host", host);
-		      props.setProperty("mail.transport.protocol", "smtp");     
-		      props.setProperty("mail.host", "smtp.gmail.com");  
-		      props.put("mail.smtp.auth", "true");  
-		      props.put("mail.smtp.port", "465");  
-		      props.put("mail.debug", "true");  
-		      props.put("mail.smtp.socketFactory.port", "465");  
-		      props.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");  
-		      props.put("mail.smtp.socketFactory.fallback", "false"); 
-
-		      // Get the default Session object.
-//		      Session session = Session.getDefaultInstance(props);
-		      Session session = Session.getDefaultInstance(props,  
-		    		    new javax.mail.Authenticator() {
-		    		       protected PasswordAuthentication getPasswordAuthentication() {  
-		    		       return new PasswordAuthentication(from,pwd);  
-		    		   }  
-		    		   });
-
-		      try{
-		         // Create a default MimeMessage object.
-		         MimeMessage message = new MimeMessage(session);
-
-		         // Set From: header field of the header.
-		         message.setFrom(new InternetAddress(from));
-
-		         // Set To: header field of the header.
-		         message.addRecipient(Message.RecipientType.TO,
-		                                  new InternetAddress(to));
-
-		         // Set Subject: header field
-		         message.setSubject("Sending ValueChart - "+selectedVC);
-
-		         // Create the message part 
-		         BodyPart messageBodyPart = new MimeBodyPart();
-
-		         // Fill the message
-		         messageBodyPart.setText("Please find ValueChart attached.");
-		         
-		         // Create a multipart message
-		         Multipart multipart = new MimeMultipart();
-
-		         // Set text message part
-		         multipart.addBodyPart(messageBodyPart);
-
-		         // Part two is attachment
-		         messageBodyPart = new MimeBodyPart();
-		         String filename = selectedVC;
-		         DataSource source = new FileDataSource(filename);
-		         messageBodyPart.setDataHandler(new DataHandler(source));
-		         messageBodyPart.setFileName(filename);
-		         multipart.addBodyPart(messageBodyPart);
-
-		         // Send the complete message parts
-		         message.setContent(multipart );
-
-		         // Send message
-		         Transport.send(message);
-		         System.out.println("Sent message successfully....");
-		         JOptionPane.showMessageDialog(this,"ValueChart sent successfully.","ValueChart Sent",JOptionPane.INFORMATION_MESSAGE);
-		      }catch (MessagingException mex) {
-		         mex.printStackTrace();
-		      }
-		}
-	}
-
 	void saveFile(){
 		File file;
 		int ans = JOptionPane.YES_OPTION;
@@ -493,7 +305,7 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 	                    JOptionPane.YES_NO_OPTION);	        			     	    		        
 	    	}
 	    	if (ans == JOptionPane.YES_OPTION){
-		        chart.con.createDataFile(filename, true);
+		        chart.con.createDataFile(filename);
 		        }
 	    	else 
 	    		saveFile();
@@ -501,9 +313,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 	}
 	
 	void changeHeaders(TablePane pane){
-		Iterator<BaseTableContainer> it;    	
+		Iterator it;    	
 		for (it = pane.getRows(); it.hasNext();){
-			BaseTableContainer btc = it.next();
+			BaseTableContainer btc = (BaseTableContainer)(it.next());
 			btc.updateHeader();
 			if (btc.table instanceof TablePane) 
 				changeHeaders((TablePane)btc.table); 
@@ -513,12 +325,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 	void createSnapshot(String name) throws AWTException, IOException {
 		try{
 			JFrame frame = (JFrame)chart.getFrame();
-//			BufferedImage image = new Robot().createScreenCapture( 
-//					   new Rectangle(frame.getX() + 4, frame.getY() + 149, 
-//					   		frame.getWidth() - 7, frame.getHeight() - 152));
 			BufferedImage image = new Robot().createScreenCapture( 
-					   new Rectangle(frame.getX() + 4, frame.getY(), 
-					   		frame.getWidth() - 7, frame.getHeight()));
+					   new Rectangle(frame.getX() + 4, frame.getY() + 149, 
+					   		frame.getWidth() - 7, frame.getHeight() - 152));
 
 			File file = new File(name);
 			ImageIO.write(image, "jpg", file);

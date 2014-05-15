@@ -13,12 +13,14 @@ import acme.misc.ScanfReader;
 //NOTE: THIS IS JUST AN ABSTRACT CLASS
 public abstract class AttributeDomain
 {
+	public static final int DISCRETE = 1;
+	public static final int CONTINUOUS = 2;
 
 	public AttributeDomain()
 	 { 
 	 }
 
-	public abstract AttributeDomainType getType();
+	public abstract int getType();
 
         //getElemnts give you the value in a discrete domain
 	public String[] getElements()
@@ -70,9 +72,9 @@ public abstract class AttributeDomain
 
 	*/
 	
-	public static AttributeDomain getInfo(Vector xval, Vector yval, AttributeDomainType type){
+	public static AttributeDomain getInfo(Vector xval, Vector yval, int type){
 		AttributeDomain domain = null;
-		if (type == AttributeDomainType.DISCRETE){	      	
+		if (type == DISCRETE){	      	
 			domain = new DiscreteAttributeDomain();
             for (int i=0; i<yval.size(); i++ ){	      	
             	Double dbl = (Double) yval.get(i);
@@ -101,42 +103,46 @@ public abstract class AttributeDomain
 	   double val = 0;
 	   double ordval = 0;
 	   c = scanReader.scanChar(" %c");
+	 	
 	   if (c != '{')
-	    { throw new IOException (
-"Line " + scanReader.getLineNumber() + ": expected '{'");
+	    {
+		   throw new IOException (
+				   "Line " + scanReader.getLineNumber() + ": expected '{'");
+	    
 	    }
 	   while (true)
 	    { 
 	      ordstr = scanReader.scanString (elementChars);
 	      if (ordstr.charAt(0) == '}')
 	       { throw new IOException ("Line " + scanReader.getLineNumber() + 
-": expected domain entry");
+	    		   ": expected domain entry");
 	       }
 	      if (numberChars.indexOf(ordstr.charAt(0)) == -1)
 	       { // then not a number string
-		 if (domain == null)
-		  { domain = new DiscreteAttributeDomain();
-		  }
-		 else if (domain.getType() == AttributeDomainType.CONTINUOUS)
-		  { throw new IOException ("Line "+scanReader.getLineNumber()+
-": continuous domains cannot have symbolic entries");
-		  }
+				 if (domain == null)
+				  { domain = new DiscreteAttributeDomain();
+				  }
+				 else if (domain.getType() == CONTINUOUS)
+				  { throw new IOException ("Line "+scanReader.getLineNumber()+
+				": continuous domains cannot have symbolic entries");
+				  }
 	       }
 	      else
-	       { if (domain == null)
-		  { domain = new ContinuousAttributeDomain();
-		  }
-		 else if (domain.getType() == AttributeDomainType.DISCRETE)
-		  { throw new IOException ("Line "+scanReader.getLineNumber()+
-": discrete domains cannot have numeric entries");
-		  }
-		 try
-		  { ordval = Double.parseDouble (ordstr);
-		  }
-		 catch (NumberFormatException e)
-		  { throw new IOException ("Line "+scanReader.getLineNumber()+
-": malformed numeric domain entry " + ordstr);
-		  }
+	       {
+				  if (domain == null)
+				   		{ domain = new ContinuousAttributeDomain();
+				  }
+				 else if (domain.getType() == DISCRETE)
+						 { throw new IOException ("Line "+scanReader.getLineNumber()+
+								 ": discrete domains cannot have numeric entries");
+						 }
+				 try
+				  { ordval = Double.parseDouble (ordstr);
+				  }
+				 catch (NumberFormatException e)
+						  { throw new IOException ("Line "+scanReader.getLineNumber()+
+								  ": malformed numeric domain entry " + ordstr);
+				  }
 	       }
 	      try 
 	       { val = scanReader.scanDouble ();
@@ -146,13 +152,13 @@ public abstract class AttributeDomain
 	       }
 	      catch (IOException e)
 	       { throw new IOException ("Line " + scanReader.getLineNumber() + 
-": expected numeric domain weight");
+	    		   ": expected numeric domain weight");
 	       }
 	      if (val < 0 || val > 1.0)
 	       { throw new IOException ("Line " + scanReader.getLineNumber() + 
-": weight " + val + " should be within [0,1]");
+	    		   ": weight should be within [0,1]");
 	       } 
-	      if (domain.getType() == AttributeDomainType.DISCRETE)
+	      if (domain.getType() == DISCRETE)
 	       { ((DiscreteAttributeDomain)domain).addElement(ordstr, val);
 	       }
 	      else
@@ -164,7 +170,7 @@ public abstract class AttributeDomain
 	       }
 	      else if (c != ',')
 	       { throw new IOException (
-"Line " + scanReader.getLineNumber() + ": missing ','"); 
+	    		   "Line " + scanReader.getLineNumber() + ": missing ','"); 
 	       }
 	    }	   
 	   return domain;

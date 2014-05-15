@@ -1,4 +1,5 @@
-import java.util.*;
+import java.util.Iterator;
+import java.util.Vector;
 
 //Just like ContinuousAttributeDomain, this is the other class which can control most of the interaction
 //you will need to do with the domain.
@@ -29,8 +30,8 @@ public class DiscreteAttributeDomain extends AttributeDomain
 	   set = new Vector(32);
 	 }
 
-	public AttributeDomainType getType()
-	 { return AttributeDomainType.DISCRETE;
+	public int getType()
+	 { return DISCRETE;
 	 }
 	
 	public Entry getEntry (String elem)
@@ -88,13 +89,7 @@ public class DiscreteAttributeDomain extends AttributeDomain
 
 	//added for utility graph: so position does not change
 	public void changeWeight(String elem, double wt){
-		Entry e = getEntry(elem);		
-		if(wt > 1.0)
-			e.weight = Math.min(wt, 1.0);
-		else if(wt < 0.0)
-			e.weight = Math.max(wt, 0.0);
-		else
-			e.weight = wt;
-//		System.out.println(elem+" "+wt+" "+e.weight);
+		Entry e = getEntry(elem);
+		e.weight = wt;
 	}
 }

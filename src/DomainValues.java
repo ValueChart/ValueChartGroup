@@ -49,6 +49,7 @@ import javax.swing.table.DefaultTableModel;
 	        lblAlt.setPreferredSize(new Dimension(getWidth(), lblAlt.getHeight()));
 	        add(lblAlt);
 	        //Dimension dimarea = new Dimension(0, 20);
+	        
 	        //add(Box.createRigidArea(dimarea));
 	        add(scrollPane);
 	        scrollPane.setPreferredSize(new Dimension(250, 250));

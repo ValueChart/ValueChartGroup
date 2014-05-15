@@ -163,12 +163,10 @@ public class ContGraph extends JPanel implements MouseListener, MouseMotionListe
         String temp;
         g.setColor(Color.DARK_GRAY);
         for(int i = 0; i < items.length; i++){
-            if (chart.displayUtilityWeights) {
-                temp = String.valueOf(weights[i]*100);
-                g.setFont(new Font ("Arial", Font.BOLD, 6));
-                if (getHeight() > 20){
-                	g.drawString(temp.substring(0,3), (p[i].x + 5), p[i].y < getHeight() - BOTTOM - 3 ? p[i].y + 5 : p[i].y);
-                }
+            temp = String.valueOf(weights[i]);
+            g.setFont(new Font ("Arial", Font.BOLD, 6));
+            if (getHeight() > 20){
+            	g.drawString(temp.substring(0,3), (p[i].x + 5), p[i].y < getHeight() - BOTTOM - 3 ? p[i].y + 5 : p[i].y);
             }
             s[i] = p[i].getShape();
         }
@@ -209,9 +207,7 @@ public class ContGraph extends JPanel implements MouseListener, MouseMotionListe
     }
   
     class MoveablePoint extends Point2D.Float {
-        private static final long serialVersionUID = 1L;
-        
-        int r = getHeight() > MIN_HEIGHT ? 3 : 1;
+    	int r = getHeight() > MIN_HEIGHT ? 3 : 1;
         Shape shape;
         public MoveablePoint(int x, int y) {
             super(x, y);

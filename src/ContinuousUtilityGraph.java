@@ -33,10 +33,8 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
     AttributeCell acell;
     
     JPanel pnl;
-    boolean modified = false;
-    boolean fromChart = false; // graph opened by clicking on chart interface
-
-    public ContinuousUtilityGraph(ValueChart ch, boolean fromCh, ContinuousAttributeDomain dd, double[] it, double[] we, String un, String att, DefineValueFunction d, AttributeCell ac) {
+    
+    public ContinuousUtilityGraph(ValueChart ch, ContinuousAttributeDomain dd, double[] it, double[] we, String un, String att, DefineValueFunction d, AttributeCell ac) {
        	
         //Setting variable names
         cdomain = dd;
@@ -47,8 +45,6 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         attributeName = att;
         dvf = d;
         acell = ac;
-        fromChart = fromCh;
-
         
         setBackground(Color.white);
         p = new MoveablePoint[items.length];
@@ -56,14 +52,8 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         plotPoints();
         addMouseListener(this);
         addMouseMotionListener(this);
-        if (chart!=null && fromChart) {
-            if (acell != null && acell.getData() != null) {
-                AttributeData attrData = acell.getData();
-                if (attrData != null)
-                    chart.setLogOldAttributeData(LogUserAction.getSingleDataOutput(attrData, LogUserAction.OUTPUT_STATE));
-            }
-            showGraph();
-        }
+        if (chart!=null)
+        	showGraph();
         else
         	setGraph();      
         
@@ -95,7 +85,6 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
     }
 
     public void mouseClicked(MouseEvent me) { 
-        modified = true;
         if((me.getX()< 40) && (me.getX() > 0) && (me.getY() > 240)){
             for(int i = 0; i < undo.length; i++){
             cdomain.removeKnot(items[i]);
@@ -167,7 +156,7 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
                 	setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
                 	moving = p[i];
                 	clicki = i;
-                	if (chart != null && fromChart)
+                	if (chart != null)
                 		chart.last_int.setUndoUtil(this, null, items[i], weights[i], cdomain);    
                 	movePoint(xaxis, me.getY());  
                 //}                
@@ -203,7 +192,6 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
     
     void movePoint(int x, int y) {
         if (moving == null) return;
-        modified = true;
         moving.setLocation(x, y);
         
         //Updating all the lines
@@ -220,7 +208,7 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         if (chart!=null){        	
         	chart.updateAll();
         }
-        if (!fromChart)
+        else
         	dvf.checkUtility(dvf.obj_sel, dvf.lbl_sel);       
         
         //Updating weights
@@ -244,11 +232,9 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         g.setColor(Color.DARK_GRAY);
         
         for(int i = 0; i < items.length; i++){
-            if (chart != null && chart.displayUtilityWeights) {
-                Float test = new Float((205 - p[i].y) / 2);
-                temp = test.toString();
-                g.drawString(temp, (p[i].x + 5),p[i].y);
-            }
+            Float test = new Float((205 - p[i].y) / 200);
+            temp = test.toString();
+            g.drawString(temp.substring(0,3), (p[i].x + 5),p[i].y);
             s[i] = p[i].getShape();
         }
         
@@ -266,15 +252,13 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         g.drawLine(50, 5, 50, 205); //y-axis
         g.drawLine(50, 205, 260, 205); //x-axis
         //Draw the static labels
+        String utility_label = new String("Utility");
         g.setFont(new Font(null, Font.BOLD, 12));
-//        String utility_upper_bound = new String("1");
-//        g.drawString(utility_upper_bound, 35, 15);
-//        String utility_lower_bound = new String("0");
-//        g.drawString(utility_lower_bound, 35, 205);
-        String utility_upper_bound = new String("Best");
-        g.drawString(utility_upper_bound, 10, 15);
-        String utility_lower_bound = new String("Worst");
-        g.drawString(utility_lower_bound, 10, 205);
+        g.drawString(utility_label, 10, 110);
+        String utility_upper_bound = new String("1");
+        g.drawString(utility_upper_bound, 35, 15);
+        String utility_lower_bound = new String("0");
+        g.drawString(utility_lower_bound, 35, 205);
         
         //Drawing the labels from variables passed
          g.setFont(new Font(null, Font.BOLD, 12));
@@ -305,17 +289,10 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
         JDialog frame = new JDialog(chart.getFrame(), attributeName + " utility graph");
         frame.setModal(true);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                if (modified && chart!=null && fromChart && acell != null && acell.getData() != null) {
-                    chart.logUtility(acell.getData());
-                }
-            }
-        });
+        
         //ContinuousUtilityGraph moving = new ContinuousUtilityGraph();
         //moving
         this.setPreferredSize(new Dimension(275,260));
-//        this.setPreferredSize(new Dimension(500,500));
         
         frame.getContentPane().add(this, BorderLayout.CENTER);
         frame.pack();
@@ -325,8 +302,6 @@ public class ContinuousUtilityGraph extends JPanel implements MouseListener, Mou
     }
         
     class MoveablePoint extends Point2D.Float {
-        private static final long serialVersionUID = 1L;
-        
         int r = 4;
         Shape shape;
         public MoveablePoint(int x, int y) {

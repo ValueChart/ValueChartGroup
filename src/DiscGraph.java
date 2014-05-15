@@ -196,12 +196,10 @@ public class DiscGraph extends JPanel implements MouseListener, MouseMotionListe
         g.setPaint(Color.DARK_GRAY);
         weights = ddomain.getWeights();
         for(int i = 0; i < items.length; i++){
-            if (chart.displayUtilityWeights) {
             //Float test = new Float(((getHeight()-getBottom()) - p[i].y) / (getHeight()-15));
-                temp = String.valueOf(weights[i]*100);
-                if (getHeight() > MIN_HEIGHT)
-                	g.drawString(temp.substring(0,3), (p[i].x + 5),p[i].y < 5 ? p[i].y + 6 : p[i].y);
-            }
+            temp = String.valueOf(weights[i]);
+            if (getHeight() > MIN_HEIGHT)
+            	g.drawString(temp.substring(0,3), (p[i].x + 5),p[i].y < 5 ? p[i].y + 6 : p[i].y);
             s[i] = p[i].getShape();
         }        
         g.setColor(color);
@@ -240,8 +238,6 @@ public class DiscGraph extends JPanel implements MouseListener, MouseMotionListe
     }
        
     class MoveablePoint extends Point2D.Float {
-        private static final long serialVersionUID = 1L;
-        
         int r = 3;
         Shape shape;
         public MoveablePoint(int x, int y) {

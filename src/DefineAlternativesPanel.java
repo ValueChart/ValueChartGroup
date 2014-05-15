@@ -166,10 +166,10 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 			//set combobox if discrete
 			TableColumn col = table.getColumnModel().getColumn(i+1);
 			JObjective obj = (JObjective)objs.get(i);
-			if (obj.getDomainType() == AttributeDomainType.DISCRETE){
+			if (obj.getType() == JObjective.DISCRETE){
 				JComboBox cboCell;
-				if (obj.getDomain().getElements() != null)
-					cboCell = new JComboBox(obj.getDomain().getElements());
+				if (obj.domain.getElements() != null)
+					cboCell = new JComboBox(obj.domain.getElements());
 				else
 					cboCell = new JComboBox();
 				col.setCellEditor(new DefaultCellEditor(cboCell));
@@ -233,13 +233,11 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
     	if ((num_alts<2) || ((num_alts>=2)&&(!con.constPane.isEnabledAt(1))) || !con.getObjPanel().ok){//- last part
     		con.constPane.setEnabledAt(2, false);
     		con.constPane.setEnabledAt(3, false); 
-            con.constPane.setEnabledAt(4, false); 
-            con.btnOK.setEnabled(false);
+    		con.btnOK.setEnabled(false);
     	}
     	else{
     		con.constPane.setEnabledAt(2, true);
     		con.constPane.setEnabledAt(3, true);
-            con.constPane.setEnabledAt(4, true); 
     		con.btnOK.setEnabled(true);
     	}
     }
@@ -259,7 +257,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 	        data.addElement(new_name);	 
 	        for (int i=0; i<objs.size(); i++){
 	        		JObjective obj = (JObjective)objs.get(i);
-	        		if (obj.getDomainType()==AttributeDomainType.DISCRETE){
+	        		if (obj.getType()==JObjective.DISCRETE){
 	        			data.addElement("");
 	        		}
 	        		else
@@ -276,7 +274,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 	        for (int i=0; i<all_objs.size(); i++){
         		JObjective obj = (JObjective)all_objs.get(i);
         		if (!obj.getName().equals("name")){
-	        		if (obj.getDomainType()==AttributeDomainType.DISCRETE){
+	        		if (obj.getType()==JObjective.DISCRETE){
 	        			datamap.put(obj.getName(), "");
 	        		}
 	        		else
@@ -300,7 +298,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
     	for(int i=0; i< all_objs.size(); i++){
     		JObjective obj = (JObjective)all_objs.get(i);
     		//create a vector with unique discrete values
-    		if (obj.getDomainType()==(AttributeDomainType.DISCRETE)){
+    		if (obj.domain_type==(JObjective.DISCRETE)){
     			//-->if (from_const){
 	    			v = new Vector();
 		    		for (int j=0; j<alts.size(); j++){
@@ -355,7 +353,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
     				for (int k=0; k<objs.size(); k++){
     					JObjective obj = (JObjective)objs.get(k);
     					if ((obj.getName()).equals(columns.get(j).toString()))
-    						if (obj.getDomainType() == AttributeDomainType.DISCRETE)
+    						if (obj.getType() == JObjective.DISCRETE)
     							str = str + "\"" + hm.get(columns.get(j).toString()) + "\"" + "\n";
     						else 
     							str = str + hm.get(columns.get(j).toString()) + "\n";
@@ -473,8 +471,8 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 		        		
 		        		//2. discrete items
 		        		//a) check if in list
-		        		if (obj!=null && obj.getDomainType()==AttributeDomainType.DISCRETE){
-		        			String elts[] = obj.getDomain().getElements();
+		        		if (obj!=null && obj.domain_type==JObjective.DISCRETE){
+		        			String elts[] = obj.domain.getElements();
 		        			try{
 			        			for (int i=0; i<elts.length; i++){
 			        				if (entered.equals(elts[i])){ 
@@ -491,7 +489,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 		                                JOptionPane.YES_NO_CANCEL_OPTION);
 		                        //c)add the new discrete value 
 		                        if (n == JOptionPane.YES_OPTION) {
-		                        	DiscreteAttributeDomain dom = (DiscreteAttributeDomain)obj.getDomain();
+		                        	DiscreteAttributeDomain dom = (DiscreteAttributeDomain)obj.domain;
 		                        	dom.addElement(entered, 0.5); 		                        	
 		                        	updateTable(); //d. update for new combobox item
 		                        }

@@ -1,12 +1,17 @@
-
+/*
+This class that brings all the classes together
+ */
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
 import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 import java.io.*;
 
 import acme.misc.*;
+
 import org.icepdf.core.pobjects.OutlineItem;
 import org.icepdf.core.pobjects.Outlines;
 import org.icepdf.ri.common.ComponentKeyBinding;
@@ -18,20 +23,29 @@ import org.icepdf.ri.common.views.DocumentViewControllerImpl;
 public class ValueChart extends JPanel {
 
     private static final long serialVersionUID = 1L;
-//    static public final int DEFAULT_COL_WIDTH = 30;
-    static public final int DEFAULT_COL_WIDTH = 50; //SANJANA: Changed default col width to "Large"
+    static public final int DEFAULT_COL_WIDTH = 60;
+    static public final int DEFAULT_USER_COL_WIDTH = 16;
+    static public final int DEFAULT_PADDING_WIDTH = 9;//9
     //*%* Changed display height to make it relative to the screen size
-    //static public final int DEFAULT_DISPLAY_HEIGHT = 365;
-    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .48);
+//    static public final int DEFAULT_DISPLAY_HEIGHT = 500;
+    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .44);
     //*%*
     static public final int DEFAULT_DISPLAY = 1,
             SIDE_DISPLAY = 2,
             SEPARATE_DISPLAY = 3;
-    int headerWidth = 250;
-    int graphWidth = 100;
+    static public final int COLORFORUSER = 1,
+    		COLORFORATTRIBUTE = 2,
+    		COLORFORINTENSITY = 3;
+    
+    int headerWidth = 200; //width of criteria column
+    int graphWidth = 100; //width of utility graphs
     int displayType = DEFAULT_DISPLAY;
     int displayHeight = DEFAULT_DISPLAY_HEIGHT;
+    int userWidth = DEFAULT_USER_COL_WIDTH;
+    int padWidth = DEFAULT_PADDING_WIDTH;
     int colWidth = DEFAULT_COL_WIDTH;
+//    int colWidthGroup = padWidth * 2 + userWidth * noOfUsers;
+    int colWidthGroup ;
     boolean showAbsoluteRatios = false;
     private JFrame chartFrame = null;
     private String chartTitle;
@@ -44,15 +58,29 @@ public class ValueChart extends JPanel {
     DisplayDialog dialog;
     Reader initReader = null;
     ResizeHandler resizeHandler;
-    JPanel pnlDisp;
-    Vector entryList;
+    Vector<ChartEntry> entryList;    
+    ArrayList<String> users = null;
     String filename;
     Vector objs;
     Vector alts;
     Vector prims;
     ConstructionView con;
+    
+    String data;
+    double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0 
+    ArrayList<IndividualAttributeMaps> listOfAttributeMaps = new ArrayList<IndividualAttributeMaps>();     //map of attributes for all users
+    Map<String,Double> maxWeightMap = new HashMap<String,Double>(); //Map of attributes with maximum weights
+    ArrayList<IndividualEntryMap> listOfEntryMaps = new ArrayList<IndividualEntryMap>(); //map of entries for all users
+    ArrayList<HashMap<String,Double>> listOfWeightMaps = new ArrayList<HashMap<String,Double>>();
+    Set<Color> listOfUserColors = new HashSet<>();
+    ArrayList<Color> colorList;
+        
+    GroupActions pnlGroupActions;
+    int colorChoice; //variable to select the purpose of color
+    String userToPickAttributeColor; //choose a user to pick his attribute colors
+    boolean topChoices = false;
+    
     boolean pump = false;
-    boolean sort = false;
     boolean pump_increase = true;
     boolean show_graph = true;
     int sa_dir = BaseTableContainer.UP;
@@ -62,10 +90,7 @@ public class ValueChart extends JPanel {
     boolean isNew = true;
     LastInteraction last_int;
     LastInteraction next_int;
-    Vector<AttributeData> attrData;
-    LogUserAction log;
-    boolean displayUtilityWeights = false;
-
+    
     //***Added so that there is one frame that allows display of pdf reports from value chart. This window is not used for each of the attribute/entry reports.
     //Those are contained within the AttributeCell class. Rather, this is for anywhere else on the interface (it started with a need to have one report window to display the report for the criteria details)
     SwingController controller; //Used for each window that controls a pdf document
@@ -76,44 +101,28 @@ public class ValueChart extends JPanel {
     OutlineItem item = null; //The items in the bookmark
 
 //CONSTRUCTOR
-    
-    public ValueChart(ValueChart vc) {
-        super();
-    }
-    
-    public ValueChart(ConstructionView c, String file, LogUserAction l, int type, int colwd, boolean b, boolean g, boolean dispUtil) {
-        super();
-        show_graph = g;
+    public ValueChart(ConstructionView c, String file, ArrayList<String> list, int type, int colwd, boolean b, boolean graph,int colorOption) {
+        super();        
+        show_graph = graph;
         con = c;
         isNew = b;
         filename = file;
+        users = list;
+//        colWidthGroup =  padWidth * 2 + userWidth * users.size();
+        colWidthGroup =  userWidth * (list.size()-1) + padWidth;
+        colorChoice = colorOption;
         setDisplayType(type);
-        displayUtilityWeights = dispUtil;
-        
-        constructFromFile(l, colwd);
-    }
-
-    public ValueChart(ConstructionView c, String file, LogUserAction l,
-            Vector<AttributeData> data, Vector entry, int type, int colwd,
-            boolean b, boolean g, boolean dispUtil) {
-        super();
-        show_graph = g;
-        con = c;
-        isNew = b;
-        setDisplayType(type);
-        displayUtilityWeights = dispUtil;
-
-        if (data == null || entry == null)
-            constructFromFile(l, colwd);
-        else {
-            filename = file;
-            constructFromAttribute(data, entry, l, colwd);
-        }
-    }
-    
-    
-    private void constructFromFile(LogUserAction l, int colwd) {
-
+    	             
+		 try {
+			 doReadAll(users);
+		 } catch (IOException e) {
+//		     System.out.println("Error in file: "+ filename +" "+ e.getMessage());
+			 System.out.println("Error in file: " + e.getMessage());
+		 }
+		 
+		 heightScalingConstant = getHeightScalingConstant();
+//		 System.out.println("Scaling constant: "+heightScalingConstant);
+		 
         menuOptions = new OptionsMenu(this);
         menuOptions.createMenu();
         if (!isNew) {
@@ -132,7 +141,7 @@ public class ValueChart extends JPanel {
             } catch (IOException e) {
                 System.out.println("Error in input: " + e.getMessage());
             }
-            //setDisplayHeight(Toolkit.getDefaultToolkit().getScreenSize().height);
+//            setDisplayHeight(Toolkit.getDefaultToolkit().getScreenSize().height);
             setDisplayHeight(displayHeight);
             setSize(getPreferredWidth(), displayType == SIDE_DISPLAY ? displayHeight * 2 - 50 : displayHeight);
             setVisible(true);
@@ -142,66 +151,13 @@ public class ValueChart extends JPanel {
         }
 
         showVC();
-        if (l != null) {
-            log = l;
-        } else {
-            log = new LogUserAction(getChartTitle());
-            log.setVerbosity(LogUserAction.LOG_ALL);
-        }
         if (isNew) {
-            menuOptions.setSelectedItems();
             chartFrame.setJMenuBar(menuOptions);
         }
         setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         if (displayType == SEPARATE_DISPLAY) {
             dialog.setLocation(chartFrame.getX(), chartFrame.getHeight());
-        }
-    }
-    
-    
-    private void constructFromAttribute(Vector<AttributeData> data, Vector entry, LogUserAction l, int colwd) {
-
-
-        menuOptions = new OptionsMenu(this);
-        menuOptions.createMenu();
-        if (!isNew) {
-            menuOptions.setVisible(false);
-        }
-        last_int = new LastInteraction(menuOptions.menuUndo);
-        next_int = new LastInteraction(menuOptions.menuRedo);
-        setColWidth(colwd);
-
-        showAbsoluteRatios = true;
-        attrData = data;
-        entryList = entry;
-        resizeHandler = new ResizeHandler();
-        addComponentListener(resizeHandler);
-
-        // TODO
-        readFromAttribute();
-
-        // setDisplayHeight(Toolkit.getDefaultToolkit().getScreenSize().height);
-        setDisplayHeight(displayHeight);
-        setSize(getPreferredWidth(),
-                displayType == SIDE_DISPLAY ? displayHeight * 2 - 50
-                        : displayHeight);
-        setVisible(true);
-
-        showVC();
-        if (l != null) {
-            log = l;
-        } else {
-            log = new LogUserAction(getChartTitle());
-            log.setVerbosity(LogUserAction.LOG_ALL);
-        }
-        if (isNew) {
-            menuOptions.setSelectedItems();
-            chartFrame.setJMenuBar(menuOptions);
-        }
-        setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        if (displayType == SEPARATE_DISPLAY) {
-            dialog.setLocation(chartFrame.getX(), chartFrame.getHeight());
-        }
+        }	
     }
 
 //DISPLAY
@@ -230,7 +186,6 @@ public class ValueChart extends JPanel {
     }
 
     public void updateAll() {
-        updateHeaders();
         displayPanel.repaint();
         mainPane.repaint();
     }
@@ -253,9 +208,9 @@ public class ValueChart extends JPanel {
 
 //CONNECT CONST/INSP
     void setPrims(TablePane pane) {
-        Iterator<BaseTableContainer> it;
+        Iterator it;
         for (it = pane.getRows(); it.hasNext();) {
-            BaseTableContainer btc = it.next();
+            BaseTableContainer btc = (BaseTableContainer) (it.next());
             if (btc.table instanceof AttributeCell) {
                 prims.add(btc);
                 btc.adjustHeaderWidth();//added for rotate
@@ -275,13 +230,11 @@ public class ValueChart extends JPanel {
                     obj.setDomain(ac.getDomain());
                     obj.setUnit(ac.getUnits());
                     double pc = btc.getOverallRatio();
-                    AttributeData data = btc.getData();
-                    if (data != null && !data.isAbstract()) pc = data.getWeight();
                     obj.setWeight(String.valueOf(pc));
                     //connect ac and obj
                     ac.obj = obj;
                     obj.acell = ac;
-                    if (obj.getDomainType() == AttributeDomainType.CONTINUOUS) {
+                    if (obj.domain_type == JObjective.CONTINUOUS) {
                         if (obj.getUnit().equals("CAD")) {
                             obj.setDecimalFormat("0.00");
                         }
@@ -300,15 +253,15 @@ public class ValueChart extends JPanel {
     }
 
     void setObjs(TablePane pane, String str) {
-        Iterator<BaseTableContainer> it;
+        Iterator it;
         JObjective obj = null;
         for (it = pane.getRows(); it.hasNext();) {
-            BaseTableContainer btc = it.next();
+            BaseTableContainer btc = (BaseTableContainer) (it.next());
             btc.updateHeader();
             if (str.equals("root")) {
                 con.getObjPanel().lblRoot.setName(btc.getName());
             } else {
-                    obj = new JObjective(btc.getName());
+                obj = new JObjective(btc.getName());
                 con.getObjPanel().addFromVC(str, obj);
                 objs.add(obj);
                 if (btc.table instanceof AttributeCell) {
@@ -338,7 +291,7 @@ public class ValueChart extends JPanel {
                 } else {
                     AttributeValue val = (AttributeValue) datamap.get(obj.getName());
                     datamap.put(obj.getName(), val.stringValue());
-                    obj.setDomainType(val.domain.getType());
+                    obj.setType(val.domain.getType());
                 }
             }
             alts.add(datamap);
@@ -351,58 +304,33 @@ public class ValueChart extends JPanel {
     }
 
 //READS
-    private void read(Reader reader)
-            throws IOException {
+    private void read(Reader reader) throws IOException {
         ScanfReader scanReader = new ScanfReader(reader);
         try {
             doread(scanReader);
         } catch (Exception e) {
             throw new IOException(e.getMessage() + ", line " + scanReader.getLineNumber());
         }
-        //bulding the construction view straight from vc
+       //bulding the construction view straight from vc
         if (!con.init) {
             setConst();
             con.setInit(true);
         }
         con.setChart(this);
-        //set prim obj list for rolling up the absolute tree    	
+//        set prim obj list for rolling up the absolute tree    	
         prims = new Vector();
         setPrims(mainPane);
         for (Iterator it = prims.iterator(); it.hasNext();) {
             BaseTableContainer btc = (BaseTableContainer) it.next();
             btc.setRollUp();
         }
-        mainPane.getRowAt(0).setAbstractRatios();
+        ((BaseTableContainer) mainPane.rowList.get(0)).setAbstractRatios();
         setConnectingFields();
+        if (isNew) {
+            menuOptions.setSelectedItems();
+        }
     }
     
-    private void readFromAttribute() {
-        if (attrData == null)
-            return;
-
-        mainPane = new TablePane();
-        renderMainPaneAttributes();
-        mainPane.adjustAttributesForDepth(mainPane.getDepth());
-        
-        rebuildMainPane();
-
-        // bulding the construction view straight from vc
-        if (!con.init) {
-            setConst();
-            con.setInit(true);
-        }
-        con.setChart(this);
-        // set prim obj list for rolling up the absolute tree
-        prims = new Vector();
-        setPrims(mainPane);
-        for (Iterator it = prims.iterator(); it.hasNext();) {
-            BaseTableContainer btc = (BaseTableContainer) it.next();
-            btc.setRollUp();
-        }
-        mainPane.getRowAt(0).setAbstractRatios();
-        setConnectingFields();
-    }
-
     public void newConst() {
         con = new ConstructionView(ConstructionView.FROM_VC);
         setConst();
@@ -418,7 +346,7 @@ public class ValueChart extends JPanel {
         con.setChart(this);
         //for vc w/other data
     }
-
+    
     private void doread(ScanfReader scanReader)
             throws IOException {
 
@@ -442,9 +370,7 @@ public class ValueChart extends JPanel {
             }
             if (keyword.equals("attributes")) {
                 mainPane = new TablePane();
-                attrData = new Vector<AttributeData>();
-                readAttributes(scanReader, attrData, colorList);
-                renderMainPaneAttributes();
+                readAttributes(scanReader, mainPane, colorList);
                 mainPane.adjustAttributesForDepth(mainPane.getDepth());
                 attributesRead = true;
             } else if (keyword.equals("color")) {
@@ -459,7 +385,7 @@ public class ValueChart extends JPanel {
                 }
                 entryList.add(readEntry(scanReader, mainPane));
             } else if (keyword.startsWith("report=")) {
-                //Sets the report location for thie ValueCharts parent interface (there is another reportFileLocation, which is specific to the AttributeCell bar charts)
+                //Sets the report location for the ValueCharts parent interface (there is another reportFileLocation, which is specific to the AttributeCell bar charts)
                 reportFile = new File(keyword.substring(7).replace("$", " ").replace("\\", "\\\\"));
                 if (reportFile.exists()) {
                     createReportController();
@@ -475,7 +401,271 @@ public class ValueChart extends JPanel {
             }
         }
 
-        rebuildMainPane();
+        mainPane.fillInEntries(entryList);
+
+        mainPaneWithNames = new JPanel();
+        mainPaneWithNames.setLayout(new BoxLayout(mainPaneWithNames, BoxLayout.Y_AXIS));
+
+        mainEntryNames = new EntryNamePanel(entryList, colWidthGroup, mainPane.getDepth(), true, this);
+//        mainPaneWithNames.add(Box.createVerticalStrut(40));//-
+        JPanel pnlBottom = new JPanel();
+        pnlBottom.setLayout(new BoxLayout(pnlBottom, BoxLayout.X_AXIS));
+        pnlBottom.add(Box.createHorizontalGlue());
+        pnlBottom.add(mainEntryNames);
+
+        mainPaneWithNames.add(mainPane);
+        mainPaneWithNames.add(pnlBottom);
+
+        removeAll();
+
+       /*	if (displayType == SIDE_DISPLAY){ 
+	         setLayout (new BoxLayout (this, BoxLayout.X_AXIS));
+	         add(mainPaneWithNames);
+         }
+         else{ 
+	         setLayout (new BoxLayout (this, BoxLayout.Y_AXIS));
+	         add(mainPaneWithNames);
+	         if (displayType != SEPARATE_DISPLAY){ 
+		         add (Box.createVerticalStrut(colWidth));
+		         add (Box.createGlue());
+	         }
+         }*/
+
+        displayPanel = new DisplayPanel(colWidthGroup,this);
+        displayPanel.setRootPane(mainPane);
+        displayPanel.setEntries(entryList);
+
+        JPanel pnlDisp = new JPanel();
+        pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
+        if (displayType == SIDE_DISPLAY) {
+            pnlDisp.add(Box.createHorizontalGlue());
+        } else {
+            pnlDisp.add(Box.createHorizontalStrut(93));
+            pnlGroupActions = new GroupActions(this);            
+            pnlDisp.add(pnlGroupActions);
+            pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup + (show_graph ? graphWidth : 0), displayHeight));
+            pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup, displayHeight));
+        }
+        pnlDisp.add(Box.createHorizontalGlue());
+        pnlDisp.add(displayPanel);
+
+        displayWithNames = new JPanel();
+        displayWithNames.setLayout(new BoxLayout(displayWithNames, BoxLayout.Y_AXIS));
+        displayWithNames.add(pnlDisp);
+
+        //int mainWidth = (entryList.size()+mainPane.getDepth())*colWidth;
+        int mainWidth = entryList.size() * colWidthGroup;
+///**/	int dispWidth = entryList.size()*colWidth + colWidth;
+        int dispWidth = entryList.size() * colWidthGroup + colWidthGroup;
+
+        if (displayType == SIDE_DISPLAY) {
+            displayPanel.setMaximumSize(new Dimension(dispWidth, 10000));
+            displayPanel.setMinimumSize(new Dimension(dispWidth, 0));
+            //mainPaneWithNames.setAlignmentY(0.0f);
+        }
+
+        graphWidth = (show_graph ? graphWidth : 0);
+
+        mainPaneWithNames.setMaximumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 10000));
+        mainPaneWithNames.setMinimumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 0));
+        mainPaneWithNames.setPreferredSize(
+                new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, displayType == SIDE_DISPLAY ? displayHeight * 2 - 50 : displayHeight));
+
+        int w = ((displayType == SIDE_DISPLAY) ? mainWidth + 40 : dispWidth) + colWidth;//no real reason why it's 40
+
+        
+        if (displayType == SIDE_DISPLAY) {
+            displayWithNames.setMaximumSize(new Dimension(w, 10000));
+            displayWithNames.setMinimumSize(new Dimension(w, 0));
+            displayWithNames.setPreferredSize(new Dimension(w, displayHeight * 2 - 50));
+//            displayWithNames.setPreferredSize(new Dimension(w, displayHeight));
+        } else {
+            displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
+            displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
+            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, displayHeight));//- and rev x, y
+        }
+        
+        mainPane.updateSizesAndHeights();
+
+        if (displayType == SEPARATE_DISPLAY) {
+            dialog = new DisplayDialog(chartFrame, "Total Scores", displayWithNames);
+        }
+//        Dimension displayDim = displayWithNames.getPreferredSize();
+//        Dimension mainDim = mainPaneWithNames.getPreferredSize();
+        if (displayType == DEFAULT_DISPLAY) {
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));            
+            add(displayWithNames);
+//            displayDim.height = mainDim.height;
+            add(Box.createRigidArea(new Dimension(0, 5)));            
+//        }
+//        if (displayType == SIDE_DISPLAY) {
+//            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+//            add(mainPaneWithNames);
+//            add(Box.createHorizontalStrut(40));//-
+//            add(Box.createGlue());
+//            add(displayWithNames);
+//            displayDim.height = mainDim.height;
+//        } 
+//        else{
+            
+            add(mainPaneWithNames);
+//            displayDim.height = mainDim.height;
+//            if (displayType != SEPARATE_DISPLAY) {
+//                add (Box.createVerticalStrut(40));
+//                add (Box.createGlue());
+//            }
+        }
+    }
+    private void readAttributes(ScanfReader scanReader, TablePane pane, HashMap colorList)
+            throws IOException {
+        String name = null;
+        double sum = 0.0;
+        while (!(name = scanReader.scanString()).equals("end")) {
+            BaseTableContainer container;
+            double hr = 0.0;
+       
+            if (name.equals("attributes")) { //if keyword=attributes, then read abstract name and ratio
+                TablePane subpane = new TablePane();
+                name = scanReader.scanString();
+                if (chartTitle == null) {
+                    //this is the first attribute level, so set the title of the window to the main title of the ValueChart
+                    chartTitle = name.replace('_', ' ');
+                }
+//                hr = getMaxHeightRatio(scanReader,name)/heightScalingConstant;
+//                hr = getMaxHeightRatio(scanReader,name);
+                hr = readHeightRatio(scanReader);
+//            	System.out.println(name+" "+hr);
+                readAttributes(scanReader, subpane, colorList);
+                container = new BaseTableContainer(subpane, name, this, colWidth);
+//                container = new BaseTableContainer(subpane, name, this, colWidthGroup);
+
+            } else { //if no keyword is primitive            	
+            	hr = getMaxHeightRatio(scanReader,name)/heightScalingConstant;
+            	sum += hr;
+//            	System.out.println( "sum"  + sum );
+//            	
+//            	System.out.println( heightScalingConstant );
+//            	hr = readHeightRatio(scanReader);
+//            	System.out.println(name+" "+hr);
+            	AttributeDomain domain = AttributeDomain.read(scanReader);
+                AttributeCell cell = new AttributeCell(this, domain);
+                cell.setColWidth(colWidthGroup);
+                String option = null;
+
+                //This is where the program reads through the valuecharts file (.vc) and collects the properties for each of the attributes
+                while (!(option = scanReader.scanString()).equals("end")) {
+                    if (option.startsWith("color=")) {
+                        String colorName = option.substring(6);
+                        Color color = (Color) colorList.get(colorName);
+                        if (color == null) {
+                            throw new IOException("Unknown color '" + colorName + "'");
+                        }
+                        cell.setColor(color);
+                    } else if (option.startsWith("units=")) {
+                        String unitsName = option.substring(6);
+                        cell.setUnits(unitsName);
+                    } else {
+                        throw new IOException("Unknown option '" + option + "'");
+                    }
+                }
+                container = new BaseTableContainer(cell, name, this, colWidth);
+            }
+            pane.addRow(container);            
+            container.setHeightRatio(hr);            
+            container.setRollUpRatio(hr);
+//            System.out.println( container.getHeight() );
+//            System.out.println("Height ratio: "+hr);
+        }
+    }
+    
+    private void doReadAll(ArrayList users) throws IOException {
+    	
+    	for(Object aFile : users){
+			String filename = (String) aFile;
+			initReader = new FileReader(filename);
+			ScanfReader scanReader = new ScanfReader(initReader);
+			
+	        ArrayList<ChartEntry> listOfEntries = new ArrayList<ChartEntry>();
+	        HashMap colorList = new HashMap(10);
+	        IndividualAttributeMaps attrMaps = new IndividualAttributeMaps(aFile.toString());
+	        
+	        boolean attributesRead = false;
+	
+	        colorList.put("red", Color.red);
+	        colorList.put("green", Color.green);
+	        colorList.put("blue", Color.blue);
+	        colorList.put("cyan", Color.cyan);
+	        colorList.put("magenta", Color.magenta);
+	        colorList.put("yellow", Color.yellow);       
+	        
+	        if(!aFile.toString().equals("SuperUser.vc")){	        	
+	        	TablePane groupPane = new TablePane();
+	        	while (true) {        	
+		            String keyword = null;
+		            try {
+		                keyword = scanReader.scanString();
+		            } catch (EOFException e) {
+		                break;
+		            }		            
+		            if(keyword.equals("attributes")){
+		            	//read attributes		            	
+	            		readAttributesAll(scanReader,groupPane,attrMaps,colorList,filename);	            		
+	            		attributesRead = true;    
+		                
+		            } else if (keyword.equals("color")) {
+		                String name = scanReader.scanString();
+		                float r = scanReader.scanFloat();
+		                float g = scanReader.scanFloat();
+		                float b = scanReader.scanFloat();
+		                colorList.put(name, new Color(r, g, b));
+		            } 
+		            else if (keyword.equals("entry")) {
+		                if (!attributesRead) {
+		                    throw new IOException("Entry specified before attributes");
+		                }	
+//		                printlistOfAttributeMaps(listOfAttributeMaps);
+		                listOfEntries.add(readEntryAll(scanReader, groupPane, filename));
+		            } 
+		            else if (keyword.startsWith("report=")) {
+		                //Sets the report location for the ValueCharts parent interface (there is another reportFileLocation, which is specific to the AttributeCell bar charts)
+		                reportFile = new File(keyword.substring(7).replace("$", " ").replace("\\", "\\\\"));
+		                if (reportFile.exists()) {
+		                    createReportController();
+		                } else {
+		                    //since the report does not exist, throw a system message letting the user know this, and set the report to null
+		                    System.out.println("The report for the ValueChart is not valid, the system believes the report is located at: ");
+		                    System.out.println("  " + reportFile.toString());
+		                    System.out.println("  If this is an error, please verify that you have correctly substituted all spaces and added two slashes between directories.");
+		                    reportFile = null;
+		                }
+		            } else {
+		                throw new IOException("Unknown keyword " + keyword);
+		            }
+		        }
+		        IndividualEntryMap iem = new IndividualEntryMap(filename, listOfEntries);
+		        listOfEntryMaps.add(iem);
+	        }
+    	}
+    	
+    	// add elements to al, including duplicates
+    	HashSet hs = new HashSet();
+    	hs.addAll(listOfAttributeMaps);
+    	listOfAttributeMaps.clear();
+    	listOfAttributeMaps.addAll(hs);
+    	
+    	//assign a distinct color for each user
+    	generateRandomColor(listOfAttributeMaps);    	
+
+//    	System.out.println("Size of list of attribute maps:" + listOfAttributeMaps.size() + "\n");
+//    	printlistOfAttributeMaps(listOfAttributeMaps);    	
+//    	System.out.println("Max Weight map: ");    	
+    	getMaxWeightMap();
+//    	System.out.println("Color Map: ");
+//    	printAttributeColorMap(listOfAttributeMaps);
+//    	System.out.println("\n" + "Size of list of entry map:" + listOfEntryMaps.size() + "\n");
+//    	printEntryMap(listOfEntryMaps);
+//    	printlistOfAttributeMaps(listOfAttributeMaps);
+//    	System.out.println("Size of user color list: "+listOfUserColors);
     }
 
     private double readHeightRatio(ScanfReader scanReader)
@@ -492,55 +682,290 @@ public class ValueChart extends JPanel {
         }
         return hr;
     }
-
-    private void readAttributes(ScanfReader scanReader,
-            Vector<AttributeData> attrList, HashMap colorList)
-            throws IOException {
-        String name = null;
-        while (!(name = scanReader.scanString()).equals("end")) {
-            AttributeData a;
-            double hr;
-            if (name.equals("attributes")) { // if keyword=attibutes, then read
-                                             // abstract name and ratio
-                a = new AttributeAbstractData();
-                name = scanReader.scanString();
-                a.setName(name);
-                hr = readHeightRatio(scanReader);
-                readAttributes(scanReader, a.getAbstract().children, colorList);
-
-            } else { // if no keyword is primitive
-                a = new AttributePrimitiveData();
-                a.setName(name);
-                hr = readHeightRatio(scanReader);
-                a.getPrimitive().setWeight(hr);
-                AttributeDomain domain = AttributeDomain.read(scanReader);
-                a.getPrimitive().setDomain(domain);
-                String option = null;
-
-                // This is where the program reads through the valuecharts file
-                // (.vc) and collects the properties for each of the attributes
-                while (!(option = scanReader.scanString()).equals("end")) {
-                    if (option.startsWith("color=")) {
-                        String colorName = option.substring(6);
-                        Color color = (Color) colorList.get(colorName);
-                        if (color == null) {
-                            throw new IOException("Unknown color '" + colorName
-                                    + "'");
-                        }
-                        a.getPrimitive().setColor(color);
-                    } else if (option.startsWith("units=")) {
-                        String unitsName = option.substring(6);
-                        a.getPrimitive().setUnitsName(unitsName);
-                    } else {
-                        throw new IOException("Unknown option '" + option + "'");
-                    }
-                }
-            }
-
-            attrList.addElement(a);
-        }
+    
+    private double getMaxHeightRatio(ScanfReader scanReader, String attrName) throws IOException{    	
+    	String frac = scanReader.scanString();
+//    	System.out.println(frac);
+    	double hr = -1;
+    	if(!frac.equals("*")){
+//    		if(frac.equals("1.0")){
+//    			hr = Double.parseDouble(frac);
+//    			return hr;
+//    		}
+//    		else{
+    			if(!maxWeightMap.isEmpty()){
+        			for(Map.Entry<String, Double> entry : maxWeightMap.entrySet()){
+            			if(entry.getKey().equals(attrName)){
+            				hr = entry.getValue();                			
+                			return hr;
+                		}
+                	}
+        		}
+        		else
+            		System.out.println("Weight Map empty");
+//    		}
+    	}
+    	return hr;
     }
 
+    private double getHeightScalingConstant(){
+    	double s = 0.0;
+    	if(!maxWeightMap.isEmpty()){
+			for(Map.Entry<String, Double> entry : maxWeightMap.entrySet()){
+    			s += entry.getValue();
+        	}
+		}
+    	return s;
+    }
+    
+    private void readAttributesAll(ScanfReader scanReader,TablePane pane, IndividualAttributeMaps iam, HashMap colorList,String fname)
+            throws IOException {
+    	String name = null;
+        while (!(name = scanReader.scanString()).equals("end")) {
+        	BaseTableContainerGroup container;
+        	double hr=1.0;
+        	double hrNotUsing;
+        	if (name.equals("attributes")) { //if keyword=attributes, then read abstract name and ratio
+        		TablePane groupSubpane = new TablePane();
+                name = scanReader.scanString();                                                
+                hrNotUsing = readHeightRatio(scanReader);
+                readAttributesAll(scanReader,groupSubpane,iam,colorList,fname);
+                container = new BaseTableContainerGroup(groupSubpane, name, this);
+//                iam.listOfContainers.add(container);
+//                listOfContainers.add(container);
+//                System.out.println("---------recurse---------");
+            }        	
+        	else {//if no keyword is primitive        		
+        		 hr = readHeightRatio(scanReader);        		 
+        		 AttributeDomain domain = AttributeDomain.read(scanReader); 
+        		 AttributeCellGroup groupCell = new AttributeCellGroup(this, domain, name);
+        		 iam.fillWeightMap(name, hr);
+        		 iam.fillDomainMap(name, domain);
+        		 String option = null;        		 
+                 //This is where the program reads through the valuecharts file (.vc) and collects the properties for each of the attributes
+                 while (!(option = scanReader.scanString()).equals("end")) {
+                     if (option.startsWith("color=")) {
+                         String colorName = option.substring(6);
+                         Color color = (Color) colorList.get(colorName);
+                         groupCell.setColor(color);
+                         iam.fillColorMap(name, color);                                                  
+                         if (color == null) {
+                             throw new IOException("Unknown color '" + colorName + "'");
+                         }                                 
+                     } else if (option.startsWith("units=")) {
+                         String unitsName = option.substring(6);
+                         iam.attributeUnits = unitsName;
+                         groupCell.setUnits(unitsName);
+                     } else {
+                         throw new IOException("Unknown option '" + option + "'");
+                     }
+                 }
+                 container = new BaseTableContainerGroup(groupCell, name, this);
+//                 iam.listOfContainers.add(container);
+        	}
+        	pane.addRowGroup(container);
+        	container.setWeight(hr);
+        }
+        
+        //assign a distinct color for each user
+//    	iam.userColor = generateRandomColor();
+    	
+        if(!iam.attributeWeightMap.isEmpty()){
+        	listOfWeightMaps.add(iam.attributeWeightMap);
+        }       
+        listOfAttributeMaps.add(iam);    
+//        printlistOfAttributeMaps(listOfAttributeMaps);
+//        System.out.println("Attribute cell name: "+pane.getAttributeCellGroup(scanReader.scanString()).getName());
+//        iam.printContainerList();
+    }
+    
+    private void getMaxWeightMap(){    	
+//    	ArrayList<Map<String,Double>> listOfWeightMaps = getWeightMap();    	
+    	if(listOfWeightMaps.isEmpty()){
+    		System.out.println("List of weight maps is empty");
+    	}
+    	else{
+    		if(listOfWeightMaps.size() > 1){
+    			for(HashMap<String, Double> aMap : listOfWeightMaps){
+//    				maxWeightMap = aMap;
+    				for(Map.Entry<String,Double> entry : aMap.entrySet()){
+    					String srcKey = entry.getKey();
+    					double srcValue = entry.getValue();
+    					if(maxWeightMap.containsKey(srcKey)){
+    						double destValue = maxWeightMap.get(srcKey);
+    						if(destValue <= srcValue){
+    							maxWeightMap.remove(srcKey);
+    							maxWeightMap.put(srcKey, srcValue);    							
+    						}
+    					}else{
+    						maxWeightMap.put(srcKey, srcValue);
+    					}
+    				}
+    			}
+//JUNK    			
+//    			Map<String,Double> aMap = listOfWeightMaps.get(0);
+//	    		for(int i = 1; i < listOfWeightMaps.size(); i++){    			
+//	    			Map<String,Double> bMap = listOfWeightMaps.get(i);
+//	        		for(Map.Entry<String,Double> entry : aMap.entrySet()){
+//	        			String key = entry.getKey();
+//	        			double aValue = entry.getValue();
+//	        			double bValue = bMap.get(key);
+//	        			if(bMap.containsKey(entry.getKey())){	        				
+//	        				double value = aValue > bValue ? aValue : bValue;
+//	        				maxWeightMap.put(key,value);	        				
+//	        			}        			
+//	        			else
+//	        			{
+//	        				System.out.println("No matching key found while finding max weights");
+//	        			}
+//	        		}
+//	        		aMap.clear();
+//	        		aMap.putAll(maxWeightMap);
+//	    		}
+    		}
+    		else if(listOfWeightMaps.size() == 1){
+    			maxWeightMap.putAll(listOfWeightMaps.get(0));
+    		}	
+    	}
+//    	System.out.println(maxWeightMap);    	
+    }
+    
+    //This function returns a list of maps; each map has attributes and their weights for individual user  
+    /*private ArrayList<Map<String,Double>> getWeightMap(){
+    	ArrayList<Map<String,Double>> listOfWeightMaps = new ArrayList<Map<String,Double>>();
+    	if(listOfAttributeMaps.isEmpty()){
+    		System.out.println("List of maps is empty");
+    	}else{
+    		for(IndividualAttributeMaps aMap : listOfAttributeMaps){
+    			if(aMap.attributeWeightMap.isEmpty())
+    				continue;
+    			else
+    				listOfWeightMaps.add(aMap.attributeWeightMap);
+        	}
+    	}
+    	return listOfWeightMaps;
+    }*/
+    
+    private ArrayList<Map<String,AttributeDomain>> getDomainMap(ArrayList<IndividualAttributeMaps> maps){
+    	ArrayList<Map<String,AttributeDomain>> listOfDomainMaps = new ArrayList<Map<String,AttributeDomain>>();
+    	if(maps.isEmpty()){
+    		System.out.println("List of maps is empty");
+    	}else{
+    		for(IndividualAttributeMaps aMap : maps){
+    			if(aMap.attributeDomainMap.isEmpty())
+    				continue;
+    			else
+    				listOfDomainMaps.add(aMap.attributeDomainMap);
+        	}
+    	} 
+    	return listOfDomainMaps;
+    }
+    
+    public void setMouseOver(String username){
+    	for(IndividualAttributeMaps a : listOfAttributeMaps){    		
+    		if(username.equals(a.userName)){    			
+    			a.mouseOver = true;
+    		}
+    	}
+    }
+    
+    public boolean getMouseOver(String filename){
+    	boolean mo = false;
+    	for(IndividualAttributeMaps a : listOfAttributeMaps){    		
+    		if(filename.equals(a.userName)){    			
+    			mo = a.mouseOver;
+    		}    		
+		}
+    	return mo;
+    }
+    
+    //random color generator for each user
+    public void generateRandomColor(ArrayList<IndividualAttributeMaps> iam)
+    {
+    	colorList = new ArrayList<Color>();
+    	/*colorList.add(new Color(165,0,38));
+    	colorList.add(new Color(215,48,39));
+    	colorList.add(new Color(244,109,67));
+    	colorList.add(new Color(253,174,97));
+    	colorList.add(new Color(254,224,144));
+    	colorList.add(new Color(255,255,191));
+    	colorList.add(new Color(224,243,248));
+    	colorList.add(new Color(171,217,233));
+    	colorList.add(new Color(116,173,209));
+    	colorList.add(new Color(69,117,180));
+    	colorList.add(new Color(49,54,149));*/
+    	
+    	
+    	colorList.add(new Color(129,15,124)); //dark Purple
+    	colorList.add(new Color(0,68,27)); //dark Green
+    	colorList.add(new Color(197,27,125)); //Pink
+    	colorList.add(new Color(31,120,180)); //Blue
+    	colorList.add(new Color(140,81,10));//Brown
+    	colorList.add(new Color(244,109,67));//Orange
+    	colorList.add(new Color(0,104,55));//dark Green
+    	colorList.add(new Color(255,127,0)); //Yellow
+    	colorList.add(new Color(251,154,153));//light Pink
+    	colorList.add(new Color(2,56,88)); //dark Blue
+    	colorList.add(new Color(140,107,177));//light Purple
+    	
+    	
+    	if(iam.size()>11){    		
+    		System.out.println("More users than colors in the color map");
+    	}
+    	else{    
+        	for(int i = 0;i<iam.size();i++){
+        		if(!listOfAttributeMaps.get(i).attributeDomainMap.isEmpty()){
+        			iam.get(i).userColor = colorList.get(i);
+        		}
+        	}	
+    	}
+    	
+/*		Random random=new Random();
+		Color aColor;
+		Color aColor = colorList.get(0);
+		float red = random.nextFloat();
+		float green = random.nextFloat();
+		float blue = random.nextFloat();      
+		aColor = new Color(red, green, blue);
+
+		for(;;){    	  
+		    if(listOfUserColors.add(aColor)){
+		    	break;
+		    }
+		    else{
+		    	  red = random.nextFloat();
+		          green = random.nextFloat();
+		          blue = random.nextFloat();
+		          aColor = new Color(red,green,blue);
+		    } 
+		}            
+		return aColor;*/
+    }
+    
+    public Color generateRandomGrayColor()
+    {
+      Random random=new Random();
+      Color aColor;
+      // Probably really put this somewhere where it gets executed only once
+//      Color aColor = Color.getHSBColor(random.nextFloat(),//random hue, color
+//              0.8f,//full saturation, 1.0 for 'colorful' colors, 0.0 for grey
+//              0.8f //1.0 for bright, 0.0 for black
+//              );
+      float intensity = random.nextFloat();      
+      aColor = new Color(intensity, intensity, intensity);
+//      return new Color(red, green, blue);
+      for(;;){    	  
+          if(listOfUserColors.add(aColor)){
+        	  break;
+          }
+          else{
+        	  intensity = random.nextFloat();              
+              aColor = new Color(intensity, intensity, intensity);
+          } 
+      }            
+      return aColor;
+    }
+    
     private ChartEntry readEntry(ScanfReader scanReader, TablePane pane)
             throws IOException {
         String entryName = scanReader.scanString("%S");
@@ -613,7 +1038,7 @@ public class ValueChart extends JPanel {
                 }
                 AttributeDomain domain = attributeCell.getDomain();
                 AttributeValue value;
-                if (domain.getType() == AttributeDomainType.DISCRETE) {
+                if (domain.getType() == AttributeDomain.DISCRETE) {
                     String name = scanReader.scanString("%S");
                     value = new AttributeValue(name, domain);
                 } else { // type == AttributeDomain.CONTINUOUS
@@ -625,21 +1050,164 @@ public class ValueChart extends JPanel {
         }
         return entry;
     }
+    
+    private ChartEntry readEntryAll(ScanfReader scanReader,TablePane pane, String fname)
+            throws IOException {
+        String entryName = scanReader.scanString("%S");
+        ChartEntry entry = new ChartEntry(entryName);
+        String attributeName;        
+        while (!(attributeName = scanReader.scanString()).equals("end")) {
+//        	System.out.println(attributeName+" "+entryName);
+            //***
+            //Here we have added a special case for the entry, called "report=", this is the PDF file location of the report associated with this entry 
+            //PROBLEM: the acme scanReader reads the line in the file, but if the line has any spaces is becomes the next attribute.
+            //         so, in the valuecharts file, the user needs to specify the entire line, including the path as one single line
+            //         We suggest using "$" to replace spaces
+            //         This method also adds a double slash when the user enters a single (necessary for java opening the file)
+            if (attributeName.startsWith("report=")) {
+                File reportFileLocation = new File(attributeName.substring(7).replace("$", " ").replace("\\", "\\\\"));
+                entry.map.put("report", reportFileLocation);
 
+                //***Now create the windows necessary to hold the pdf in view
+                //build a controller
+                SwingController controller = new SwingController(); //Used for each window that controls a pdf document
+                SwingViewBuilder factory = new SwingViewBuilder(controller);
+
+                // Build a SwingViewFactory configured with the controller
+                JPanel viewerComponentPanel = new JPanel(); //the panel for which the frame sits on;
+                viewerComponentPanel = factory.buildViewerPanel();
+                // add copy keyboard command
+                ComponentKeyBinding.install(controller, viewerComponentPanel);
+                // add interactive mouse link annotation support via callback
+                controller.getDocumentViewController().setAnnotationCallback(new org.icepdf.ri.common.MyAnnotationCallback(controller.getDocumentViewController()));
+                //Use the factory to build a JPanel that is pre-configured
+                //with a complete, active Viewer UI.
+                // Open a PDF document (frame is no yet visible, but the document is opened and ready for interaction)
+                controller.openDocument(reportFileLocation.toString());
+                //Make it continuous view
+                controller.setPageFitMode(org.icepdf.core.views.DocumentViewController.PAGE_FIT_WINDOW_WIDTH, false);
+                controller.setPageViewMode(DocumentViewControllerImpl.ONE_COLUMN_VIEW, true);
+
+                // Create a JFrame to display the panel in
+                JFrame window = new JFrame("Report for " + entryName); //the windows created for the attribute, these are used to show the report. They are class variables because we need to toggle visibility from different methods
+                window.getContentPane().add(viewerComponentPanel);
+                window.pack();
+                window.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE); //we only want to hide the window, not close it.
+                window.setSize(new Dimension(800,600));
+                
+                //The Frame and controller are the only aspects of the report frame that need to be modified from elsewhere in the program (particularly AttributeCell, so they become part of the hashmap
+                entry.map.put("Report Frame", window);
+                entry.map.put("Report Controller", controller);
+
+                //Now add the outline and bookmark items to the hash map
+                OutlineItem entryItem = null;
+                Outlines entryOutlines = controller.getDocument().getCatalog().getOutlines();
+                if (entryOutlines != null) {
+                    entryItem = entryOutlines.getRootOutlineItem();
+                }
+                if (entryItem != null) {
+                    OutlineItemTreeNode outlineItemTreeNode = new OutlineItemTreeNode(entryItem);
+                    outlineItemTreeNode.getChildCount();  // Added this line
+                    Enumeration depthFirst = outlineItemTreeNode.depthFirstEnumeration();
+                    // find the node you need
+                }
+                
+                entry.map.put("OutlineItem", entryItem);
+                //entry.map.put("Outlines", entryOutlines); //this doesn't need to be added, it is only the items that are needed for locating
+                
+                
+            } else {
+//            	AttributeCellGroup grpCell = pane.getAttributeCellGroup(attributeName);  
+//            	System.out.println(pane.getAttributeCellGroup(attributeName).getName());
+//            	System.out.println(pane.rowListGroup.size());
+        		for(int i = 0; i < listOfAttributeMaps.size(); i++){
+//        			listOfAttributeMaps.get(i).printDomainMap();
+        			if(listOfAttributeMaps.get(i).userName.equals(fname)){
+//        		if(grpCell == null){
+//        			throw new IOException("(For group)attribute " + attributeName + " not found");
+//        		}
+            	AttributeValue value;
+//            	AttributeDomain grpDomain = grpCell.getDomain();
+//            	if (grpDomain.getType() == AttributeDomain.DISCRETE) {
+//                    String name = scanReader.scanString("%S");
+//                    value = new AttributeValue(name, grpDomain);
+//                } else { // type == AttributeDomain.CONTINUOUS
+//                    double x = scanReader.scanDouble();
+//                    value = new AttributeValue(x, grpDomain);
+//                }
+//                entry.map.put(attributeName, value);
+        				if(!listOfAttributeMaps.get(i).attributeDomainMap.isEmpty()){
+        					AttributeDomain domain = listOfAttributeMaps.get(i).attributeDomainMap.get(attributeName);
+        					if (domain.getType() == AttributeDomain.DISCRETE) {
+                                String name = scanReader.scanString("%S");
+                                value = new AttributeValue(name, domain);
+                            } else { // type == AttributeDomain.CONTINUOUS
+                                double x = scanReader.scanDouble();
+                                value = new AttributeValue(x, domain);
+                            }
+        					entry.map.put(attributeName, value);
+        					break;
+        				}        				
+        			}
+        		}
+    		}                
+    	}
+        return entry;
+    }
+
+    //PRINT 
+    
+    private void printlistOfAttributeMaps(ArrayList<IndividualAttributeMaps> maps){
+    	for(IndividualAttributeMaps iam : maps){
+    		iam.printDomainMap();
+    		System.out.println();
+    		iam.printWeightMap();
+    		System.out.println("---------------------------------------------");
+    	}
+    }
+    
+    private void printEntryMap(ArrayList<IndividualEntryMap> list){
+		if(list.isEmpty()){
+			System.out.println("There are no entry maps.");
+		}
+		else{
+			for(int i = 0; i<list.size(); i++){
+				System.out.println("Username: " + list.get(i).username + "\n");				
+				printChartEntry(list.get(i).entryList);
+				System.out.println("\n");
+			}
+		}
+	}
+    
+    public void printChartEntry(ArrayList<ChartEntry> list){
+		for(int i = 0; i <list.size() ; i++){
+			System.out.println("Entry: " + list.get(i).name);
+			HashMap<String,AttributeValue> map = list.get(i).map;
+			for(Map.Entry<String, AttributeValue> e : map.entrySet()){
+//				String key = e.toString();			
+				System.out.println("Attribute name: " + e.getKey() + " " + "Attribute value: " + e.getValue().weight());
+			}
+		}	
+	}
+    
+    
+    public void printAttributeColorMap(ArrayList<IndividualAttributeMaps> maps){
+    	for(IndividualAttributeMaps iam : maps){
+//    		iam.printDomainMap();
+//    		System.out.println();
+    		iam.printColorMap();
+    		System.out.println("---------------------------------------------");
+    	}
+    }
 //BOOLS
     public void showEditView(int idx) {
         setConnectingFields();
-        log.setOldAttrData(log.getDataOutput(attrData, LogUserAction.OUTPUT_STATE));
         con.constPane.setSelectedIndex(idx);
         con.frame.setVisible(true);
     }
 
     public boolean isPumpSelected() {
         return pump;
-    }
-    
-    public boolean isSortSelected() {
-    	return sort;
     }
 
     public int getDirectionSA() {
@@ -653,6 +1221,10 @@ public class ValueChart extends JPanel {
             return chartTitle;
             
         }
+    }
+    
+    public void setTopChoices(boolean tc){
+    	topChoices = tc;
     }
 
 //SHOWS/FRAMES
@@ -783,19 +1355,35 @@ public class ValueChart extends JPanel {
 
     }
     
-    public ConstructionView getCon() {
-        return con;
-    }
-
     public DisplayPanel getDisplayPanel() {
         return displayPanel;
     }
 
-    public void resetDisplay(int type, int colwd, boolean close, boolean graph) {
-        ValueChart ch = new ValueChart(con, filename, log, attrData, entryList, type, colwd, true, graph, displayUtilityWeights);
-        ch.showAbsoluteRatios = this.showAbsoluteRatios;
+    public void resetDisplay(int type, int colwd, boolean close, boolean graph,int colorOption, String user) {
+    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption);
+    	ch.showAbsoluteRatios = this.showAbsoluteRatios;   
+    	ch.userToPickAttributeColor = user;
         ch.pump = pump;
-        ch.sort = sort;
+        ch.pump_increase = pump_increase;
+        ch.sa_dir = sa_dir;
+        ch.getDisplayPanel().setScore(getDisplayPanel().score);
+        ch.getDisplayPanel().setRuler(getDisplayPanel().ruler);        
+        for (int j = 0; j < entryList.size(); j++) {
+            if (((ChartEntry) entryList.get(j)).getShowFlag()) {
+                ((ChartEntry) (ch.entryList.get(j))).setShowFlag(true);
+                ch.updateAll();
+            }
+        }
+        closeChart();
+    }
+
+    //To paint the chart using colors from attributes
+    public void resetDisplayUsingColorForAttribute(int type, int colwd, boolean close, boolean graph,int colorOption, String user) {
+    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption);
+    	ch.userToPickAttributeColor = user;
+//    	System.out.println(user);
+    	ch.showAbsoluteRatios = this.showAbsoluteRatios;    	
+        ch.pump = pump;
         ch.pump_increase = pump_increase;
         ch.sa_dir = sa_dir;
         ch.getDisplayPanel().setScore(getDisplayPanel().score);
@@ -808,12 +1396,11 @@ public class ValueChart extends JPanel {
         }
         closeChart();
     }
-
+    
     public void compareDisplay(int type, int colwd) {
-        ValueChart ch = new ValueChart(con, filename, log, type, colwd, false, show_graph, displayUtilityWeights); // TODO
-        ch.showAbsoluteRatios = this.showAbsoluteRatios;
+        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER);
+        ch.showAbsoluteRatios = this.showAbsoluteRatios; 
         ch.pump = pump;
-        ch.sort = sort;
         ch.pump_increase = pump_increase;
         ch.sa_dir = sa_dir;
         ch.getDisplayPanel().setScore(getDisplayPanel().score);
@@ -840,16 +1427,14 @@ public class ValueChart extends JPanel {
     void showVC() {
         chartFrame = new JFrame("ValueChart for " + chartTitle);
         chartFrame.getContentPane().setLayout(new BoxLayout(chartFrame.getContentPane(), BoxLayout.Y_AXIS));
-        if (displayType == SIDE_DISPLAY) {
-            pnlOpt = new SensitivityAnalysisOptions(this);
-            chartFrame.getContentPane().add(pnlOpt);
-        }
+//        if (displayType == SIDE_DISPLAY) {
+//            pnlOpt = new SensitivityAnalysisOptions(this);
+//            chartFrame.getContentPane().add(pnlOpt);
+//        }
         chartFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         chartFrame.getContentPane().add(this);
-
         chartFrame.pack();
         chartFrame.setVisible(true);
-
     }
 
     private class DisplayDialog extends JDialog {
@@ -872,8 +1457,6 @@ public class ValueChart extends JPanel {
             if (mainPane != null) {
                 mainPane.updateSizesAndHeights();
                 mainPane.revalidate();
-                alignDisplayPanel();
-                displayPanel.revalidate();
             }
         }
     }
@@ -957,7 +1540,7 @@ public class ValueChart extends JPanel {
             last.elt = elt;
             last.domain = domain;
             if (domain != null) {
-                if (domain.getType() == AttributeDomainType.DISCRETE) {
+                if (domain.getType() == AttributeDomain.DISCRETE) {
                     DiscreteAttributeDomain d = ((DiscreteAttributeDomain) domain);
                     last.weight = (d.getEntry(elt)).weight;
                 } else {
@@ -974,7 +1557,7 @@ public class ValueChart extends JPanel {
                     base.dragY = dragY;
                     //if (east)
                     base.mouseHandler.setEastRollup(base);
-                    /*	    			else
+                 /*   	    			else
                      base.mouseHandler.setWestRollup(base);*/
                     base.mouseHandler.eastRollupStretchDrag(delY);
                     updateAll();
@@ -1008,258 +1591,5 @@ public class ValueChart extends JPanel {
             reset();
         }
     }
-    
-    
-    void renderAttribute(TablePane pane, AttributeData a) {
-        BaseTableContainer container;
-        double hr = a.getWeight();
-        String name = a.getName();
 
-        if (a.isAbstract()) {
-            TablePane subpane = new TablePane();
-            if (chartTitle == null) {
-                // this is the first attribute level, so set the title of the
-                // window to the main title of the ValueChart
-                chartTitle = name.replace('_', ' ');
-            }
-            for (AttributeData c : a.getAbstract().getChildren()) {
-                renderAttribute(subpane, c);
-            }
-            container = new BaseTableContainer(subpane, name, this, colWidth);
-        } else {
-            AttributePrimitiveData prim = a.getPrimitive();
-            AttributeDomain domain = prim.getDomain();
-
-            AttributeCell cell = new AttributeCell(this, prim);
-            cell.setColWidth(colWidth);
-            cell.setColor(prim.getColor());
-            cell.setUnits(prim.getUnitsName());
-
-            container = new BaseTableContainer(cell, name, this, colWidth);
-        }
-
-        pane.addRow(container);
-        container.setHeightRatio(hr);
-        container.setRollUpRatio(hr);
-        container.setData(a);
-    }
-
-    void renderMainPaneAttributes() {
-        for (AttributeData a : attrData) {
-            renderAttribute(mainPane, a);
-        }
-    }
-
-    void updateMainPane() {
-        for (BaseTableContainer b : mainPane.getRowList()) {
-            b.updateSize();
-        }
-    }
-
-    // TODO: to be adjusted, not currently accurate
-    double getMainPaneHeight() {
-        return mainPane.getHeight();
-    }
-
-    void rebuildMainPane() {
-        mainPane.fillInEntries(entryList);
-
-        mainPaneWithNames = new JPanel();
-        mainPaneWithNames.setLayout(new BoxLayout(mainPaneWithNames, BoxLayout.Y_AXIS));
-
-        mainEntryNames = new EntryNamePanel(entryList, colWidth, mainPane.getDepth(), true, this);
-        JPanel pnlBottom = new JPanel();
-        pnlBottom.setLayout(new BoxLayout(pnlBottom, BoxLayout.X_AXIS));
-        pnlBottom.add(Box.createHorizontalGlue());
-        pnlBottom.add(mainEntryNames);
-
-        mainPaneWithNames.add(mainPane);
-        mainPaneWithNames.add(pnlBottom);
-
-        removeAll();
-
-        /*      if (displayType == SIDE_DISPLAY){ 
-         setLayout (new BoxLayout (this, BoxLayout.X_AXIS));
-         add(mainPaneWithNames);
-         }
-         else{ 
-         setLayout (new BoxLayout (this, BoxLayout.Y_AXIS));
-         add(mainPaneWithNames);
-         if (displayType != SEPARATE_DISPLAY){ 
-         add (Box.createVerticalStrut(colWidth));
-         add (Box.createGlue());
-         }
-         }*/
-
-        displayPanel = new DisplayPanel(colWidth);
-        displayPanel.setRootPane(mainPane);
-        displayPanel.setEntries(entryList);
-
-
-        pnlDisp = new JPanel();
-        pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
-        pnlDom = new DomainValues(this);
-        if (displayType == SIDE_DISPLAY) {
-            pnlDisp.add(Box.createHorizontalGlue());
-        } else {
-            pnlOpt = new SensitivityAnalysisOptions(this);
-            pnlOpt.setAlignmentX(Component.LEFT_ALIGNMENT);
-            pnlDisp.add(pnlOpt);
-            //Note: subtracted 1 from mainPane depth, this might cause a problem if there is only one level.
-            pnlOpt.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidth + (show_graph ? graphWidth : 0), displayHeight));
-            pnlOpt.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidth, displayHeight));
-        }
-        pnlDisp.add(Box.createHorizontalGlue());
-        pnlDisp.add(displayPanel);
-
-        displayWithNames = new JPanel();
-        displayWithNames.setLayout(new BoxLayout(displayWithNames, BoxLayout.Y_AXIS));
-        displayEntryNames = new EntryNamePanel(entryList, colWidth, 0, false, this);
-        JPanel pnlNames = new JPanel();
-        pnlNames.setLayout(new BoxLayout(pnlNames, BoxLayout.X_AXIS));
-        pnlNames.add(Box.createHorizontalGlue());
-        //pnlNames.add(displayEntryNames);
-        pnlNames.add(Box.createRigidArea(new Dimension(colWidth, 0)));
-        displayWithNames.add(Box.createVerticalGlue());
-        displayWithNames.add(pnlDisp);
-        displayWithNames.add(pnlNames);
-
-        //int mainWidth = (entryList.size()+mainPane.getDepth())*colWidth;
-        int mainWidth = entryList.size() * colWidth;
-///**/  int dispWidth = entryList.size()*colWidth + colWidth;
-        int dispWidth = entryList.size() * colWidth + colWidth;
-
-        if (displayType == SIDE_DISPLAY) {
-            displayPanel.setMaximumSize(new Dimension(dispWidth, 10000));
-            displayPanel.setMinimumSize(new Dimension(dispWidth, 0));
-            //mainPaneWithNames.setAlignmentY(0.0f);
-        }
-
-        graphWidth = (show_graph ? graphWidth : 0);
-
-        mainPaneWithNames.setMaximumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 10000));
-        mainPaneWithNames.setMinimumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 0));
-        mainPaneWithNames.setPreferredSize(
-                new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, displayType == SIDE_DISPLAY ? displayHeight * 2 - 50 : displayHeight));
-
-        int w = ((displayType == SIDE_DISPLAY) ? mainWidth + 40 : dispWidth) + colWidth;//no real reason why it's 40
-
-        if (displayType == SIDE_DISPLAY) {
-            displayWithNames.setMaximumSize(new Dimension(w, 10000));
-            displayWithNames.setMinimumSize(new Dimension(w, 0));
-            displayWithNames.setPreferredSize(new Dimension(w, displayHeight * 2 - 50));
-        } else {
-            displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
-            displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
-            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, displayHeight-50));//- and rev x, y
-            // seems to work with -50 to get rid of unnecessary padding. TODO resize is weird
-        }
-        mainPane.updateSizesAndHeights();
-        alignDisplayPanel();
-        
-        if (displayType == SEPARATE_DISPLAY) {
-            dialog = new DisplayDialog(chartFrame, "Total Scores", displayWithNames);
-        }
-        if (displayType == DEFAULT_DISPLAY) {
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            add(displayWithNames);
-            add(Box.createRigidArea(new Dimension(0, 5)));
-        }
-        if (displayType == SIDE_DISPLAY) {
-            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-            add(mainPaneWithNames);
-            add(Box.createHorizontalStrut(40));//-
-            add(Box.createGlue());
-            add(displayWithNames);
-        } else {
-            add(mainPaneWithNames);
-            if (displayType != SEPARATE_DISPLAY) {
-                //add (Box.createVerticalStrut(40));
-                //add (Box.createGlue());
-            }
-            add(Box.createVerticalStrut(10));
-        }
-    }
-    
-
-    
-    public boolean logAttribute(int outputType, String msg) {
-        if (outputType == LogUserAction.OUTPUT_WEIGHT) {
-            return log.logAttributeWeight(attrData, msg);
-        }
-        else if (outputType == LogUserAction.OUTPUT_STATE) {
-            return log.logAttributeState(attrData, msg);
-        }
-
-        return false;
-    }
-    
-    public boolean logState() {
-        int temp = log.getVerbosity();
-        log.setVerbosity(LogUserAction.LOG_ALL);
-        boolean res = log.logAttributeState(attrData, "");
-        log.setVerbosity(temp);
-        return res;
-    }
-    
-    public boolean logConstruction() {
-        return log.logConstruction(attrData);
-    }
-    
-    public boolean logUtility(AttributeData data) {
-        return log.logUtility(data);
-    }
-    
-    public boolean logPump(String pumpAttr, boolean isInc) {
-        return log.logPump(attrData, pumpAttr, isInc);
-    }
-    
-    public boolean logDrag(AttributeData attr1, AttributeData attr2) {
-        return log.logDrag(attr1, attr2);
-    }
-    
-    public String outputAttributes(ColorList colors) {
-        String data = "";
-        for (AttributeData a : attrData) {
-            data = data + a.getObjectiveOutput(colors, 0);
-        }
-        return data;
-    }
-    
-    public boolean logString(String str, String msg) {
-        return log.log(str, msg);
-    }
-    
-    public void setLogOldAttributeData(String str) {
-        log.setOldAttrData(str);
-    }
-    
-    public void setLogVerbosity(int v) {
-        log.setVerbosity(v);
-    }
-
-    public LogUserAction getLog() {
-        return log;
-    }
-
-    public void setLog(LogUserAction log) {
-        this.log = log;
-    }
-    
-    public void updateHeaders() {
-        if (mainPane == null) return;
-        Iterator<BaseTableContainer> it;
-        for (it = mainPane.getRows(); it.hasNext();) {
-            BaseTableContainer btc = it.next();
-            btc.updateHeadersRecursively();
-        }
-    }
-    
-    public void alignDisplayPanel() {
-        displayPanel.setPrefHeight(mainPane.getHeight());
-        displayPanel.setMaximumSize(displayPanel.getPreferredSize());
-        displayPanel.setMinimumSize(displayPanel.getPreferredSize());
-        pnlDisp.setPreferredSize(mainPane.getSize());
-        pnlDisp.setMaximumSize(mainPane.getSize());
-    }
 }

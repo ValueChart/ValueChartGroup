@@ -18,7 +18,7 @@ import org.icepdf.ri.common.views.DocumentViewControllerImpl;
 public class EntryNamePanel extends JPanel implements ActionListener {
 
     private static final long serialVersionUID = 1L;
-//    public static Font LABELFONT = new Font("Verdana", Font.BOLD, 15);
+//    public static Font LABELFONT = new Font("Verdana", Font.BOLD, 12);
     public static Font LABELFONT = new Font("Verdana", Font.PLAIN, 12);
     public static final AffineTransform NINETY =
             new AffineTransform(0.0, -1.0, 1.0, 0.0, 0.0, 0.0);
@@ -313,7 +313,7 @@ public class EntryNamePanel extends JPanel implements ActionListener {
                         < ((i * colWidth) + hity + colWidth)) {
                     idx = i;
                     
-                    EntryNamePanel.this.setToolTipText("<html><blockquote><left><font size=\"6\">" + labelList.get(i).toString().replace('_', ' ') + "</left></blockquote></html>");
+                    EntryNamePanel.this.setToolTipText("<html><blockquote><left><font size=\"4\">" + labelList.get(i).toString().replace('_', ' ') + "</left></blockquote></html>");
                     
                     break;
                 }

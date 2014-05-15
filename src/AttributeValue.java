@@ -12,7 +12,7 @@ public class AttributeValue
 	//-for discrete attribute, set value and domain
 	public AttributeValue (String s, AttributeDomain d){
 		str = s;
-		if (d.getType() != AttributeDomainType.DISCRETE)
+		if (d.getType() != AttributeDomain.DISCRETE)
 			throw new IllegalArgumentException ("Symbolic values must be associated with discrete domains");	    
 		try{
 			((DiscreteAttributeDomain)d).weight(s);
@@ -25,7 +25,7 @@ public class AttributeValue
 	//-for continuous attribute, set value and domain
 	public AttributeValue (double n, AttributeDomain d){
 		num = n;
-		if (d.getType() != AttributeDomainType.CONTINUOUS)
+		if (d.getType() != AttributeDomain.CONTINUOUS)
 			throw new IllegalArgumentException ("Numeric values must be associated with continous domains");
 		try{
 			((ContinuousAttributeDomain)d).weight(n);
@@ -56,7 +56,7 @@ public class AttributeValue
 	//returns the weight value of the attribute
 	public double weight()
 	 {
-	   if (domain.getType() == AttributeDomainType.DISCRETE)
+	   if (domain.getType() == AttributeDomain.DISCRETE)
 	    { return ((DiscreteAttributeDomain)domain).weight (str);
 	    }
 	   else

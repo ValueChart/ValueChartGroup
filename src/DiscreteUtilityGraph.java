@@ -30,15 +30,6 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
     boolean undone;
     AttributeCell acell;
     JPanel pnl;    
-    boolean modified = false;
-    boolean fromChart = false; // graph opened by clicking on chart interface
-    
-    public static Font LABELFONT = new Font("Verdana", Font.PLAIN, 10);
-    public static Font LABELFONT_BOLD = new Font("Verdana", Font.BOLD, 10);
-    public static final AffineTransform ANGLEFONT =
-            AffineTransform.getRotateInstance(-Math.PI / 6.0);
-    public static Font VLABELFONT = LABELFONT.deriveFont(ANGLEFONT);
-    public static Font VLABELFONT_BOLD = LABELFONT_BOLD.deriveFont(ANGLEFONT);
     
     int getSpacing(int i){
     	int sp = 0;
@@ -51,7 +42,7 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
     	return sp;
     }
     
-    public DiscreteUtilityGraph(ValueChart ch, boolean fromCh, DiscreteAttributeDomain dd, String[] it, double[] we, String att, DefineValueFunction d, AttributeCell ac) {
+    public DiscreteUtilityGraph(ValueChart ch, DiscreteAttributeDomain dd, String[] it, double[] we, String att, DefineValueFunction d, AttributeCell ac) {
         
         //Setting variable names
         ddomain = dd;
@@ -63,7 +54,6 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         redo = new DiscreteAttributeDomain();
         dvf = d;
         acell = ac;
-        fromChart = fromCh;
         
        for(int i = 0; i < items.length; i++){
             undo.addElement(items[i], ddomain.weight(items[i]));
@@ -78,14 +68,8 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         
         addMouseListener(this);
         addMouseMotionListener(this);
-        if (chart!=null && fromChart) {
-            if (acell != null && acell.getData() != null) {
-                AttributeData attrData = acell.getData();
-                if (attrData != null)
-                    chart.setLogOldAttributeData(LogUserAction.getSingleDataOutput(attrData, LogUserAction.OUTPUT_STATE));
-            }
+        if (chart!=null)
         	showGraph();
-        }
         else
         	setGraph();        
     }
@@ -110,8 +94,7 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
     
     void setGraph(){
         pnl = new JPanel();
-        this.setPreferredSize(new Dimension(275,260));
-//        this.setPreferredSize(new Dimension(500,500));
+        this.setPreferredSize(new Dimension(275,260));        
         pnl.add(this, BorderLayout.CENTER);
     }
 
@@ -120,7 +103,6 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
     }
     
     public void mouseClicked(MouseEvent me) {
-        modified = true;
         if((me.getX()< 40) && (me.getX() > 0) && (me.getY() > 240)){
             undone = true;
             int Incre = 240 / items.length; // This is the variable that calculate how far each point should be.
@@ -190,7 +172,7 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
                 xaxis = (int)base[i].x;
                 moving = p[i];
                 clicki = i;
-                if (chart != null && fromChart)
+                if (chart != null)
                 	chart.last_int.setUndoUtil(this, items[i], 0, weights[i], ddomain);    
                 
             for(int e = 0; e < items.length; e++){
@@ -233,7 +215,6 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
     
     void movePoint(int x, int y) {
         if (moving == null) return;
-        modified = true;
         moving.setLocation(x, y);
         
         //Updating all the lines
@@ -251,7 +232,7 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
 	    //Update Value Chart
 	    if (chart!=null)        
 	        chart.updateAll();
-        if (!fromChart)
+        else
         	dvf.checkUtility(dvf.obj_sel, dvf.lbl_sel);        
         
     }
@@ -281,11 +262,9 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         String temp;
         g.setColor(Color.DARK_GRAY);
         for(int i = 0; i < items.length; i++){
-            if (chart != null && chart.displayUtilityWeights) {
-                Float test = new Float((205 - p[i].y) / 2); //converted domain values
-                temp = test.toString();
-                g.drawString(temp, (p[i].x + 5),p[i].y);
-            }
+            Float test = new Float((205 - p[i].y) / 200);
+            temp = test.toString();
+            g.drawString(temp.substring(0,3), (p[i].x + 5),p[i].y);
             s[i] = p[i].getShape();
         }
         
@@ -303,14 +282,12 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         
         //Draw the static labels
         g.setFont(new Font(null, Font.BOLD, 12));
-//        String utility_upper_bound = new String("1");
-        String utility_upper_bound = new String("Best");
-//        g.drawString(utility_upper_bound, 35, 15);
-        g.drawString(utility_upper_bound, 10, 15);
-//        String utility_lower_bound = new String("0");
-        String utility_lower_bound = new String("Worst");
-//        g.drawString(utility_lower_bound, 35, 205);
-        g.drawString(utility_lower_bound, 10, 205);
+        String utility_label = new String("Utility");
+        g.drawString(utility_label, 10, 110);
+        String utility_upper_bound = new String("1");
+        g.drawString(utility_upper_bound, 35, 15);
+        String utility_lower_bound = new String("0");
+        g.drawString(utility_lower_bound, 35, 205);
         
         //Drawing the labels from variables passed
         g.setFont(new Font(null, Font.BOLD, 13));
@@ -320,18 +297,11 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         weights = ddomain.getWeights();
         for(int i = 0; i < items.length; i++){
             if((weights[i] == 0.0) || (weights[i] == 1.0)){
-                g.setFont(new Font(null, Font.BOLD, 10));
-//            	g.setFont(VLABELFONT_BOLD);
+                g.setFont(new Font(null, Font.BOLD, 12));
             }
             else{
-                g.setFont(new Font(null, Font.PLAIN, 10));
-//            	g.setFont(VLABELFONT);
-            }
-//            if(items[i].length()>10){
-//            	String cut = items[i];
-//            	items[i] = cut.substring(0,10).concat("\n").concat(cut.substring(10,cut.length()));
-//            }
-//          g.drawString(items[i], (((Incre * i) + getSpacing(i) - 3 * (items[i].length()))) + (30 + ((int) (p[i].x - 30) / 2)), ANG_HT);
+                g.setFont(new Font(null, Font.PLAIN, 12));
+            }       
             g.drawString(items[i],(((Incre * i) + getSpacing(i) - 3 * (items[i].length()))),220);
         }
         
@@ -348,28 +318,20 @@ public class DiscreteUtilityGraph extends JPanel implements MouseListener, Mouse
         JFrame frame = new JFrame(attributeName + " utility graph");
         
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                if (modified && chart!=null && fromChart && acell != null && acell.getData() != null) {
-                    chart.logUtility(acell.getData());
-                }
-            }
-        });
+        
         //ContinuousUtilityGraph moving = new ContinuousUtilityGraph();
         //moving
         this.setPreferredSize(new Dimension(275,260));
         
         frame.getContentPane().add(this, BorderLayout.NORTH);
         frame.pack();
-        frame.setVisible(true);        
+        frame.setVisible(true);
         
         
     }
     
     
     class MoveablePoint extends Point2D.Float {
-        private static final long serialVersionUID = 1L;
-        
         int r = 4;
         Shape shape;
         public MoveablePoint(int x, int y) {

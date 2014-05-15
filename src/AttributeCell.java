@@ -7,9 +7,14 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.swing.JPanel;
 import org.icepdf.core.pobjects.OutlineItem;
+import org.icepdf.core.pobjects.Outlines;
 import org.icepdf.ri.common.ComponentKeyBinding;
+import org.icepdf.ri.common.OutlineItemTreeNode;
 import org.icepdf.ri.common.SwingController;
 import org.icepdf.ri.common.SwingViewBuilder;
 import org.icepdf.ri.common.views.DocumentViewControllerImpl;
@@ -19,33 +24,47 @@ public class AttributeCell extends JComponent {
 
     private static final long serialVersionUID = 1L;
     static public final int DEFAULT_HEIGHT = 64;
-    private Vector entryList;
+    private Vector<ChartEntry> entryList;
     private String attributeName;
-    private int colWidth = ValueChart.DEFAULT_COL_WIDTH;
+//    private int colWidth = ValueChart.DEFAULT_COL_WIDTH;
+    private int userWidth = ValueChart.DEFAULT_USER_COL_WIDTH;
+    private int padding = ValueChart.DEFAULT_PADDING_WIDTH;
+    private int colWidth;
     private Color color = Color.red;
     private ValueChart chart;
     private String units;
     private double threshold;
-    private AttributePrimitiveData data;
+    AttributeDomain domain;
     JPopupMenu domainPopup;
     JPopupMenu entryPopup;
     JMenuItem entryPopupMenuItem;
     ContGraph cg;
     DiscGraph dg;
     JObjective obj;
+    
+    double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0
+    double maxAttributeWeight;
+    
+//    ArrayList<IndividualAttributeMaps> attrMapList = null; //Added to get data from all users
+//    ArrayList<IndividualEntryMap> entryMapList = null;    
+    
     //***Part of the new submenu feature
     JPopupMenu attributeMeta = new JPopupMenu(); //***Used for the new popup menu to display images, reports (PDF), etc.
     SwingController[] controller; //Used for each window that controls a pdf document
     JFrame[] window; //the windows created for the attribute, these are used to show the report. They are class variables because we need to toggle visibility from different methods
-    JPanel[] viewerComponentPanel; //the panel for which the fram sits on;
+    JPanel[] viewerComponentPanel; //the panel for which the frame sits on;
 
-    public AttributeCell(ValueChart chart, AttributePrimitiveData data) {
+    public AttributeCell(ValueChart chart, AttributeDomain domain) {
         MouseHandler mouseHandler = new MouseHandler();
         addMouseListener(mouseHandler);
         addMouseMotionListener(mouseHandler);
         //addComponentListener(new ResizeHandler());
         this.chart = chart;
-        this.data = data;
+        this.domain = domain;
+//        this.attrMapList = attrlist;
+//        this.entryMapList = entrylist;
+        heightScalingConstant = chart.heightScalingConstant;        
+//        colWidth = chart.userWidth * attrlist.size();
     }
 
     //temp
@@ -53,8 +72,8 @@ public class AttributeCell extends JComponent {
         return attributeName;
     }
 
-    public void setData(AttributePrimitiveData d) {
-        data = d;
+    public void setDomain(AttributeDomain ad) {
+        domain = ad;
     }
 
     public double getOverallRatio() { // return overallRatio;
@@ -63,7 +82,7 @@ public class AttributeCell extends JComponent {
         while (container instanceof BaseTableContainer) {
             ratio *= ((BaseTableContainer) container).getHeightRatio();//-
             container = container.getParent().getParent();
-        }
+        }        
         return ratio;
     }
 
@@ -126,14 +145,14 @@ public class AttributeCell extends JComponent {
 
     public JPopupMenu getDomainPopup() {
         if (domainPopup == null) {
-            makeHelpPopups(getDomain());
+            makeHelpPopups(domain);
         }
         return domainPopup;
     }
 
     public JPopupMenu getEntryPopup() {
         if (entryPopup == null) {
-            makeHelpPopups(getDomain());
+            makeHelpPopups(domain);
         }
         return entryPopup;
     }
@@ -143,7 +162,7 @@ public class AttributeCell extends JComponent {
         String best = "";
         String worst = "";
         DecimalFormat df = obj.decimalFormat;
-        if (domain.getType() == AttributeDomainType.DISCRETE) {
+        if (domain.getType() == AttributeDomain.DISCRETE) {
             DiscreteAttributeDomain dd = (DiscreteAttributeDomain) domain;
             String elt[] = dd.getElements();
             double wt[] = dd.getWeights();
@@ -168,7 +187,7 @@ public class AttributeCell extends JComponent {
                 }
             }
         }
-        /*        if (domain.getType() == AttributeDomain.DISCRETE){ 
+                if (domain.getType() == AttributeDomain.DISCRETE){ 
          DiscreteAttributeDomain dd = (DiscreteAttributeDomain)domain;
          String[] elements = dd.getElements();
          String msg = null;
@@ -186,7 +205,7 @@ public class AttributeCell extends JComponent {
          rangeMsg += " -> [" + cd.weight(cd.getMin()) + ", " +
          cd.weight(cd.getMax()) + "]";
          domainPopup.add(rangeMsg);
-         }*/
+         }
         String msg = "";
         msg = "BEST: " + best;
         domainPopup.add(msg);
@@ -202,29 +221,29 @@ public class AttributeCell extends JComponent {
 
     }
 
-    //This is added to display utility graph
+//This is added to display utility graph
     public void getUtility(AttributeDomain domain) {
-        if (domain.getType() == AttributeDomainType.DISCRETE) {
+        if (domain.getType() == AttributeDomain.DISCRETE) {
             DiscreteAttributeDomain dd =
                     (DiscreteAttributeDomain) domain;
-            new DiscreteUtilityGraph(chart, true, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
+            new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
 
         } else {
             ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
-            new ContinuousUtilityGraph(chart, true, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
+            new ContinuousUtilityGraph(chart, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
         }
     }
 
     //This will make function call to get utility graph
     public void makeUtility(AttributeDomain domain) {
-        if (domain.getType() == AttributeDomainType.DISCRETE) {
+        if (domain.getType() == AttributeDomain.DISCRETE) {
             DiscreteAttributeDomain dd =
                     (DiscreteAttributeDomain) domain;
-            new DiscreteUtilityGraph(chart, true, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
+            new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
 
         } else {
             ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
-            new ContinuousUtilityGraph(chart, true, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
+            new ContinuousUtilityGraph(chart, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
         }
     }
 
@@ -241,11 +260,7 @@ public class AttributeCell extends JComponent {
     }
 
     AttributeDomain getDomain() {
-        return data.getDomain();
-    }
-
-    public AttributePrimitiveData getData() {
-        return data;
+        return domain;
     }
 
     public int getColWidth() {
@@ -374,65 +389,194 @@ public class AttributeCell extends JComponent {
 
     public void paint(Graphics g) {
         int width = getWidth();
-        int height = getHeight();
+        int cellHeight = getHeight();
         g.setColor(Color.white);
-        g.fillRect(0, 0, width, height);
-        g.setColor(Color.gray);
-        g.drawLine(0, getHeight() - 1, width, getHeight() - 1);
+        g.fillRect(0, 0, width, cellHeight);
+        g.setColor(Color.black);
+        g.drawRect(0, getHeight(), width, getHeight());
+//        int x = padding;
         int x = 0;
-        int thresholdPos = (int) (height - ((height) * threshold));
+        int thresholdPos = (int) (cellHeight - ((cellHeight) * threshold));        
 
-        for (Iterator it = entryList.iterator(); it.hasNext();) {
-            ChartEntry entry = (ChartEntry) it.next();
-            AttributeValue value = (AttributeValue) entry.map.get(attributeName);
-            int h = 0;
-            int hpos = height;
-            if (value != null) {
-                h = (int) (value.weight() * height);
-                hpos = height - h;
-            }
-            g.setColor(color);
-            int wthresh = Math.max(hpos, thresholdPos);
-            if (wthresh < height) {
-                g.setColor(Color.darkGray);
-                g.fillRect(x, wthresh, colWidth, h);
-            }
-            if (wthresh > hpos) {
-                g.setColor(color);
-                g.fillRect(x, hpos, colWidth, wthresh - hpos);
-            }
+        //need max weights for each attribute to divide each cell's height so that we get the height in pixels
+        //cellHeight was maxHeightRatio * height
+        maxAttributeWeight = chart.maxWeightMap.get(attributeName);  
 
-            g.setColor(Color.WHITE);
-            g.fillRect(x, 0, colWidth, (int) ((1 - value.weight()) * height));
+        //for each attribute  x        
+        	//for each alternative y h
+        		//for each user (drawing function)
 
-            Font f = new Font("Verdana", Font.BOLD, 10);
-            g.setFont(f);
-
-            try {
-                if (entry.getShowFlag()) {
-                    g.setColor(Color.BLACK);
-                	g.drawString(value.stringValue(), x+2, height-5);                    
-                }
-            } catch (java.lang.NullPointerException ne) {
-            }
-
-
+        
+        for(ChartEntry entryForSuperUser : entryList){
+        	//To separate a bundle of users within an alternative - white spaces
+        	x+=padding/3;
+            g.setColor(Color.white);
+            ((Graphics2D) g).setStroke(new BasicStroke());
+            g.drawLine(x-3, 0, x-3, cellHeight - 1);
+            
+            ((Graphics2D) g).setStroke(new BasicStroke());
             g.setColor(Color.lightGray);
-            x += colWidth;
-            g.drawLine(x - 1, 0, x - 1, height - 1);
+            g.drawLine(x-1, 0, x-1, cellHeight - 1); 
+            
+            for(IndividualEntryMap e : chart.listOfEntryMaps){
+    			for(ChartEntry entryForEachUser : e.entryList){
+    				if(entryForSuperUser.name.equals(entryForEachUser.name)){
+        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
+        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //
+//        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
+        	            int h = 0;
+        	            int hpos = cellHeight;
+        	            if (individualValue != null) {
+        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+        	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
+        	            }
+//        	            g.setColor(color);
+//        	            g.setColor(getUserColorFromAttributeMap(e.username));
+        	            int wthresh = Math.max(hpos, thresholdPos);
+        	            //thresholded
+        	            if (wthresh < individualHeight) {
+        	                g.setColor(Color.darkGray);
+        	                g.fillRect(x, wthresh, userWidth, h);
+        	            }
+        	            //regular
+        	            if (wthresh > hpos) {
+//        	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
+//        	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
+        	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
+        	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
+        	            }
 
-            if (x > width) {
-                break;
-            }
+        	            g.setColor(Color.WHITE);
+        	            g.fillRect(x, 0, userWidth, cellHeight - h);
+
+        	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+
+        	            try {
+        	                if (entryForEachUser.getShowFlag()) {
+        	                    g.setColor(Color.darkGray);
+        	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
+        	                }
+        	            } catch (java.lang.NullPointerException ne) {
+        	            }
+
+        	            g.setColor(Color.red); 
+        	         // Another line style: a 2 pixel-wide dot-dashed line
+//        	            Stroke thindashed = new BasicStroke(1.0f, // line width
+//        	                / cap style /BasicStroke.CAP_BUTT,
+//        	                / join style, miter limit /BasicStroke.JOIN_BEVEL, 1.0f,
+//        	                / the dash pattern/new float[] { 8.0f, 2.0f},
+//        	                / the dash phase /0.0f); / on 8, off 3, on 2, off 3 
+//        	            ((Graphics2D) g).setStroke(thindashed);
+        	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
+        	            
+        	            g.setColor(Color.lightGray);
+        	            x += userWidth;
+        	            ((Graphics2D) g).setStroke(new BasicStroke());
+        	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
+
+        	            if (x > width) {
+        	                break;
+        	            }
+    				}
+    			}
+    		}
+            
+          //To separate a bundle of users within an alternative - bold black lines
+            x+=padding/3;            
+            g.setColor(Color.white);
+            ((Graphics2D) g).setStroke(new BasicStroke());
+            g.drawLine(x-3, 0, x-3, cellHeight - 1);
+           
+            x+=padding/3;
+            g.setColor(Color.BLACK);
+            ((Graphics2D) g).setStroke(new BasicStroke());
+            g.drawLine(x-3, 0, x-3, cellHeight - 1); 
         }
 
         g.setColor(Color.lightGray);
-        g.drawLine(0, height - 1, width - 1, height - 1);
+        ((Graphics2D) g).setStroke(new BasicStroke(1));
+        g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
+        
         if (thresholdPos > 0) {
             g.setColor(Color.darkGray);
-            g.drawLine(0, thresholdPos, width - 1, thresholdPos);
+            g.drawLine(0, thresholdPos, width-2, thresholdPos);
         }
     }
+    
+    public double getHeightFromAttributeMap(String filename,String attrName){
+    	double individualHeight = 1.0;
+    	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
+    		
+    		if(filename.equals(a.userName)){
+    			
+    			if(!a.attributeWeightMap.isEmpty()){    				
+    				individualHeight = a.attributeWeightMap.get(attrName);    				
+    			}
+    		}
+    	}
+    	
+    	return individualHeight;
+    }
+       
+//    public Color chooseColor (int choice, String filename, String attrName, String user){
+    public Color chooseColor (String filename, String attrName, String entryName, String user){
+    	Color aColor = Color.BLACK;
+//    	if(choice == ValueChart.COLORFORUSER){
+//    		aColor = getUserColorFromAttributeMap(filename);
+//    	}    		
+//    	else if(choice == ValueChart.COLORFORATTRIBUTE){
+//    		aColor = getAttributeColorFromAttributeMap(attrName,user);
+//    	}    		
+    	if(!chart.topChoices){
+    		aColor = getUserColorFromAttributeMap(filename);
+    	}
+    	else{
+    		aColor = setTopAlternativeColor(filename, entryName, attrName);
+    	}
+    	return aColor;
+    }
+    
+    //Get a distinct color for every user 
+    public Color getUserColorFromAttributeMap(String filename){
+    	Color aColor = Color.DARK_GRAY;
+    	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
+    		if(filename.equals(a.userName)){
+    			aColor = a.userColor;
+    		}
+    	}
+    	return aColor;
+    }
+    
+    //Get color for attributes from different users
+    public Color getAttributeColorFromAttributeMap(String attrName, String user){
+    	Color aColor = Color.DARK_GRAY;
+    	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){    		
+    		if(user.equals(a.userName)){    			
+    			if(!a.attributeColorMap.isEmpty()){    				
+    				aColor = a.attributeColorMap.get(attrName);
+    			}
+    		}
+    	}
+    	return aColor;    	
+    }
+    
+    public Color setTopAlternativeColor(String userName, String entryName, String attrName){
+    	Color aColor = Color.GRAY;
+    	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
+    		for(IndividualEntryMap e : chart.listOfEntryMaps){
+    			if(userName.equals(a.userName) && userName.equals(e.username) && entryName.equals(a.topAlternative)){
+    				for (int j = 0; j < e.entryList.size(); j++) {
+    		            if(entryName.equals(e.entryList.get(j).name)){
+    		            	aColor = a.userColor;
+    		            }
+    		        }
+    			}
+    		}
+		}
+    	return aColor;
+    }
+    
     /* 
      private class NullSelectionModel implements SingleSelectionModel {
      public void addChangeListener(ChangeListener listener) {
@@ -478,7 +622,7 @@ public class AttributeCell extends JComponent {
         Cursor defaultCursor = null;
         boolean nearThreshold = false;
 
-        public void mouseDragged(MouseEvent e) {
+        public void mouseDragged(MouseEvent e) {/*
             int newY = e.getY() + getLocation().y;
             int delY = newY - dragY;
             dragY = newY;
@@ -493,37 +637,45 @@ public class AttributeCell extends JComponent {
                 }
                 threshold = (height - thresholdPos) / (double) (height - 1);//-
                 boolean redisplay = false;
-                for (Iterator it = entryList.iterator(); it.hasNext();) {
-                    ChartEntry entry = (ChartEntry) it.next();
-                    AttributeValue value = (AttributeValue) entry.map.get(attributeName);
-                    double h = (value != null ? value.weight() : 0);
-                    if (threshold <= 0) {
-                        if (threshold >= h && !entry.isMasked() && threshold > 0.02) {//added to fix bug0 
-                            if (entry.addMaskingAttribute(AttributeCell.this)) {
-                                redisplay = true;
-                            }
-                        } else if (threshold < h && entry.isMasked() || threshold <= 0.02) {//added to fix bug0, in 2013 changed < to <=
-                            if (entry.removeMaskingAttribute(AttributeCell.this)) {
-                                redisplay = true;
-                            }
+//                for (ChartEntry entryForSuperUser : entryList) {
+                	for(IndividualEntryMap iem : chart.listOfEntryMaps){
+            			for(ChartEntry entryForEachUser : iem.entryList){
+//            				if(entryForSuperUser.name.equals(entryForEachUser.name)){
+            					AttributeValue value = (AttributeValue) entryForEachUser.map.get(attributeName);
+            					double h = (value != null ? value.weight() : 0);
+            					if (threshold <= 0) {
+                                    if (threshold >= h && !entryForEachUser.isMasked() && threshold > 0.02) {//added to fix bug0 
+                                        if (entryForEachUser.addMaskingAttribute(attributeName)) {
+                                            redisplay = true;
+                                        }
+                                    } else if (threshold < h && entryForEachUser.isMasked() || threshold <= 0.02) {//added to fix bug0, in 2013 changed < to <=
+                                        if (entryForEachUser.removeMaskingAttribute(attributeName)) {
+                                            redisplay = true;
+                                        }
+                                    }
+                                }else {
+                                    if (threshold >= h && !entryForEachUser.isMasked() && threshold > 1.0 / ((double) height - 1.0)) {//added 2013 because bug fix above wasn't working for domain values = 0. Because height-1 might be zero, added condition 
+                                        if (entryForEachUser.addMaskingAttribute(attributeName)) {
+                                            redisplay = true;
+                                        }
+                                    } else if (threshold < h && entryForEachUser.isMasked() || threshold <= 1.0 / ((double) height - 1.0)) {//added 2013 because bug fix above wasn't working for domain values = 0. Because height-1 might be zero, added condition  
+                                        if (entryForEachUser.removeMaskingAttribute(attributeName)) {
+                                            redisplay = true;
+                                        }
+                                    }
+                                }
+            					
+//            				}
+        			  	}
+            			if (redisplay) {
+                            chart.updateDisplay();
                         }
-                    } else {
-                        if (threshold >= h && !entry.isMasked() && threshold > 1.0 / ((double) height - 1.0)) {//added 2013 because bug fix above wasn't working for domain values = 0. Because height-1 might be zero, added condition 
-                            if (entry.addMaskingAttribute(AttributeCell.this)) {
-                                redisplay = true;
-                            }
-                        } else if (threshold < h && entry.isMasked() || threshold <= 1.0 / ((double) height - 1.0)) {//added 2013 because bug fix above wasn't working for domain values = 0. Because height-1 might be zero, added condition  
-                            if (entry.removeMaskingAttribute(AttributeCell.this)) {
-                                redisplay = true;
-                            }
-                        }
-                    }
-                }
-                if (redisplay) {
-                    chart.updateDisplay();
-                }
-                repaint();
-            }
+                        repaint();
+                                    			
+        			}
+//            	}
+                    
+            }*/
         }
 
         public void mouseMoved(MouseEvent e) {

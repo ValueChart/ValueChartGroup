@@ -1,4 +1,6 @@
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 //This class is the basis of ChartEntry. To my knowledge, this class has little to do with he interface itself. One thing to note though.
 //is that HashMap is the datatype for a Chart Entry. I am not sure if this is a good idea rather than using an object. Since HashMap has certain
@@ -17,16 +19,18 @@ public class ChartEntry
 		maskingAttributes = new HashSet();
 		/**/showFlag=false;
 	}
-
+	
 	public boolean isMasked(){
 		return !maskingAttributes.isEmpty();
 	}
 
-	public boolean addMaskingAttribute (AttributeCell attr){
+//	public boolean addMaskingAttribute (AttributeCell attr){
+	public boolean addMaskingAttribute (String attr){
 		return maskingAttributes.add (attr);
 	}
 
-	public boolean removeMaskingAttribute (AttributeCell attr){
+//	public boolean removeMaskingAttribute (AttributeCell attr){
+	public boolean removeMaskingAttribute (String attr){
 	   return maskingAttributes.remove (attr);
 	}
 

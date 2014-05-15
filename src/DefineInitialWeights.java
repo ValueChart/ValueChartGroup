@@ -34,20 +34,18 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 	static final int ROW_HEIGHT = 20;
 	
 	String new_sel;
-	Vector<JObjective> objs;
+	Vector objs;
 	
-	Vector<Vector<String>> rows;
-	Vector<String> columns;
+	Vector rows, columns;
+    Vector rowstemp;
 	JTable table;	
 	TableHandler tabModel;  
 	JScrollPane scrollPane;
 	JPanel pnlTable;
 	
+	int count = 0;
 	DecimalFormat df;
 	ConstructionView con;
-	
-	JDialog SMARTERframe;
-	boolean completedSMARTER = false;
 		
 	JPopupMenu popWeighting;
 	
@@ -68,28 +66,24 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 	    menuItem.addActionListener(this);
 	    popWeighting.add(menuItem);
 	    add(Box.createRigidArea(new Dimension(0, 15)));
-		obj_map = new HashMap<String,JObjective>();
+		obj_map = new HashMap();
 	}
-	HashMap<String,JObjective> obj_map;
+	HashMap obj_map;
 	void setObjectiveList(){
-	    if (completedSMARTER) {
-	        completedSMARTER = false;
-	        return;
-	    }
-	    
 		pnlTable.removeAll();
-		objs = new Vector<JObjective>();
+		objs = new Vector();
+		rowstemp = new Vector();
 		
 		objs = con.getObjPanel().getPrimitiveObjectives();
 		
 		//create hashmap for reference
 		obj_map.clear();
-		for (Iterator<JObjective> it = objs.iterator(); it.hasNext();){
-				JObjective obj = it.next();
+		for (Iterator it = objs.iterator(); it.hasNext();){
+				JObjective obj = (JObjective)it.next();
 				obj_map.put(obj.getName(), obj);
 		}		
-		rows = new Vector<Vector<String>>();			
-		columns = new Vector<String>();	
+		rows = new Vector();			
+		columns = new Vector();	
 		
 		columns.add("");
 		columns.add("Worst");
@@ -122,22 +116,22 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 	
 	void updateWeights(){
 		JObjective obj;
-		Vector<String> entry;
+		Vector entry;
 		boolean allequal = true;
 		Double equalWeight = new Double(1.0 / objs.size());
 		for (int i=0; i<objs.size(); i++)
-			if (!(objs.get(i).getWeight().equals("*"))){
+			if (!(((JObjective)(objs.get(i))).getWeight().equals("*"))){
 				allequal = false;
 				break;
 			}
 		for (int i=0; i<objs.size(); i++){			
-			 entry = new Vector<String>();			 
-			 obj=objs.get(i);
+			 entry = new Vector();			 
+			 obj=(JObjective)objs.get(i);
 			 entry.add(obj.getName());
 			 entry.add(null);
 			 entry.add(null);
 			 double wt[] = obj.getDomain().getWeights();			 
-			 if (obj.getDomainType()==AttributeDomainType.DISCRETE){
+			 if (obj.getType()==JObjective.DISCRETE){
 			 	String elt[] = obj.getDomain().getElements();
 				 for (int j=0; j<wt.length; j++){
 					 	if (wt[j]==0.0)
@@ -150,9 +144,9 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 			 	double kt[] = obj.getDomain().getKnots();
 				 for (int j=0; j<wt.length; j++){	
 				 	if (wt[j]==0.0)
-				 		entry.set(1, (String.valueOf(obj.decimalFormat.format(kt[j]))) + " " + obj.getUnit());
+				 		entry.set(1, (String.valueOf(obj.decimalFormat.format(kt[j]))) + " " + obj.unit);
 				 	if (wt[j]==1.0)
-				 		entry.set(2, (String.valueOf(obj.decimalFormat.format(kt[j]))) + " " + obj.getUnit());				 		
+				 		entry.set(2, (String.valueOf(obj.decimalFormat.format(kt[j]))) + " " + obj.unit);				 		
 				 }
 			 }		 
 			 if (allequal){
@@ -165,37 +159,33 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 			 		obj.setWeight("0.00");
 			 	}
 			 	else
-			 		entry.add(df.format(obj.getWeightNumeric()));
+			 		entry.add(df.format(Double.valueOf(obj.getWeight()).doubleValue()));
 			 rows.add(entry);
 		}			
 
 	}
 	
-    public void addFromSMARTER(Vector<Vector<String>> rowstemp){
-        if (columns.size() < 5)
-            columns.add(3, "Ranking");
-        tabModel.fireTableStructureChanged();  
-        rows.clear();
-        rows.addAll(rowstemp);
-        tabModel.fireTableStructureChanged();
-        setWeights();   
-        repaint(); 
-	}		    	
+    public void addFromSMARTER(Vector data){
+	    	Vector entry = data;
+			entry.add(String.valueOf(count));
+			entry.add("");
+			rowstemp.add(entry);
+			tabModel.fireTableRowsInserted(rows.size(), rows.size());
+		}		    	
     
 	public void actionPerformed(ActionEvent e) {
         if ("SMARTER...".equals(e.getActionCommand())) {
-        	WeightingBySMARTER wbs = new WeightingBySMARTER(con, false);
-        	String problem = "";
-        	if (con != null && con.chart != null) problem = con.chart.getChartTitle();
-        	wbs.startWeighting(problem);
-        	wbs.showFrame();
+        	count = 1;	//reset counter;
+        	WeightingBySMARTER wbs = new WeightingBySMARTER();
+        	wbs.startWeighting();
+        	rowstemp.clear();
         }
         if ("Set equal weights".equals(e.getActionCommand())) {
         	double w = 1.0/(double)rows.size();
         	
 			//update display
         	for (int i=0; i<rows.size(); i++){
-			Vector<String> v = rows.get(i);
+			Vector v = (Vector)rows.get(i);
 			v.set(3, String.valueOf(df.format(w)));
 			tabModel.fireTableCellUpdated(i, 4);
 
@@ -217,65 +207,210 @@ public class DefineInitialWeights extends JPanel implements ActionListener{
 		}
 	}
 	
-    void setWeights(){
-        int K=objs.size();
-        int k=1;
-        //double weight[]=new double[K];
-        double x=0;
-        Vector<Double> weights = new Vector<Double>();
-        for (int i=0; i<K; i++){                
-            //weight computation
-            x=0; 
-            for (int j=k; j<=K; j++)
-                x = x + (1.0 / j);  
-            double w = x/K;
-            k++;
-            weights.add(w);
-        }
+	class WeightingBySMARTER extends JPanel implements ActionListener{		
+		private static final long serialVersionUID = 1L;
 
-        for (int i=0; i<(K-1); i++){
-            Vector<String> v = rows.get(i);
-            boolean tied = false;
-            Vector<String> next = rows.get(i+1);
-            if (v.get(3).equals(next.get(3))){
-                int tie = Integer.valueOf(String.valueOf(v.get(3))).intValue();//1
-                double tot = weights.get(i);
-                tied = true;
-                int tiecount = 1;
-                Vector<String> nx = next;
-                while(tied == true){    
-                    tied=false;                     
-                    i++;
-                    tiecount++;
-                    tot = tot + weights.get(i);     
-                    if (i<(K-1)){
-                        nx = rows.get(i+1);
-                        if (nx.get(3).equals(String.valueOf(tie))){
-                            tied=true;
-                        }
-                    }
-                }
-                double tieweight = tot/(double)tiecount;
-                for (int j=0; j<K; j++){
-                    Vector<String> vec = rows.get(j);
-                    if(vec.get(3).equals(String.valueOf(tie)))
-                        weights.set(j, tieweight);
-                }
-            }
-        }       
-        for (int i=0; i<K; i++){                    
-            //update display
-            Vector<String> v = rows.get(i);
-            v.set(4, df.format(weights.get(i)));
-            tabModel.fireTableCellUpdated(i, 4);
+		JDialog frame;
+		
+		String q1 = "Imagine the worst possible alternative (i.e. scoring 0 on all objectives), and for some reason you were required to choose it. ";
+		String q2 = "If you can choose just one objective to improve from its WORST value to its BEST, which would you choose to improve? ";
+		String q3 = "Next, imagine that you are stuck with the worst possible alternative and allowed to improve any objective EXCEPT ";
+		String q4 = " from its worst value to its best.  Which would it be?";
+		String q5 = " is the last objective that you would choose to improve.  Click OK to complete the SMARTER weighting technique.";
+		JButton btnSelect; 
+		JButton btnCancel;
+		
+        JTextArea txtQ;
+    	JTable tableWiz;	
+    	DefaultTableModel tabModelWiz;  
+    	Vector wizRows;
+    	Vector wizCols;
+		
+		String sel;		// string of selected objective
+		boolean is_first;	//to determine which string to display
+		
+		WeightingBySMARTER(){			
+		}
+		
+		void startWeighting(){
+		    txtQ = new JTextArea(q1 + q2);	
+	        txtQ.setLineWrap(true);
+	        txtQ.setWrapStyleWord(true);	
+	        txtQ.setRows(5);
+	        txtQ.setFont(new Font("Arial", Font.BOLD, 12));
+	        
+	        wizCols = new Vector();
+	        wizCols.addAll(columns.subList(0, 3));
+			wizRows = new Vector();
+	        
+			Vector entry;
+			
+			for (int i=0; i<objs.size(); i++){
+				 Vector e = new Vector();
+				 e = (Vector)rows.get(i);
+				 entry = new Vector();
+				 entry.addAll(e.subList(0, 3));
+				 wizRows.add(entry);
+			}			
 
-            //update objective weight
-            JObjective obj = (JObjective)obj_map.get(v.get(0));
-            obj.setWeight(df.format(weights.get(i)));
-        }
-        con.btnOK.setEnabled(true);
-    }
-    
+			//set up table model and component
+			tabModelWiz = new DefaultTableModel();
+			tabModelWiz.setDataVector(wizRows, wizCols);		
+			tableWiz = new JTable(tabModelWiz);        
+	        tableWiz.setPreferredScrollableViewportSize(new Dimension(350, Math.min(wizRows.size() * 16, 150)));
+	        tableWiz.setAutoCreateColumnsFromModel(true);
+	        tableWiz.setRowSelectionAllowed(true);      
+	        tableWiz.setRowSelectionInterval(0, 0);
+	        tableWiz.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+	        JScrollPane scrollPane = new JScrollPane(tableWiz);	        
+
+	        btnSelect = new JButton("Select");
+	        btnSelect.addActionListener(this);
+	        btnSelect.setActionCommand("btnSelect");		
+	        
+	        btnCancel = new JButton("Cancel");
+	        btnCancel.addActionListener(this);
+	        btnCancel.setActionCommand("btnCancel");		 
+	        
+	        JPanel pnlButtons = new JPanel(); 
+	        pnlButtons.setLayout(new BoxLayout(pnlButtons, BoxLayout.LINE_AXIS));
+	        pnlButtons.add(Box.createHorizontalGlue());
+	        pnlButtons.add(btnSelect);
+		    pnlButtons.add(Box.createRigidArea(new Dimension(10, 0)));
+	        pnlButtons.add(btnCancel);
+		    
+	        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+	        add(txtQ);
+	        Dimension dimarea = new Dimension(0, 20);
+	        add(Box.createRigidArea(dimarea));
+	        add(scrollPane);
+	        add(Box.createRigidArea(dimarea));
+	        add(pnlButtons);
+	        add(Box.createRigidArea(new Dimension(0, 10)));
+	        
+	        setBorder(BorderFactory.createEmptyBorder(20,30,0,30));	        
+	        showFrame();	
+	        is_first = true;
+		}
+		
+	    public void showFrame() {    	
+	        //Create and set up the window.
+	        frame = new JDialog(con.frame, "SMARTER");
+	        frame.setModal(true);
+	        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	        frame.getContentPane().add(this, BorderLayout.CENTER);
+	        frame.pack();
+	        frame.setLocation(con.getX() + con.getWidth()/2 - getWidth()/2, 
+	        		con.getY() + con.getHeight()/2 - getHeight()/2);
+	        frame.setVisible(true);
+	    }
+	    
+		public void actionPerformed(ActionEvent e) {
+			if("btnSelect".equals(e.getActionCommand())){
+	            is_first = false;	
+	            int sel[] = tableWiz.getSelectedRows();
+	            //if no selection
+	            if (sel.length ==0)
+	            	return;
+	            for (int i = 0; i < sel.length; i++){
+	            	String str = tableWiz.getValueAt(sel[i], 0).toString();
+	            	addFromSMARTER((Vector)wizRows.get(sel[i]));	
+	            	wizRows.removeElementAt(sel[i]);
+	            	//adjust for removal from wizrows
+	            	for (int j=i; j<sel.length; j++)
+	            		sel[j]--;
+	            	tableWiz.addNotify();
+	            	if ((objs.size() - tableWiz.getRowCount())>1 && tableWiz.getRowCount() != 1){
+	            		q3 = q3 + " and ";
+	            	}
+	            	if (tableWiz.getRowCount()==1){
+	            		str = tableWiz.getValueAt(0, 0).toString();
+	            		txtQ.setText(str.substring(0, 1).toUpperCase() + str.substring(1, str.length()) + q5);
+	            		btnSelect.setText("OK");
+	            	}			    
+	            	else{ 
+	            		q3 = q3 + str.substring(0, 1).toUpperCase() + str.substring(1, str.length());		            
+	            		txtQ.setText(q3 + " " + q4);
+	            	}
+	            	repaint();	            
+	            	if (tableWiz.getRowCount() == 0) { //none left, disable firing.
+	            		frame.dispose();
+	            		if (columns.size() < 5)
+	            			columns.add(3, "Ranking");
+	            		tabModel.fireTableStructureChanged();  
+	            		rows.clear();
+	            		rows.addAll(rowstemp);
+	            		tabModel.fireTableStructureChanged();
+	            		setWeights();	
+	            		(DefineInitialWeights.this).repaint(); 
+	            	}
+
+	            }
+	            tableWiz.clearSelection();
+	            count++;
+			}
+			else if("btnCancel".equals(e.getActionCommand()))
+				frame.dispose();
+		}
+		void setWeights(){
+			int K=objs.size();
+			int k=1;
+			//double weight[]=new double[K];
+			double x=0;
+			Vector weights = new Vector();
+			for (int i=0; i<K; i++){				
+				//weight computation
+				x=0; 
+				for (int j=k; j<=K; j++)
+					x = x + (1.0 / j);	
+				double w = x/K;
+				k++;
+				weights.add(String.valueOf(df.format(w)));
+			}
+
+			for (int i=0; i<(K-1); i++){
+				Vector v = (Vector)rows.get(i);
+				boolean tied = false;
+				Vector next = (Vector)rows.get(i+1);
+				if (v.get(3).equals(next.get(3))){
+					int tie = Integer.valueOf(String.valueOf(v.get(3))).intValue();//1
+					double tot = Double.valueOf(String.valueOf(weights.get(i))).doubleValue();
+					tied = true;
+					int tiecount = 1;
+					Vector nx = next;
+					while(tied == true){	
+						tied=false;						
+						i++;
+						tiecount++;
+						tot = tot + Double.valueOf(String.valueOf(weights.get(i))).doubleValue();		
+						if (i<(K-1)){
+							nx = (Vector)rows.get(i+1);
+							if (nx.get(3).equals(String.valueOf(tie))){
+								tied=true;
+							}
+						}
+					}
+					double tieweight = tot/(double)tiecount;
+					for (int j=0; j<K; j++){
+						Vector vec = (Vector)rows.get(j);
+						if(vec.get(3).equals(String.valueOf(tie)))
+							weights.set(j, Double.valueOf(tieweight));
+					}
+				}
+			}		
+			for (int i=0; i<K; i++){					
+				//update display
+				Vector v = (Vector)rows.get(i);
+				v.set(4, weights.get(i));
+				tabModel.fireTableCellUpdated(i, 4);
+
+				//update objective weight
+				JObjective obj = (JObjective)obj_map.get(v.get(0));
+				obj.setWeight(weights.get(i).toString());
+			}
+			con.btnOK.setEnabled(true);
+		}
+	}
 	
 	class TableHandler extends DefaultTableModel{
 		private static final long serialVersionUID = 1L;
