@@ -1,4 +1,5 @@
 //This class is for picking colors to distinguish users or attributes 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -23,6 +24,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 
@@ -38,7 +41,8 @@ public class GroupActions extends JPanel implements ActionListener {
 	JRadioButton mostVariedHeights;
 	JRadioButton topChoice;
 	JRadioButton topTwoChoices;
-	JCheckBox showAverage;
+	JCheckBox showAverageAlternatives;
+	JCheckBox showAverageWeights;
 	
 	JComboBox<String> userList;
 	JButton remapColors;
@@ -169,12 +173,21 @@ public class GroupActions extends JPanel implements ActionListener {
         topTwoChoices.setFont(font);		
         grpDetails.add(topTwoChoices);
         
-        showAverage = new JCheckBox("Show Average");
-        showAverage.setActionCommand("showAverage");
-        showAverage.setEnabled(true);
-        showAverage.setSelected(false);
-        showAverage.addActionListener(this);
-        showAverage.setFont(font);
+        showAverageAlternatives = new JCheckBox("Show Average Alternatives");
+        showAverageAlternatives.setActionCommand("showAverageAlternatives");
+        showAverageAlternatives.setEnabled(true);
+        showAverageAlternatives.setSelected(false);
+        showAverageAlternatives.addActionListener(this);
+        showAverageAlternatives.setFont(font);
+        
+        
+        showAverageWeights = new JCheckBox("Show Average Weights");
+        showAverageWeights.setActionCommand("showAverageWeights");
+        showAverageWeights.setEnabled(true);
+        showAverageWeights.setSelected(false);
+        showAverageWeights.addActionListener(this);
+        showAverageWeights.setFont(font);
+        
         
         pnlDetails = new JPanel();        
         pnlDetails.setLayout(new BoxLayout(pnlDetails, BoxLayout.Y_AXIS));
@@ -182,10 +195,14 @@ public class GroupActions extends JPanel implements ActionListener {
 //        pnlDetails.add(allAgree);
 //        pnlDetails.add(mostVariedHeights);
         pnlDetails.add(topChoice);
-//        pnlDetails.add(topTwoChoices);                
-        pnlDetails.add(showAverage);
+//        pnlDetails.add(topTwoChoices);
+        pnlDetails.add(Box.createHorizontalStrut(5));
+        pnlDetails.add(new JSeparator(SwingConstants.HORIZONTAL));
+        pnlDetails.add(Box.createHorizontalStrut(5));
+        pnlDetails.add(showAverageAlternatives);
+        pnlDetails.add(showAverageWeights);
 //        pnlDetails.add(userList);
-        pnlDetails.add(Box.createVerticalGlue());
+//        pnlDetails.add(Box.createVerticalGlue());
 //        pnlDetails.add(Box.createGlue());
         
         pnlUserColors.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), "Apply color for:", 0, 0, font));
@@ -202,12 +219,12 @@ public class GroupActions extends JPanel implements ActionListener {
         pnlMaster = new JPanel();
         pnlMaster.setLayout(new BoxLayout(pnlMaster, BoxLayout.X_AXIS));
         pnlMaster.add(pnlUserNColors);
-        pnlMaster.add(Box.createRigidArea(new Dimension(50, 0)));
+//        pnlMaster.add(Box.createRigidArea(new Dimension(20, 0)));
         pnlMaster.add(pnlDetails);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));        
         add(pnlMaster);     
 	}
-	
+		
 	//Get a distinct color for every user 
     public Color getUserColorFromAttributeMap(String filename){
     	Color aColor = Color.BLACK;
@@ -281,8 +298,8 @@ public class GroupActions extends JPanel implements ActionListener {
 //			chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph,ValueChart.COLORFORATTRIBUTE,aUser);
 //			chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph,ValueChart.COLORFORATTRIBUTE);
 		}
-		else if("showAverage".equals(ae.getActionCommand())){
-			if (showAverage.isSelected())
+		else if("showAverageAlternatives".equals(ae.getActionCommand())){
+			if (showAverageAlternatives.isSelected())
 				chart.getDisplayPanel().setShowAvg(true);
 			else
 				chart.getDisplayPanel().setShowAvg(false);
@@ -303,6 +320,13 @@ public class GroupActions extends JPanel implements ActionListener {
 		else if("topTwoChoices".equals(ae.getActionCommand())){
 			topTwoChoices.setSelected(true);
 			userList.setEnabled(true);
+		}
+		else if("showAverageWeights".equals(ae.getActionCommand())){
+			if (showAverageWeights.isSelected())
+				chart.showAverageWeights(true);
+			else
+				chart.showAverageWeights(false);
+			chart.updateAll();
 		}
 	}
 	

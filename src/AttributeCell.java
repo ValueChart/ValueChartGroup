@@ -33,7 +33,7 @@ public class AttributeCell extends JComponent {
     private Color color = Color.red;
     private ValueChart chart;
     private String units;
-    private double threshold;
+    private double threshold;    
     AttributeDomain domain;
     JPopupMenu domainPopup;
     JPopupMenu entryPopup;
@@ -43,7 +43,7 @@ public class AttributeCell extends JComponent {
     JObjective obj;
     
     double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0
-    double maxAttributeWeight;
+    double maxAttributeWeight;    
     
 //    ArrayList<IndividualAttributeMaps> attrMapList = null; //Added to get data from all users
 //    ArrayList<IndividualEntryMap> entryMapList = null;    
@@ -63,7 +63,7 @@ public class AttributeCell extends JComponent {
         this.domain = domain;
 //        this.attrMapList = attrlist;
 //        this.entryMapList = entrylist;
-        heightScalingConstant = chart.heightScalingConstant;        
+        heightScalingConstant = chart.heightScalingConstant;
 //        colWidth = chart.userWidth * attrlist.size();
     }
 
@@ -389,11 +389,12 @@ public class AttributeCell extends JComponent {
 
     public void paint(Graphics g) {
         int width = getWidth();
-        int cellHeight = getHeight();
+        int cellHeight = getHeight();        
         g.setColor(Color.white);
         g.fillRect(0, 0, width, cellHeight);
         g.setColor(Color.black);
         g.drawRect(0, getHeight(), width, getHeight());
+        
 //        int x = padding;
         int x = 0;
         int thresholdPos = (int) (cellHeight - ((cellHeight) * threshold));        
@@ -408,6 +409,7 @@ public class AttributeCell extends JComponent {
 
         
         for(ChartEntry entryForSuperUser : entryList){
+        	
         	//To separate a bundle of users within an alternative - white spaces
         	x+=padding/3;
             g.setColor(Color.white);
@@ -423,7 +425,7 @@ public class AttributeCell extends JComponent {
     				if(entryForSuperUser.name.equals(entryForEachUser.name)){
         				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
         				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
-        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //
+        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
 //        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
         	            int h = 0;
         	            int hpos = cellHeight;
@@ -459,15 +461,9 @@ public class AttributeCell extends JComponent {
         	                }
         	            } catch (java.lang.NullPointerException ne) {
         	            }
-
-        	            g.setColor(Color.red); 
-        	         // Another line style: a 2 pixel-wide dot-dashed line
-//        	            Stroke thindashed = new BasicStroke(1.0f, // line width
-//        	                / cap style /BasicStroke.CAP_BUTT,
-//        	                / join style, miter limit /BasicStroke.JOIN_BEVEL, 1.0f,
-//        	                / the dash pattern/new float[] { 8.0f, 2.0f},
-//        	                / the dash phase /0.0f); / on 8, off 3, on 2, off 3 
-//        	            ((Graphics2D) g).setStroke(thindashed);
+        	            
+        	            //To draw weight rectangles
+        	            g.setColor(Color.red);
         	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
         	            
         	            g.setColor(Color.lightGray);
@@ -477,7 +473,7 @@ public class AttributeCell extends JComponent {
 
         	            if (x > width) {
         	                break;
-        	            }
+        	            }        	         
     				}
     			}
     		}
@@ -497,6 +493,20 @@ public class AttributeCell extends JComponent {
         g.setColor(Color.lightGray);
         ((Graphics2D) g).setStroke(new BasicStroke(1));
         g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
+        
+      //To draw the average lines
+        if(chart.showAvgWeights){
+        	int averageHeight = 0;
+    		averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
+            g.setColor(Color.BLACK);
+            g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
+            
+            g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
+            g.setFont(new Font("Verdana", Font.PLAIN, 8));            
+            g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width+3,cellHeight - averageHeight);
+            
+            
+        }
         
         if (thresholdPos > 0) {
             g.setColor(Color.darkGray);
@@ -576,6 +586,7 @@ public class AttributeCell extends JComponent {
 		}
     	return aColor;
     }
+    
     
     /* 
      private class NullSelectionModel implements SingleSelectionModel {
