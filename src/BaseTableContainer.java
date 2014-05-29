@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.border.*;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 
@@ -333,7 +334,7 @@ public class BaseTableContainer extends Box implements ActionListener {
 
 	public void updateHeader() {
         //String s;
-        Double s;
+        Double s,max,min,avg;        
         if (chart.showAbsoluteRatios) {
             //s = headerString(heightRatio * heightScale);
             s = heightRatio * heightScale;
@@ -342,23 +343,30 @@ public class BaseTableContainer extends Box implements ActionListener {
             s = heightRatio;
         }
         //*********FORMAT TEXT*********
-        //header.setText (s);
-        //header.setToolTipText (s);
-//        Integer pct = (int)(s * 100);
-        Integer pct;
+//        Integer pct;
+        Double pct_d = s * 100 * chart.heightScalingConstant;
+        DecimalFormat twoDForm = new DecimalFormat("#.##");
+        Double pct = Double.valueOf(twoDForm.format(pct_d));
 //        System.out.println(name+" "+heightRatio+" "+heightScale);
         if(table instanceof AttributeCell){
+        	AttributeCell cell = (AttributeCell) table;
+        	max = Double.valueOf(twoDForm.format(chart.maxWeightMap.get(cell.getName())*100));
+        	min = Double.valueOf(twoDForm.format(chart.minWeightMap.get(cell.getName())*100));
+        	avg = Double.valueOf(twoDForm.format(chart.averageAttributeWeights.get(cell.getName())*100));
 //        	pct = (int)Math.ceil((s *chart.heightScalingConstant * 100));
-        	pct = (int)(s *chart.heightScalingConstant * 100);
+//        	pct = s *chart.heightScalingConstant * 100;
 //        	System.out.println(name+" "+s +" "+chart.heightScalingConstant);
 //        	pct = (int)(s * 100);
         	if (getHeight() < 30) {
-                header.setText("   " + name.replace('_', ' ') + " (MAX: " + pct + "%)");
+                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<small> [MAX: " + max + "%,  MIN: "+ min + "%]</small></left></html>");
             } else {
-                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + " (MAX: " + pct + "%)</left></html>");
+                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<br>&nbsp;&nbsp;<small> [MAX: " + max + "%, MIN: " + min + "%]</small></left></html>");
             }
+//        	if(chart.showAvgWeights){
+//        		header.setText("<html><right><small> AVG:" + avg + "%</small></right></html>");
+//        	}
             //header.setText(s);
-            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') + " (" + pct + "%)</left></blockquote></html>");
+            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') + "<br><small> [MAX: " + max + "%, MIN: " + min + "%]</small></left></blockquote></html>");
             header.setFont(new Font("Verdana", Font.PLAIN, 12));
         }
         else{

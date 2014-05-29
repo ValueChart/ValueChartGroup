@@ -25,6 +25,7 @@ public class DisplayPanel extends JComponent {
 //    boolean topChoices = false;
     private TablePane rootPane;
     private int colWidth = ValueChart.DEFAULT_COL_WIDTH;
+    private int prefHeight = -1;
     private Vector<ChartEntry> entryList;
     private int userWidth = ValueChart.DEFAULT_USER_COL_WIDTH;
     private int padding = ValueChart.DEFAULT_PADDING_WIDTH;
@@ -64,7 +65,7 @@ public class DisplayPanel extends JComponent {
     			for (Iterator it = cellList.iterator(); it.hasNext();) {//for each attribute
     				AttributeCell cell = (AttributeCell) it.next();
          			weights = e.getEntryWeights(cell.getName());
-         			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());
+         			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());///chart.heightScalingConstant;
                     accumulatedRatios[j] += or * weights[i];
     			}    			
     			String srcKey = e.username;
@@ -124,11 +125,19 @@ public class DisplayPanel extends JComponent {
 
         dim.width = colWidth * entryList.size();
         setPreferredSize(dim);
-        setMaximumSize(new Dimension(colWidth * entryList.size() + colWidth * 2, 10000));
+        setMaximumSize(new Dimension(colWidth * entryList.size(), 10000));
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(colWidth * entryList.size() + colWidth * 2, getHeight());
+        return new Dimension(colWidth * entryList.size(), (prefHeight < 0 ? getHeight() : prefHeight));
+    }
+    
+    public void setPrefHeight(int height) {
+        prefHeight = height;
+    }
+    
+    public int getPrefHeight() {
+        return prefHeight;
     }
 
     public void setScore(boolean s) {
@@ -149,22 +158,22 @@ public class DisplayPanel extends JComponent {
 	  	fillMaxTotalScores();
         int numEntries = entryList.size();
         int totalWidth = getWidth();
-        int totalHeight = getHeight();
+        int totalHeight = (int) (getHeight());
         g.setColor(Color.white);
         int align_right = 0;//totalWidth - numEntries*colWidth;//
 //        g.fillRect(align_right + colWidth, 0, numEntries * colWidth, totalHeight);
-        g.fillRect(align_right + colWidth, 0, numEntries * colWidth, totalHeight);
+        g.fillRect(align_right, 0, numEntries * colWidth, totalHeight);
         if (rootPane == null) {
             return;
         }
         Vector cellList = new Vector(16);
         rootPane.getAttributeCells(cellList);
-        double[] weights;	//array of entry weights (values)
+        double[] weights;	//array of entry weights (values)6
         double[] accumulatedRatios = new double[numEntries * noOfUsers];
         int[] ypos = new int[numEntries * noOfUsers];	//position of x, starts all at 0
        
       //for each objective, get the (array)domain value of each alternative
-        int h = 0, x = align_right + colWidth;
+        int h = 0, x = align_right;
         int avgH = 0;
         int j = 0;
         //for each alternative
@@ -180,7 +189,7 @@ public class DisplayPanel extends JComponent {
     				for (Iterator it = cellList.iterator(); it.hasNext();) { 
         				AttributeCell cell = (AttributeCell) it.next();
              			weights = e.getEntryWeights(cell.getName());
-             			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());
+             			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());//chart.heightScalingConstant;
 	                    accumulatedRatios[j] += or * weights[i];
 	                    h = (int) Math.round(accumulatedRatios[j] * totalHeight) - ypos[j];
 	                    ChartEntry entry = (ChartEntry) entryList.get(i);
@@ -210,7 +219,7 @@ public class DisplayPanel extends JComponent {
     				}
     				//scores
     	            if (score) {
-    	            	int xpos = x + userWidth/4;
+    	            	int xpos = x + userWidth/6;
     	            	double maxTotalScore = accumulatedRatios[j];
 //        				if(chart.topChoices){
 //    						for(IndividualAttributeMaps iam : chart.listOfAttributeMaps){
@@ -228,24 +237,25 @@ public class DisplayPanel extends JComponent {
         	            	for(Map.Entry<String, Double> entry : maxTotalScores.entrySet()){
                     			if(entry.getKey().equals(e.username)){
                     				if(chart.getMouseOver(e.username)){
-                    					g.setFont(new Font("DEFAULT",Font.PLAIN,12));    
+                    					g.setFont(new Font("DEFAULT",Font.PLAIN,10));    
                     					g.setColor(Color.lightGray);
                     				}
                 					else{
                 						if(maxTotalScore == entry.getValue()){//if score is the max score, bold it
-                        					g.setFont(new Font("DEFAULT",Font.BOLD,12));    
+                        					g.setFont(new Font("DEFAULT",Font.BOLD,10));    
                         					g.setColor(Color.RED);
                         				}
                         				else{
                         					g.setColor(Color.darkGray);
-                        					g.setFont(new Font("DEFAULT",Font.PLAIN,12));
+                        					g.setFont(new Font("DEFAULT",Font.PLAIN,10));
                         				}
                 					}
                         		}
                         	}
 //        				}
-    	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] * 100))), xpos, totalHeight - ypos[j] - 5);
-	                    xpos = xpos + userWidth/4;
+//    	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] * chart.heightScalingConstant*100))), xpos, totalHeight - ypos[j] - 5);
+    	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] *100))), xpos, totalHeight - ypos[j] - 5);
+	                    xpos = xpos + userWidth/6;
     	            }
     				j++;
     	            x += userWidth;

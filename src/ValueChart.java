@@ -24,11 +24,11 @@ public class ValueChart extends JPanel {
 
     private static final long serialVersionUID = 1L;
     static public final int DEFAULT_COL_WIDTH = 60;
-    static public final int DEFAULT_USER_COL_WIDTH = 16;
+    static public final int DEFAULT_USER_COL_WIDTH = 20;
     static public final int DEFAULT_PADDING_WIDTH = 9;//9
     //*%* Changed display height to make it relative to the screen size
 //    static public final int DEFAULT_DISPLAY_HEIGHT = 500;
-    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .44);
+    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .48);
     //*%*
     static public final int DEFAULT_DISPLAY = 1,
             SIDE_DISPLAY = 2,
@@ -41,6 +41,7 @@ public class ValueChart extends JPanel {
     int graphWidth = 100; //width of utility graphs
     int displayType = DEFAULT_DISPLAY;
     int displayHeight = DEFAULT_DISPLAY_HEIGHT;
+    int displayPanelHeight;
     int userWidth = DEFAULT_USER_COL_WIDTH;
     int padWidth = DEFAULT_PADDING_WIDTH;
     int colWidth = DEFAULT_COL_WIDTH;
@@ -55,6 +56,7 @@ public class ValueChart extends JPanel {
     DisplayPanel displayPanel;
     EntryNamePanel displayEntryNames;
     JPanel displayWithNames;
+    JPanel pnlDisp;
     DisplayDialog dialog;
     Reader initReader = null;
     ResizeHandler resizeHandler;
@@ -70,8 +72,10 @@ public class ValueChart extends JPanel {
     double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0 
     ArrayList<IndividualAttributeMaps> listOfAttributeMaps = new ArrayList<IndividualAttributeMaps>();     //map of attributes for all users
     Map<String,Double> maxWeightMap = new HashMap<String,Double>(); //Map of attributes with maximum weights
+    Map<String,Double> minWeightMap = new HashMap<String,Double>(); //Map of attributes with minimum weights
     ArrayList<IndividualEntryMap> listOfEntryMaps = new ArrayList<IndividualEntryMap>(); //map of entries for all users
     ArrayList<HashMap<String,Double>> listOfWeightMaps = new ArrayList<HashMap<String,Double>>();
+    public HashMap<String,Double> averageAttributeWeights = new HashMap<String,Double>();;
     Set<Color> listOfUserColors = new HashSet<>();
     ArrayList<Color> colorList;
         
@@ -79,6 +83,7 @@ public class ValueChart extends JPanel {
     int colorChoice; //variable to select the purpose of color
     String userToPickAttributeColor; //choose a user to pick his attribute colors
     boolean topChoices = false;
+    boolean showAvgWeights = false;
     
     boolean pump = false;
     boolean pump_increase = true;
@@ -150,7 +155,7 @@ public class ValueChart extends JPanel {
             e.printStackTrace();
         }
 
-        showVC();
+        showVC();        
         if (isNew) {
             chartFrame.setJMenuBar(menuOptions);
         }
@@ -400,6 +405,7 @@ public class ValueChart extends JPanel {
                 throw new IOException("Unknown keyword " + keyword);
             }
         }
+        
 
         mainPane.fillInEntries(entryList);
 
@@ -435,22 +441,24 @@ public class ValueChart extends JPanel {
         displayPanel.setRootPane(mainPane);
         displayPanel.setEntries(entryList);
 
-        JPanel pnlDisp = new JPanel();
+        pnlDisp = new JPanel();        
         pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
         if (displayType == SIDE_DISPLAY) {
             pnlDisp.add(Box.createHorizontalGlue());
         } else {
-            pnlDisp.add(Box.createHorizontalStrut(93));
+//            pnlDisp.add(Box.createHorizontalStrut(0));
             pnlGroupActions = new GroupActions(this);            
             pnlDisp.add(pnlGroupActions);
-            pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup + (show_graph ? graphWidth : 0), displayHeight));
-            pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup, displayHeight));
+//            pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup + (show_graph ? graphWidth : 0), pnlGroupActions.getPreferredSize().height));
+//            pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup, pnlGroupActions.getMaximumSize().height));
+//            pnlGroupActions.setAlignmentX(Component.LEFT_ALIGNMENT);
         }
         pnlDisp.add(Box.createHorizontalGlue());
         pnlDisp.add(displayPanel);
-
+        
         displayWithNames = new JPanel();
         displayWithNames.setLayout(new BoxLayout(displayWithNames, BoxLayout.Y_AXIS));
+//        displayWithNames.add(Box.createVerticalGlue());
         displayWithNames.add(pnlDisp);
 
         //int mainWidth = (entryList.size()+mainPane.getDepth())*colWidth;
@@ -482,20 +490,20 @@ public class ValueChart extends JPanel {
         } else {
             displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
             displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
-            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, displayHeight));//- and rev x, y
+            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, (int) (displayHeight)-50));//- and rev x, y
+         // seems to work with -50 to get rid of unnecessary padding. TODO resize is weird
         }
         
         mainPane.updateSizesAndHeights();
+        alignDisplayPanel();
 
         if (displayType == SEPARATE_DISPLAY) {
             dialog = new DisplayDialog(chartFrame, "Total Scores", displayWithNames);
         }
-//        Dimension displayDim = displayWithNames.getPreferredSize();
-//        Dimension mainDim = mainPaneWithNames.getPreferredSize();
+
         if (displayType == DEFAULT_DISPLAY) {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));            
             add(displayWithNames);
-//            displayDim.height = mainDim.height;
             add(Box.createRigidArea(new Dimension(0, 5)));            
 //        }
 //        if (displayType == SIDE_DISPLAY) {
@@ -786,6 +794,10 @@ public class ValueChart extends JPanel {
     	}
     	else{
     		if(listOfWeightMaps.size() > 1){
+    			HashSet hs = new HashSet();
+    	    	hs.addAll(listOfWeightMaps);
+    	    	listOfWeightMaps.clear();
+    	    	listOfWeightMaps.addAll(hs);
     			for(HashMap<String, Double> aMap : listOfWeightMaps){
 //    				maxWeightMap = aMap;
     				for(Map.Entry<String,Double> entry : aMap.entrySet()){
@@ -796,6 +808,65 @@ public class ValueChart extends JPanel {
     						if(destValue <= srcValue){
     							maxWeightMap.remove(srcKey);
     							maxWeightMap.put(srcKey, srcValue);    							
+    						}
+    					}
+    					if(minWeightMap.containsKey(srcKey)){
+    						double destValue = minWeightMap.get(srcKey);
+    						if(destValue >= srcValue){
+    							minWeightMap.remove(srcKey);
+    							minWeightMap.put(srcKey, srcValue);    							
+    						}    						
+    					}
+    					if(averageAttributeWeights.containsKey(srcKey)){
+    						double destValue = averageAttributeWeights.get(srcKey);
+    						destValue += srcValue;
+    						averageAttributeWeights.put(srcKey,destValue);
+    					}
+    					else{
+    						maxWeightMap.put(srcKey, srcValue);
+    						minWeightMap.put(srcKey, srcValue);
+    						averageAttributeWeights.put(srcKey,srcValue);
+    					}
+    						
+					}
+				}
+			}
+    		else if(listOfWeightMaps.size() == 1){
+    			maxWeightMap.putAll(listOfWeightMaps.get(0));
+    			minWeightMap.putAll(listOfWeightMaps.get(0));
+    			averageAttributeWeights.putAll(listOfWeightMaps.get(0));
+    		}	
+    	}
+    	HashMap<String,Double> averageAttributeWeights_clone = new HashMap<String,Double>();
+    	averageAttributeWeights_clone.putAll(averageAttributeWeights);
+    	for(String key : averageAttributeWeights_clone.keySet()){    		
+    		double srcValue = averageAttributeWeights.get(key)/(users.size()-1);
+    		averageAttributeWeights.remove(key);
+    		averageAttributeWeights.put(key, srcValue);
+    	}
+//    	System.out.println(minWeightMap);
+//    	System.out.println(maxWeightMap);
+//    	System.out.println(averageAttributeWeights);
+//    	System.out.println(users.size());
+	}
+    
+    private void getMinWeightMap(){    	
+//    	ArrayList<Map<String,Double>> listOfWeightMaps = getWeightMap();    	
+    	if(listOfWeightMaps.isEmpty()){
+    		System.out.println("List of weight maps is empty");
+    	}
+    	else{
+    		if(listOfWeightMaps.size() > 1){
+    			for(HashMap<String, Double> aMap : listOfWeightMaps){
+//    				maxWeightMap = aMap;
+    				for(Map.Entry<String,Double> entry : aMap.entrySet()){
+    					String srcKey = entry.getKey();
+    					double srcValue = entry.getValue();
+    					if(minWeightMap.containsKey(srcKey)){
+    						double destValue = minWeightMap.get(srcKey);
+    						if(destValue <= srcValue){
+    							minWeightMap.remove(srcKey);
+    							minWeightMap.put(srcKey, srcValue);    							
     						}
     					}else{
     						maxWeightMap.put(srcKey, srcValue);
@@ -1226,6 +1297,10 @@ public class ValueChart extends JPanel {
     public void setTopChoices(boolean tc){
     	topChoices = tc;
     }
+    
+    public void showAverageWeights(boolean b) {
+    	showAvgWeights = b;
+	}
 
 //SHOWS/FRAMES
     
@@ -1436,7 +1511,7 @@ public class ValueChart extends JPanel {
         chartFrame.pack();
         chartFrame.setVisible(true);
     }
-
+    
     private class DisplayDialog extends JDialog {
 
         private static final long serialVersionUID = 1L;
@@ -1457,6 +1532,8 @@ public class ValueChart extends JPanel {
             if (mainPane != null) {
                 mainPane.updateSizesAndHeights();
                 mainPane.revalidate();
+                alignDisplayPanel();
+                pnlDisp.revalidate();
             }
         }
     }
@@ -1591,5 +1668,59 @@ public class ValueChart extends JPanel {
             reset();
         }
     }
+    
 
+    public void alignDisplayPanel() {
+        displayPanel.setPrefHeight((int) (mainPane.getHeight()/this.heightScalingConstant));
+        displayPanel.setMaximumSize(displayPanel.getPreferredSize());
+        displayPanel.setMinimumSize(displayPanel.getPreferredSize());
+        pnlGroupActions.setPreferredSize(new Dimension(displayPanel.getPreferredSize().width,displayPanel.getPreferredSize().height));
+        pnlGroupActions.setMaximumSize(displayPanel.getPreferredSize());
+        pnlGroupActions.setMinimumSize(displayPanel.getPreferredSize());
+        displayWithNames.setMaximumSize(new Dimension (mainPane.getSize().width, displayPanel.getMaximumSize().height));
+//        displayWithNames.setMinimumSize(new Dimension(mainPane.getSize().width, displayPanel.getMinimumSize().height));
+//        displayWithNames.setPreferredSize(new Dimension(mainPane.getSize().width, displayPanel.getPreferredSize().height));
+//        pnlDisp.setPreferredSize(mainPane.getSize());
+//        pnlDisp.setMaximumSize(mainPane.getSize());
+//        displayPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 10));
+//        displayWithNames.setBorder(BorderFactory.createLineBorder(Color.CYAN, 10));
+//        pnlDisp.setBorder(BorderFactory.createLineBorder(Color.RED, 10));
+    }
+    
+/*    public void getDisplayPanelHeight(){
+    	int numEntries = entryList.size();
+    	Vector cellList = new Vector(16);
+        mainPane.getAttributeCells(cellList);
+        int cellHeight;
+        double maxAttributeWeight;
+        int totalDisplayHeight = 0;
+    	for (int i = 0; i < numEntries; i++) {
+    		for(IndividualEntryMap e : this.listOfEntryMaps){
+    			for (Iterator it = cellList.iterator(); it.hasNext();) {
+    				totalDisplayHeight = 0;
+    				AttributeCell cell = (AttributeCell) it.next();
+    				cellHeight = cell.getHeight(); 
+    				double individualHeightRatio = cell.getHeightFromAttributeMap(e.username,cell.getName()); //get heightRatio for each rectangle from the attribute weight maps
+    				maxAttributeWeight = this.maxWeightMap.get(cell.getName());
+    				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);
+    				totalDisplayHeight += individualHeight;
+    			}
+    		}
+    		System.out.println(totalDisplayHeight);
+    	}
+    }*/
+    
+    
+    private void fillAverageWeights() {
+		//for each attribute
+			//for each user    	    		
+		for(IndividualEntryMap e : this.listOfEntryMaps){
+			int users = 0;
+			for(ChartEntry entryForEachUser : e.entryList){
+//				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps
+				
+			}
+		}    	
+	}
+	
 }
