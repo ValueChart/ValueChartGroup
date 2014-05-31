@@ -28,7 +28,7 @@ public class ValueChart extends JPanel {
     static public final int DEFAULT_PADDING_WIDTH = 9;//9
     //*%* Changed display height to make it relative to the screen size
 //    static public final int DEFAULT_DISPLAY_HEIGHT = 500;
-    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * .48);
+    static public final int DEFAULT_DISPLAY_HEIGHT = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * 0.52);
     //*%*
     static public final int DEFAULT_DISPLAY = 1,
             SIDE_DISPLAY = 2,
@@ -476,8 +476,9 @@ public class ValueChart extends JPanel {
 
         mainPaneWithNames.setMaximumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 10000));
         mainPaneWithNames.setMinimumSize(new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, 0));
+        mainPane.setPreferredSize(new Dimension(mainPane.getPreferredSize().width, displayHeight));
         mainPaneWithNames.setPreferredSize(
-                new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, displayType == SIDE_DISPLAY ? displayHeight * 2 - 50 : displayHeight));
+                new Dimension(mainWidth + ((mainPane.getDepth() -1) * headerWidth) + graphWidth, displayType == SIDE_DISPLAY ? displayHeight * 2 - 50 : displayHeight + EntryNamePanel.ANG_HT));
 
         int w = ((displayType == SIDE_DISPLAY) ? mainWidth + 40 : dispWidth) + colWidth;//no real reason why it's 40
 
@@ -490,12 +491,11 @@ public class ValueChart extends JPanel {
         } else {
             displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
             displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
-            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, (int) (displayHeight)-50));//- and rev x, y
+            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, (int) (displayHeight/heightScalingConstant)));//- and rev x, y
          // seems to work with -50 to get rid of unnecessary padding. TODO resize is weird
         }
         
         mainPane.updateSizesAndHeights();
-        alignDisplayPanel();
 
         if (displayType == SEPARATE_DISPLAY) {
             dialog = new DisplayDialog(chartFrame, "Total Scores", displayWithNames);
@@ -523,6 +523,7 @@ public class ValueChart extends JPanel {
 //                add (Box.createGlue());
 //            }
         }
+        alignDisplayPanel();
     }
     private void readAttributes(ScanfReader scanReader, TablePane pane, HashMap colorList)
             throws IOException {
@@ -1508,6 +1509,8 @@ public class ValueChart extends JPanel {
 //        }
         chartFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         chartFrame.getContentPane().add(this);
+//        chartFrame.getContentPane().setSize(chartFrame.getContentPane().getSize().width, Toolkit.getDefaultToolkit().getScreenSize().height);
+        chartFrame.validate();
         chartFrame.pack();
         chartFrame.setVisible(true);
     }
@@ -1671,20 +1674,21 @@ public class ValueChart extends JPanel {
     
 
     public void alignDisplayPanel() {
-        displayPanel.setPrefHeight((int) (mainPane.getHeight()/this.heightScalingConstant));
+        int height = (int) (mainPane.getHeight()/this.heightScalingConstant);
+        int width = mainPane.getSize().width;
+
+        displayPanel.setPrefHeight(height);
         displayPanel.setMaximumSize(displayPanel.getPreferredSize());
         displayPanel.setMinimumSize(displayPanel.getPreferredSize());
-        pnlGroupActions.setPreferredSize(new Dimension(displayPanel.getPreferredSize().width,displayPanel.getPreferredSize().height));
-        pnlGroupActions.setMaximumSize(displayPanel.getPreferredSize());
-        pnlGroupActions.setMinimumSize(displayPanel.getPreferredSize());
-        displayWithNames.setMaximumSize(new Dimension (mainPane.getSize().width, displayPanel.getMaximumSize().height));
-//        displayWithNames.setMinimumSize(new Dimension(mainPane.getSize().width, displayPanel.getMinimumSize().height));
-//        displayWithNames.setPreferredSize(new Dimension(mainPane.getSize().width, displayPanel.getPreferredSize().height));
-//        pnlDisp.setPreferredSize(mainPane.getSize());
-//        pnlDisp.setMaximumSize(mainPane.getSize());
+        
+        pnlDisp.setPreferredSize(new Dimension(width, height));
+        pnlDisp.setMaximumSize(pnlDisp.getPreferredSize());
+        pnlDisp.setMinimumSize(pnlDisp.getPreferredSize());
+        
 //        displayPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 10));
 //        displayWithNames.setBorder(BorderFactory.createLineBorder(Color.CYAN, 10));
 //        pnlDisp.setBorder(BorderFactory.createLineBorder(Color.RED, 10));
+
     }
     
 /*    public void getDisplayPanelHeight(){
