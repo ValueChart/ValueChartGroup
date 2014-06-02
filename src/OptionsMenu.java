@@ -57,9 +57,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 
     	MenuTitle menu;
         menu = new MenuTitle("File");   
-        menuItem = new MenuEntry("New");
-        menu.add(menuItem);
         menuItem = new MenuEntry("Open");
+        menu.add(menuItem);
+        menuItem = new MenuEntry("Reload");
         menu.add(menuItem);
         menu.addSeparator();
         menuItem = new MenuEntry("Save"); 
@@ -190,6 +190,10 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 			ValueChartsPlus.chart = chart;
 			ValueChartsPlus.showStartView();
 		}
+		
+        if ("Reload".equals(ae.getActionCommand())) {
+            chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph,ValueChart.COLORFORUSER,null);
+        }
 		
 		if ("Save".equals(ae.getActionCommand())){
 			saveFile();
