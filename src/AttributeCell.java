@@ -408,110 +408,167 @@ public class AttributeCell extends JComponent {
         		//for each user (drawing function)
 
         
-        for(ChartEntry entryForSuperUser : entryList){
+        if(!chart.generateAvgGVC){
+        	for(ChartEntry entryForSuperUser : entryList){
+            	
+            	//To separate a bundle of users within an alternative - white spaces
+            	x+=padding/3;
+                g.setColor(Color.white);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, cellHeight - 1);
+                
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.setColor(Color.lightGray);
+                g.drawLine(x-1, 0, x-1, cellHeight - 1); 
+                
+                for(IndividualEntryMap e : chart.listOfEntryMaps){
+        			for(ChartEntry entryForEachUser : e.entryList){
+        				if(entryForSuperUser.name.equals(entryForEachUser.name)){
+            				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+            				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
+            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
+//            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
+            	            int h = 0;
+            	            int hpos = cellHeight;
+            	            if (individualValue != null) {
+            	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+            	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
+            	            }
+//            	            g.setColor(color);
+//            	            g.setColor(getUserColorFromAttributeMap(e.username));
+            	            int wthresh = Math.max(hpos, thresholdPos);
+            	            //thresholded
+            	            if (wthresh < individualHeight) {
+            	                g.setColor(Color.darkGray);
+            	                g.fillRect(x, wthresh, userWidth, h);
+            	            }
+            	            //regular
+            	            if (wthresh > hpos) {
+//            	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
+//            	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
+            	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
+            	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
+            	            }
+
+            	            g.setColor(Color.WHITE);
+            	            g.fillRect(x, 0, userWidth, cellHeight - h);
+
+            	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+
+            	            try {
+            	                if (entryForEachUser.getShowFlag()) {
+            	                    g.setColor(Color.darkGray);
+            	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
+            	                }
+            	            } catch (java.lang.NullPointerException ne) {
+            	            }
+            	            
+            	            //To draw weight rectangles
+            	            g.setColor(Color.red);
+            	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
+            	            
+            	            g.setColor(Color.lightGray);
+            	            x += userWidth;
+            	            ((Graphics2D) g).setStroke(new BasicStroke());
+            	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
+
+            	            if (x > width) {
+            	                break;
+            	            }        	         
+        				}
+        			}
+        		}
+                
+              //To separate a bundle of users within an alternative - bold black lines
+                x+=padding/3;            
+                g.setColor(Color.white);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, cellHeight - 1);
+               
+                x+=padding/3;
+                g.setColor(Color.BLACK);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, cellHeight - 1); 
+            }
         	
-        	//To separate a bundle of users within an alternative - white spaces
-        	x+=padding/3;
-            g.setColor(Color.white);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, cellHeight - 1);
+        	g.setColor(Color.lightGray);
+            ((Graphics2D) g).setStroke(new BasicStroke(1));
+            g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
             
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.setColor(Color.lightGray);
-            g.drawLine(x-1, 0, x-1, cellHeight - 1); 
-            
-            for(IndividualEntryMap e : chart.listOfEntryMaps){
-    			for(ChartEntry entryForEachUser : e.entryList){
-    				if(entryForSuperUser.name.equals(entryForEachUser.name)){
-        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
-        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
-        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
-//        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
-        	            int h = 0;
-        	            int hpos = cellHeight;
-        	            if (individualValue != null) {
-        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
-        	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
-        	            }
-//        	            g.setColor(color);
-//        	            g.setColor(getUserColorFromAttributeMap(e.username));
-        	            int wthresh = Math.max(hpos, thresholdPos);
-        	            //thresholded
-        	            if (wthresh < individualHeight) {
-        	                g.setColor(Color.darkGray);
-        	                g.fillRect(x, wthresh, userWidth, h);
-        	            }
-        	            //regular
-        	            if (wthresh > hpos) {
+          //To draw the average lines
+            if(chart.showAvgWeights){
+            	int averageHeight = 0;
+        		averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
+                g.setColor(Color.BLACK);
+                g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
+                
+                g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
+                g.setFont(new Font("Verdana", Font.PLAIN, 8));            
+                g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width,cellHeight - averageHeight);
+                
+                
+            }
+        	
+        }
+        else if(chart.generateAvgGVC){
+            for(ChartEntry entryForSuperUser : entryList){//for each criteria
+            	int totalIndividualHeight = 0;
+	            for(IndividualEntryMap e : chart.listOfEntryMaps){//for each user
+	    			for(ChartEntry entryForEachUser : e.entryList){//for each alternative
+	    				if(entryForSuperUser.name.equals(entryForEachUser.name)){
+	        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+	        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
+	        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);
+	        				int h = 0;	        	            
+	        	            if (individualValue != null) {
+	        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+	        	                totalIndividualHeight += h;	        	                
+	        	            }	
+	    				}
+	    			}
+	    		}
+	            
+	            totalIndividualHeight /= chart.users.size()-1; 
+	            int hpos = cellHeight;
+	            hpos = cellHeight - totalIndividualHeight; //height of rectangle to be drawn as origin is at top left
+	            g.setColor(color);
+	            int wthresh = Math.max(hpos, thresholdPos);
+//    	            //thresholded
+//    	            if (wthresh < totalIndividualHeight) {
+//    	                g.setColor(Color.darkGray);
+//    	                g.fillRect(x, wthresh, userWidth, h);
+//    	            }
+    	            //regular
+    	            if (wthresh > hpos) {
 //        	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
 //        	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
-        	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
-        	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
-        	            }
+//    	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
+    	                g.fillRect(x, hpos, colWidth, wthresh - hpos);            	               
+    	            }
 
-        	            g.setColor(Color.WHITE);
-        	            g.fillRect(x, 0, userWidth, cellHeight - h);
+    	            g.setColor(Color.WHITE);
+    	            g.fillRect(x, 0, colWidth, cellHeight - totalIndividualHeight);
 
-        	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+    	            g.setFont(new Font("Verdana", Font.BOLD, 10));    	            
+    	            g.setColor(Color.lightGray);
+    	            x += colWidth;
+    	            ((Graphics2D) g).setStroke(new BasicStroke());
+    	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
 
-        	            try {
-        	                if (entryForEachUser.getShowFlag()) {
-        	                    g.setColor(Color.darkGray);
-        	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
-        	                }
-        	            } catch (java.lang.NullPointerException ne) {
-        	            }
-        	            
-        	            //To draw weight rectangles
-        	            g.setColor(Color.red);
-        	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
-        	            
-        	            g.setColor(Color.lightGray);
-        	            x += userWidth;
-        	            ((Graphics2D) g).setStroke(new BasicStroke());
-        	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
-
-        	            if (x > width) {
-        	                break;
-        	            }        	         
-    				}
-    			}
-    		}
-            
-          //To separate a bundle of users within an alternative - bold black lines
-            x+=padding/3;            
-            g.setColor(Color.white);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, cellHeight - 1);
-           
-            x+=padding/3;
-            g.setColor(Color.BLACK);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, cellHeight - 1); 
-        }
-
-        g.setColor(Color.lightGray);
-        ((Graphics2D) g).setStroke(new BasicStroke(1));
-        g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
-        
-      //To draw the average lines
-        if(chart.showAvgWeights){
-        	int averageHeight = 0;
-    		averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
-            g.setColor(Color.BLACK);
-            g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
-            
-            g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
-            g.setFont(new Font("Verdana", Font.PLAIN, 8));            
-            g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width+3,cellHeight - averageHeight);
-            
-            
+    	            if (x > width) {
+    	                break;
+    	            } 
+    	            
+    	            g.setColor(Color.lightGray);
+    	            ((Graphics2D) g).setStroke(new BasicStroke(1));
+    	            g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
+            }
         }
         
-        if (thresholdPos > 0) {
-            g.setColor(Color.darkGray);
-            g.drawLine(0, thresholdPos, width-2, thresholdPos);
-        }
+//        if (thresholdPos > 0) {
+//            g.setColor(Color.darkGray);
+//            g.drawLine(0, thresholdPos, width-2, thresholdPos);
+//        }
     }
     
     public double getHeightFromAttributeMap(String filename,String attrName){

@@ -36,7 +36,7 @@ public class ValueChartsPlus extends JPanel{
 		if (noOfEntries > 10)
 			con.setDisplayType(ConstructionView.SIDE_DISPLAY);
 		con.showChart(true);
-		con.filename = "SuperUser.vc";	//temp holder for a new filename    
+		con.filename = "test.vc";	//temp holder for a new filename    
 	}
  
     //List all the vc files

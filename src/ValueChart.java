@@ -75,15 +75,18 @@ public class ValueChart extends JPanel {
     Map<String,Double> minWeightMap = new HashMap<String,Double>(); //Map of attributes with minimum weights
     ArrayList<IndividualEntryMap> listOfEntryMaps = new ArrayList<IndividualEntryMap>(); //map of entries for all users
     ArrayList<HashMap<String,Double>> listOfWeightMaps = new ArrayList<HashMap<String,Double>>();
-    public HashMap<String,Double> averageAttributeWeights = new HashMap<String,Double>();;
+    HashMap<String,Double> averageAttributeWeights = new HashMap<String,Double>();
+    ArrayList<ChartEntry> averageAttributeValues = new ArrayList<ChartEntry>();
     Set<Color> listOfUserColors = new HashSet<>();
     ArrayList<Color> colorList;
+    JPanel averageWeights;
         
     GroupActions pnlGroupActions;
     int colorChoice; //variable to select the purpose of color
     String userToPickAttributeColor; //choose a user to pick his attribute colors
     boolean topChoices = false;
     boolean showAvgWeights = false;
+    boolean generateAvgGVC = false;
     
     boolean pump = false;
     boolean pump_increase = true;
@@ -106,13 +109,14 @@ public class ValueChart extends JPanel {
     OutlineItem item = null; //The items in the bookmark
 
 //CONSTRUCTOR
-    public ValueChart(ConstructionView c, String file, ArrayList<String> list, int type, int colwd, boolean b, boolean graph,int colorOption) {
+    public ValueChart(ConstructionView c, String file, ArrayList<String> list, int type, int colwd, boolean b, boolean graph,int colorOption, boolean avgGVC) {
         super();        
         show_graph = graph;
         con = c;
         isNew = b;
         filename = file;
         users = list;
+        generateAvgGVC = avgGVC;
 //        colWidthGroup =  padWidth * 2 + userWidth * users.size();
         colWidthGroup =  userWidth * (list.size()-1) + padWidth;
         colorChoice = colorOption;
@@ -419,8 +423,16 @@ public class ValueChart extends JPanel {
         pnlBottom.add(Box.createHorizontalGlue());
         pnlBottom.add(mainEntryNames);
 
+        
+//        JButton xx = new JButton("test");
+//        averageWeights = new JPanel();
+//        averageWeights.setLayout(new BoxLayout(averageWeights, BoxLayout.X_AXIS));
+//        averageWeights.add(xx);
+//        averageWeights.add(Box.createHorizontalGlue());
+        
         mainPaneWithNames.add(mainPane);
         mainPaneWithNames.add(pnlBottom);
+        
 
         removeAll();
 
@@ -447,11 +459,12 @@ public class ValueChart extends JPanel {
             pnlDisp.add(Box.createHorizontalGlue());
         } else {
 //            pnlDisp.add(Box.createHorizontalStrut(0));
-            pnlGroupActions = new GroupActions(this);            
-            pnlDisp.add(pnlGroupActions);
-//            pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup + (show_graph ? graphWidth : 0), pnlGroupActions.getPreferredSize().height));
-//            pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth - colWidthGroup, pnlGroupActions.getMaximumSize().height));
-//            pnlGroupActions.setAlignmentX(Component.LEFT_ALIGNMENT);
+            pnlGroupActions = new GroupActions(this);   
+            if(!generateAvgGVC)
+            	pnlDisp.add(pnlGroupActions);
+            pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth + (show_graph ? graphWidth : 0), pnlGroupActions.getPreferredSize().height));
+            pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth, pnlGroupActions.getMaximumSize().height));
+            pnlGroupActions.setAlignmentX(Component.LEFT_ALIGNMENT);
         }
         pnlDisp.add(Box.createHorizontalGlue());
         pnlDisp.add(displayPanel);
@@ -490,7 +503,8 @@ public class ValueChart extends JPanel {
         } else {
             displayWithNames.setMaximumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 10000));//- and rev x, y
             displayWithNames.setMinimumSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
-            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, (int) (displayHeight)-50));//- and rev x, y
+            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, (int) (displayHeight)-250));//- and rev x, y
+//            displayWithNames.setPreferredSize(new Dimension(w + (mainPane.getDepth() -1) * headerWidth + graphWidth, 0));//- and rev x, y
 
          // seems to work with -50 to get rid of unnecessary padding. TODO resize is weird
         }
@@ -523,7 +537,7 @@ public class ValueChart extends JPanel {
 //                add (Box.createVerticalStrut(40));
 //                add (Box.createGlue());
 //            }
-        }
+        }        
     }
     private void readAttributes(ScanfReader scanReader, TablePane pane, HashMap colorList)
             throws IOException {
@@ -661,7 +675,7 @@ public class ValueChart extends JPanel {
     	hs.addAll(listOfAttributeMaps);
     	listOfAttributeMaps.clear();
     	listOfAttributeMaps.addAll(hs);
-    	
+
     	//assign a distinct color for each user
     	generateRandomColor(listOfAttributeMaps);    	
 
@@ -851,57 +865,7 @@ public class ValueChart extends JPanel {
 //    	System.out.println(users.size());
 	}
     
-    private void getMinWeightMap(){    	
-//    	ArrayList<Map<String,Double>> listOfWeightMaps = getWeightMap();    	
-    	if(listOfWeightMaps.isEmpty()){
-    		System.out.println("List of weight maps is empty");
-    	}
-    	else{
-    		if(listOfWeightMaps.size() > 1){
-    			for(HashMap<String, Double> aMap : listOfWeightMaps){
-//    				maxWeightMap = aMap;
-    				for(Map.Entry<String,Double> entry : aMap.entrySet()){
-    					String srcKey = entry.getKey();
-    					double srcValue = entry.getValue();
-    					if(minWeightMap.containsKey(srcKey)){
-    						double destValue = minWeightMap.get(srcKey);
-    						if(destValue <= srcValue){
-    							minWeightMap.remove(srcKey);
-    							minWeightMap.put(srcKey, srcValue);    							
-    						}
-    					}else{
-    						maxWeightMap.put(srcKey, srcValue);
-    					}
-    				}
-    			}
-//JUNK    			
-//    			Map<String,Double> aMap = listOfWeightMaps.get(0);
-//	    		for(int i = 1; i < listOfWeightMaps.size(); i++){    			
-//	    			Map<String,Double> bMap = listOfWeightMaps.get(i);
-//	        		for(Map.Entry<String,Double> entry : aMap.entrySet()){
-//	        			String key = entry.getKey();
-//	        			double aValue = entry.getValue();
-//	        			double bValue = bMap.get(key);
-//	        			if(bMap.containsKey(entry.getKey())){	        				
-//	        				double value = aValue > bValue ? aValue : bValue;
-//	        				maxWeightMap.put(key,value);	        				
-//	        			}        			
-//	        			else
-//	        			{
-//	        				System.out.println("No matching key found while finding max weights");
-//	        			}
-//	        		}
-//	        		aMap.clear();
-//	        		aMap.putAll(maxWeightMap);
-//	    		}
-    		}
-    		else if(listOfWeightMaps.size() == 1){
-    			maxWeightMap.putAll(listOfWeightMaps.get(0));
-    		}	
-    	}
-//    	System.out.println(maxWeightMap);    	
-    }
-    
+   
     //This function returns a list of maps; each map has attributes and their weights for individual user  
     /*private ArrayList<Map<String,Double>> getWeightMap(){
     	ArrayList<Map<String,Double>> listOfWeightMaps = new ArrayList<Map<String,Double>>();
@@ -918,7 +882,33 @@ public class ValueChart extends JPanel {
     	return listOfWeightMaps;
     }*/
     
-    private ArrayList<Map<String,AttributeDomain>> getDomainMap(ArrayList<IndividualAttributeMaps> maps){
+    private double getWeightfromAvg(String name, String attrName) {
+		double weight = 0;
+    	for(ChartEntry entry : averageAttributeValues){
+			if(name.equals(entry.name)){
+				AttributeValue val = (AttributeValue) entry.map.get(attrName);
+				weight = val.weight();
+			}
+		}
+    	return weight;
+	}
+
+	private double getHeightFromAttributeMap(String user, String attrName) {
+    	double individualHeight = 1.0;
+    	for(IndividualAttributeMaps a : listOfAttributeMaps){
+    		
+    		if(user.equals(a.userName)){
+    			
+    			if(!a.attributeWeightMap.isEmpty()){    				
+    				individualHeight = a.attributeWeightMap.get(attrName);    				
+    			}
+    		}
+    	}
+    	
+    	return individualHeight;
+	}
+
+	private ArrayList<Map<String,AttributeDomain>> getDomainMap(ArrayList<IndividualAttributeMaps> maps){
     	ArrayList<Map<String,AttributeDomain>> listOfDomainMaps = new ArrayList<Map<String,AttributeDomain>>();
     	if(maps.isEmpty()){
     		System.out.println("List of maps is empty");
@@ -1436,7 +1426,7 @@ public class ValueChart extends JPanel {
     }
 
     public void resetDisplay(int type, int colwd, boolean close, boolean graph,int colorOption, String user) {
-    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption);
+    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption,false);
     	ch.showAbsoluteRatios = this.showAbsoluteRatios;   
     	ch.userToPickAttributeColor = user;
         ch.pump = pump;
@@ -1455,9 +1445,8 @@ public class ValueChart extends JPanel {
 
     //To paint the chart using colors from attributes
     public void resetDisplayUsingColorForAttribute(int type, int colwd, boolean close, boolean graph,int colorOption, String user) {
-    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption);
+    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption, false);
     	ch.userToPickAttributeColor = user;
-//    	System.out.println(user);
     	ch.showAbsoluteRatios = this.showAbsoluteRatios;    	
         ch.pump = pump;
         ch.pump_increase = pump_increase;
@@ -1474,7 +1463,23 @@ public class ValueChart extends JPanel {
     }
     
     public void compareDisplay(int type, int colwd) {
-        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER);
+        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,false);
+        ch.showAbsoluteRatios = this.showAbsoluteRatios; 
+        ch.pump = pump;
+        ch.pump_increase = pump_increase;
+        ch.sa_dir = sa_dir;
+        ch.getDisplayPanel().setScore(getDisplayPanel().score);
+        ch.getDisplayPanel().setRuler(getDisplayPanel().ruler);
+        for (int j = 0; j < entryList.size(); j++) {
+            if (((ChartEntry) entryList.get(j)).getShowFlag()) {
+                ((ChartEntry) (ch.entryList.get(j))).setShowFlag(true);
+                ch.updateAll();
+            }
+        }
+    }
+    
+    public void avgGVCDisplay(int type, int colwd, boolean avgGVC) {
+        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,avgGVC);
         ch.showAbsoluteRatios = this.showAbsoluteRatios; 
         ch.pump = pump;
         ch.pump_increase = pump_increase;
@@ -1675,12 +1680,13 @@ public class ValueChart extends JPanel {
         displayPanel.setPrefHeight((int) (mainPane.getHeight()/this.heightScalingConstant));
         displayPanel.setMaximumSize(displayPanel.getPreferredSize());
         displayPanel.setMinimumSize(displayPanel.getPreferredSize());
-        pnlGroupActions.setPreferredSize(new Dimension(displayPanel.getPreferredSize().width,displayPanel.getPreferredSize().height));
+//        pnlGroupActions.setPreferredSize(new Dimension(displayPanel.getPreferredSize().width,displayPanel.getPreferredSize().height));
+        pnlGroupActions.setPreferredSize(new Dimension(pnlGroupActions.getPreferredSize().width,displayPanel.getPreferredSize().height));
         pnlGroupActions.setMaximumSize(displayPanel.getPreferredSize());
         pnlGroupActions.setMinimumSize(displayPanel.getPreferredSize());
-        displayWithNames.setMaximumSize(new Dimension (mainPane.getSize().width, displayPanel.getMaximumSize().height));
-//        displayWithNames.setMinimumSize(new Dimension(mainPane.getSize().width, displayPanel.getMinimumSize().height));
-//        displayWithNames.setPreferredSize(new Dimension(mainPane.getSize().width, displayPanel.getPreferredSize().height));
+        displayWithNames.setMaximumSize(new Dimension (mainPane.getSize().width, displayWithNames.getMaximumSize().height));
+        displayWithNames.setMinimumSize(new Dimension(mainPane.getSize().width, displayWithNames.getMinimumSize().height));
+        displayWithNames.setPreferredSize(new Dimension(mainPane.getSize().width, displayWithNames.getPreferredSize().height));
 //        pnlDisp.setPreferredSize(mainPane.getSize());
 //        pnlDisp.setMaximumSize(mainPane.getSize());
 //        displayPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 10));
@@ -1710,17 +1716,5 @@ public class ValueChart extends JPanel {
     		System.out.println(totalDisplayHeight);
     	}
     }*/
-    
-    
-    private void fillAverageWeights() {
-		//for each attribute
-			//for each user    	    		
-		for(IndividualEntryMap e : this.listOfEntryMaps){
-			int users = 0;
-			for(ChartEntry entryForEachUser : e.entryList){
-//				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps
-				
-			}
-		}    	
-	}
+
 }

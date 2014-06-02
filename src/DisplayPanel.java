@@ -34,6 +34,7 @@ public class DisplayPanel extends JComponent {
     public HashMap<String,Double> maxTotalScores; //<User,MaxScore>
     public HashMap<String,Double> averageTotalScores; //<Alternative,AverageScore>
     public HashMap<String,String> topAltforUsers; //<User,TopChoice>
+    public HashMap<String,Color> attrColorMap; //<Attribute,Color>
     
     JPopupMenu domainMeta = new JPopupMenu();
     
@@ -45,6 +46,7 @@ public class DisplayPanel extends JComponent {
     	maxTotalScores = new HashMap<String,Double>();
     	averageTotalScores = new HashMap<String,Double>();
     	topAltforUsers = new HashMap<String,String>();
+    	attrColorMap = new HashMap<String,Color>();    	    	
         MouseHandler mouseHandler = new MouseHandler();
         addMouseListener(mouseHandler);        
     }
@@ -170,112 +172,190 @@ public class DisplayPanel extends JComponent {
         rootPane.getAttributeCells(cellList);
         double[] weights;	//array of entry weights (values)6
         double[] accumulatedRatios = new double[numEntries * noOfUsers];
-        int[] ypos = new int[numEntries * noOfUsers];	//position of x, starts all at 0
+        
        
-      //for each objective, get the (array)domain value of each alternative
-        int h = 0, x = align_right;
-        int avgH = 0;
-        int j = 0;
-        //for each alternative
-        for (int i = 0; i < numEntries; i++) { 
-        	x+=padding/3;
-            g.setColor(Color.white);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, totalHeight - 1);            
-    		if(!chart.listOfEntryMaps.isEmpty()){
-    			//for each user    			
-    			for(IndividualEntryMap e : chart.listOfEntryMaps){    				
-    				//for each attribute
-    				for (Iterator it = cellList.iterator(); it.hasNext();) { 
-        				AttributeCell cell = (AttributeCell) it.next();
-             			weights = e.getEntryWeights(cell.getName());
-             			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());//chart.heightScalingConstant;
-	                    accumulatedRatios[j] += or * weights[i];
-	                    h = (int) Math.round(accumulatedRatios[j] * totalHeight) - ypos[j];
-	                    ChartEntry entry = (ChartEntry) entryList.get(i);
-	                    if (e.entryList.get(i).isMasked()) {
-	                        g.setColor(Color.lightGray);
-	                    } else {
-//	                        g.setColor(cell.getUserColorFromAttributeMap(e.username));
-//	                    	g.setColor(cell.chooseColor(chart.colorChoice,e.username,cell.getName(),chart.userToPickAttributeColor));
-                    		g.setColor(cell.chooseColor(e.username,cell.getName(),entry.name,chart.userToPickAttributeColor));
-	                    }	
-	                    g.fillRect(x, totalHeight - h - ypos[j], userWidth, h);
-	                    g.setColor(Color.lightGray);
-	                    g.drawLine(x, totalHeight - h - ypos[j], x + userWidth - 1, totalHeight - h - ypos[j]);
-	                    g.setColor(Color.lightGray);
-        	            g.drawLine(x-1, 0, x-1, getHeight() - 1);
-        	            
-        	            //Draw average line
-        	            if(showAvg){
-        	            	g.setColor(Color.BLACK);
-            				avgH = (int) Math.round(averageTotalScores.get(e.entryList.get(i).name)*totalHeight);
-            				g.drawLine(x-1, totalHeight - avgH, x + userWidth -1, totalHeight - avgH);
+        if(!chart.generateAvgGVC){
+        	int[] ypos = new int[numEntries * noOfUsers];	//position of x, starts all at 0
+            //for each objective, get the (array)domain value of each alternative
+            int h = 0, x = align_right;
+            int avgH = 0;
+            int j = 0;
+            //for each alternative
+            for (int i = 0; i < numEntries; i++) { 
+            	x+=padding/3;
+                g.setColor(Color.white);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, totalHeight - 1);            
+        		if(!chart.listOfEntryMaps.isEmpty()){
+        			//for each user    			
+        			for(IndividualEntryMap e : chart.listOfEntryMaps){    				
+        				//for each attribute
+        				for (Iterator it = cellList.iterator(); it.hasNext();) { 
+            				AttributeCell cell = (AttributeCell) it.next();
+                 			weights = e.getEntryWeights(cell.getName());
+                 			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());//chart.heightScalingConstant;
+    	                    accumulatedRatios[j] += or * weights[i];
+    	                    h = (int) Math.round(accumulatedRatios[j] * totalHeight) - ypos[j];
+    	                    ChartEntry entry = (ChartEntry) entryList.get(i);
+    	                    if (e.entryList.get(i).isMasked()) {
+    	                        g.setColor(Color.lightGray);
+    	                    } else {
+//    	                        g.setColor(cell.getUserColorFromAttributeMap(e.username));
+//    	                    	g.setColor(cell.chooseColor(chart.colorChoice,e.username,cell.getName(),chart.userToPickAttributeColor));
+                        		g.setColor(cell.chooseColor(e.username,cell.getName(),entry.name,chart.userToPickAttributeColor));
+    	                    }	
+    	                    g.fillRect(x, totalHeight - h - ypos[j], userWidth, h);
+    	                    g.setColor(Color.lightGray);
+    	                    g.drawLine(x, totalHeight - h - ypos[j], x + userWidth - 1, totalHeight - h - ypos[j]);
+    	                    g.setColor(Color.lightGray);
+            	            g.drawLine(x-1, 0, x-1, getHeight() - 1);
+            	            
+            	            //Draw average line
+            	            if(showAvg){
+            	            	g.setColor(Color.BLACK);
+                				avgH = (int) Math.round(averageTotalScores.get(e.entryList.get(i).name)*totalHeight);
+                				g.drawLine(x-1, totalHeight - avgH, x + userWidth -1, totalHeight - avgH);
+            	            }
+    	                    ypos[j] += h;
+    	                    if (x > totalWidth) {
+    	                        break;
+    	                    }
+        				}
+        				//scores
+        	            if (score) {
+        	            	int xpos = x + userWidth/6;
+        	            	double maxTotalScore = accumulatedRatios[j];
+//            				if(chart.topChoices){
+//        						for(IndividualAttributeMaps iam : chart.listOfAttributeMaps){
+//        							if(e.entryList.get(i).name.equals(iam.topAlternative) && e.username.equals(iam.userName)){
+//        								g.setFont(new Font("DEFAULT",Font.BOLD,12));    
+//                    					g.setColor(Color.RED);
+//        							}
+//        							else{
+//        								g.setFont(new Font("DEFAULT",Font.PLAIN,12));    
+//                    					g.setColor(Color.lightGray);
+//        							}
+//        						}
+//        					}
+//            				else{
+            	            	for(Map.Entry<String, Double> entry : maxTotalScores.entrySet()){
+                        			if(entry.getKey().equals(e.username)){
+                        				if(chart.getMouseOver(e.username)){
+                        					g.setFont(new Font("DEFAULT",Font.PLAIN,10));    
+                        					g.setColor(Color.lightGray);
+                        				}
+                    					else{
+                    						if(maxTotalScore == entry.getValue()){//if score is the max score, bold it
+                            					g.setFont(new Font("DEFAULT",Font.BOLD,10));    
+                            					g.setColor(Color.RED);
+                            				}
+                            				else{
+                            					g.setColor(Color.darkGray);
+                            					g.setFont(new Font("DEFAULT",Font.PLAIN,10));
+                            				}
+                    					}
+                            		}
+                            	}
+//            				}
+//        	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] * chart.heightScalingConstant*100))), xpos, totalHeight - ypos[j] - 5);
+        	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] *100))), xpos, totalHeight - ypos[j] - 5);
+    	                    xpos = xpos + userWidth/6;
         	            }
-	                    ypos[j] += h;
-	                    if (x > totalWidth) {
-	                        break;
-	                    }
-    				}
-    				//scores
-    	            if (score) {
-    	            	int xpos = x + userWidth/6;
-    	            	double maxTotalScore = accumulatedRatios[j];
-//        				if(chart.topChoices){
-//    						for(IndividualAttributeMaps iam : chart.listOfAttributeMaps){
-//    							if(e.entryList.get(i).name.equals(iam.topAlternative) && e.username.equals(iam.userName)){
-//    								g.setFont(new Font("DEFAULT",Font.BOLD,12));    
-//                					g.setColor(Color.RED);
-//    							}
-//    							else{
-//    								g.setFont(new Font("DEFAULT",Font.PLAIN,12));    
-//                					g.setColor(Color.lightGray);
-//    							}
-//    						}
-//    					}
-//        				else{
-        	            	for(Map.Entry<String, Double> entry : maxTotalScores.entrySet()){
-                    			if(entry.getKey().equals(e.username)){
-                    				if(chart.getMouseOver(e.username)){
-                    					g.setFont(new Font("DEFAULT",Font.PLAIN,10));    
-                    					g.setColor(Color.lightGray);
-                    				}
-                					else{
-                						if(maxTotalScore == entry.getValue()){//if score is the max score, bold it
-                        					g.setFont(new Font("DEFAULT",Font.BOLD,10));    
-                        					g.setColor(Color.RED);
-                        				}
-                        				else{
-                        					g.setColor(Color.darkGray);
-                        					g.setFont(new Font("DEFAULT",Font.PLAIN,10));
-                        				}
-                					}
-                        		}
-                        	}
-//        				}
-//    	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] * chart.heightScalingConstant*100))), xpos, totalHeight - ypos[j] - 5);
-    	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] *100))), xpos, totalHeight - ypos[j] - 5);
-	                    xpos = xpos + userWidth/6;
-    	            }
-    				j++;
-    	            x += userWidth;
-                }
-    			h=0;
-			}
-    		 //To separate a bundle of users within an alternative - bold black lines
-    		g.setColor(Color.lightGray);
-            g.drawLine(x-1, 0, x-1, getHeight() - 1);
+        				j++;
+        	            x += userWidth;
+                    }
+        			h=0;
+    			}
+        		 //To separate a bundle of users within an alternative - bold black lines
+        		g.setColor(Color.lightGray);
+                g.drawLine(x-1, 0, x-1, getHeight() - 1);
+                
+                x+=padding/3;            
+                g.setColor(Color.white);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, totalHeight - 1);
+               
+                x+=padding/3;
+                g.setColor(Color.BLACK);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.drawLine(x-3, 0, x-3, totalHeight - 1);            
+            } 
+        }
+        else if(chart.generateAvgGVC){
+        	int[] ypos = new int[numEntries];	//position of x, starts all at 0
+            int h=0, x = align_right;
+            int j = 0;
             
-            x+=padding/3;            
-            g.setColor(Color.white);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, totalHeight - 1);
+        	//for each alternative
+            for (int i = 0; i < numEntries; i++) {
+            	HashMap<String,Double> temp = new HashMap<String,Double>();
+        		if(!chart.listOfEntryMaps.isEmpty()){
+        			//for each user    			
+        			for(IndividualEntryMap e : chart.listOfEntryMaps){
+        				//for each attribute
+        				for (Iterator it = cellList.iterator(); it.hasNext();) {
+        					AttributeCell cell = (AttributeCell) it.next();
+        					String attrName = cell.getName();
+                 			weights = e.getEntryWeights(cell.getName());
+                 			double or = cell.getHeightFromAttributeMap(e.username,attrName);//chart.heightScalingConstant;
+    	                    accumulatedRatios[j] += or * weights[i];    	                    
+    	                    if(!attrColorMap.containsKey(attrName)){
+    	                    	attrColorMap.put(attrName, cell.getColor());
+    	                    }	
+    	                    if(temp.containsKey(attrName)){
+    	                    	double destValue = temp.get(attrName);
+        						destValue += accumulatedRatios[j];
+        						temp.put(attrName,destValue);
+    	                    }    	                    
+        					else{        					
+        						temp.put(attrName,accumulatedRatios[j]);
+        					}
+        				}
+        				j++;        	            
+                    }
+    			}
+        		HashMap<String,Double> temp_clone = new HashMap<String,Double>();
+        		temp_clone.putAll(temp);
+            	for(String key : temp_clone.keySet()){    		
+            		double srcValue = temp.get(key)/(chart.users.size()-1);
+            		temp.remove(key);
+            		temp.put(key, srcValue);
+            	}
+            	
+//        		System.out.println(attrColorMap);
+            	for(Map.Entry<String, Double> entry : temp.entrySet()){
+            		String attrName = entry.getKey();
+            		System.out.println(attrName+" "+attrColorMap.get(attrName));
+            		h = (int) Math.round(entry.getValue() * totalHeight) - ypos[i];
+            		g.setColor(Color.blue);
+                    g.fillRect(x, totalHeight - h - ypos[i], colWidth, h);
+                    g.setColor(Color.lightGray);
+                    g.drawLine(x, totalHeight - h - ypos[i], x + colWidth - 1, totalHeight - h - ypos[i]);
+                    g.setColor(Color.lightGray);
+    	            g.drawLine(x-1, 0, x-1, getHeight() - 1);
+    	            ypos[i] += h;
+                    if (x > totalWidth) {
+                        break;
+                    }
+            	}
+        		x += colWidth;
+        		h=0;
+            } 
+        	//---------------------------------------------------------------------------------------------------------------
+        	
+        	
+        	
+        	
+//        	int str_x = (colWidth / 3);
+//        	// vertical grid line
+//            g.setColor(Color.lightGray);
+//            str_x = align_right + colWidth;	//temp, was only colWidth
+//            for (int i = 1; i < numEntries + 1; i++) {
+//                g.drawLine(str_x, 0, str_x, totalHeight - 1);
+//                str_x += colWidth;
+//            }
+        }
            
-            x+=padding/3;
-            g.setColor(Color.BLACK);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.drawLine(x-3, 0, x-3, totalHeight - 1);            
-        }            
         	//ruler
             if (ruler) {
                 g.setColor(Color.gray);

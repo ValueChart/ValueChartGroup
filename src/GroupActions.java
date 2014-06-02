@@ -41,8 +41,14 @@ public class GroupActions extends JPanel implements ActionListener {
 	JRadioButton mostVariedHeights;
 	JRadioButton topChoice;
 	JRadioButton topTwoChoices;
+	JLabel disagreement;
+	JRadioButton controversialWeight;
+	JRadioButton controversialValueFunction;
 	JCheckBox showAverageAlternatives;
 	JCheckBox showAverageWeights;
+	JCheckBox hideUncompetitiveAlts;
+	
+	JButton generateAvgGVC;
 	
 	JComboBox<String> userList;
 	JButton remapColors;
@@ -68,6 +74,7 @@ public class GroupActions extends JPanel implements ActionListener {
 		}		
 		ButtonGroup grpColor = new ButtonGroup();
 		ButtonGroup grpDetails = new ButtonGroup();
+		ButtonGroup grpControversy = new ButtonGroup();
 		
 		forAttributes = new JRadioButton("Attributes");
 		forAttributes.setActionCommand("attributes");
@@ -89,8 +96,8 @@ public class GroupActions extends JPanel implements ActionListener {
 		userList.setActionCommand("selectUser");
 		userList.setSelectedIndex(0);
 		userList.setEnabled(false);		
-		userList.setPreferredSize(new Dimension(65, 25));
-		userList.setMaximumSize(new Dimension(65,25));
+		userList.setPreferredSize(new Dimension(65, 10));
+		userList.setMaximumSize(new Dimension(65,10));
 		userList.addActionListener(this);
 //		grpColor.add(userList);
         
@@ -173,6 +180,29 @@ public class GroupActions extends JPanel implements ActionListener {
         topTwoChoices.setFont(font);		
         grpDetails.add(topTwoChoices);
         
+        disagreement = new JLabel("Highlight Disagreed Criteria");
+        disagreement.setFont(font);
+        
+        controversialWeight = new JRadioButton("By Weight");
+        controversialWeight.setActionCommand("controversyByWeight");
+        controversialWeight.setEnabled(true);
+        controversialWeight.addActionListener(this);
+        controversialWeight.setFont(font);
+        grpControversy.add(controversialWeight);
+        
+        controversialValueFunction = new JRadioButton("By Utility");
+        controversialValueFunction.setActionCommand("controversyByValueFunction");
+        controversialValueFunction.setEnabled(true);
+        controversialValueFunction.addActionListener(this);
+        controversialValueFunction.setFont(font);
+        grpControversy.add(controversialValueFunction);
+        
+        generateAvgGVC = new JButton("Average Group VC");
+        generateAvgGVC.setActionCommand("generateAvgGVC");
+        generateAvgGVC.setEnabled(true);
+        generateAvgGVC.setFont(font);
+        generateAvgGVC.addActionListener(this);                
+        
         showAverageAlternatives = new JCheckBox("Show Average Alternatives");
         showAverageAlternatives.setActionCommand("showAverageAlternatives");
         showAverageAlternatives.setEnabled(true);
@@ -188,6 +218,13 @@ public class GroupActions extends JPanel implements ActionListener {
         showAverageWeights.addActionListener(this);
         showAverageWeights.setFont(font);
         
+        hideUncompetitiveAlts = new JCheckBox("Hide non-competitive Alternatives");
+        hideUncompetitiveAlts.setActionCommand("hideNonCompAlts");
+        hideUncompetitiveAlts.setEnabled(true);
+        hideUncompetitiveAlts.setSelected(false);
+        hideUncompetitiveAlts.addActionListener(this);
+        hideUncompetitiveAlts.setFont(font);
+        
         
         pnlDetails = new JPanel();        
         pnlDetails.setLayout(new BoxLayout(pnlDetails, BoxLayout.Y_AXIS));
@@ -195,12 +232,24 @@ public class GroupActions extends JPanel implements ActionListener {
 //        pnlDetails.add(allAgree);
 //        pnlDetails.add(mostVariedHeights);
         pnlDetails.add(topChoice);
+        pnlDetails.add(generateAvgGVC);
+        
 //        pnlDetails.add(topTwoChoices);
         pnlDetails.add(Box.createHorizontalStrut(5));
         pnlDetails.add(new JSeparator(SwingConstants.HORIZONTAL));
         pnlDetails.add(Box.createHorizontalStrut(5));
+        
+        pnlDetails.add(disagreement);
+        pnlDetails.add(controversialWeight);
+        pnlDetails.add(controversialValueFunction);
+        
+        pnlDetails.add(Box.createHorizontalStrut(5));
+        pnlDetails.add(new JSeparator(SwingConstants.HORIZONTAL));
+        pnlDetails.add(Box.createHorizontalStrut(5));
+        
         pnlDetails.add(showAverageAlternatives);
         pnlDetails.add(showAverageWeights);
+        pnlDetails.add(hideUncompetitiveAlts);
 //        pnlDetails.add(userList);
 //        pnlDetails.add(Box.createVerticalGlue());
 //        pnlDetails.add(Box.createGlue());
@@ -327,6 +376,9 @@ public class GroupActions extends JPanel implements ActionListener {
 			else
 				chart.showAverageWeights(false);
 			chart.updateAll();
+		}
+		else if("generateAvgGVC".equals(ae.getActionCommand())){
+			chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
 		}
 	}
 	
