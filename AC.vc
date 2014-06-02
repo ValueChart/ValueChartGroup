@@ -6,20 +6,20 @@ color rate 0.99607843 0.76862746 0.30980393
 
 
 attributes
-	attributes Hotel 1.0
+	attributes Hotel 1.0009999999999994
 		attributes location *
-			area 0.10249999999999992 { "nightlife" 1.0, "beach" 0.5, "airport" 0.0 }
+			area 0.2770000000000001 { "nightlife" 0.0, "beach" 0.5, "airport" 1.0 }
 				color=area end
-			skytrain-distance 0.10249999999999992 { 1.0 1.0, 3.0 0.75, 5.0 0.5, 7.0 0.25, 9.0 0.0 }
+			skytrain-distance 0.12250000000000003 { 1.0 1.0, 3.0 0.8899999856948853, 5.0 0.8899999856948853, 7.0 0.30000001192092896, 9.0 0.0 }
 				color=skytrain-distance units=blocks end
 		end
 		attributes room *
-			size 0.10249999999999992 { 200.0 0.0, 250.0 0.25, 300.0 0.5, 350.0 0.75, 400.0 1.0 }
+			size 0.07250000000000002 { 200.0 0.0, 250.0 0.38499999046325684, 300.0 0.8899999856948853, 350.0 0.8999999761581421, 400.0 1.0 }
 				color=size units=sq-ft end
-			internet-access 0.5900000000000003 { "none" 0.0, "lowspeed" 0.5, "highspeed" 1.0 }
+			internet-access 0.20822895622895582 { "none" 0.0, "lowspeed" 0.03500000014901161, "highspeed" 1.0 }
 				color=internet-access end
 		end
-		rate 0.10249999999999992 { 100.0 1.0, 125.0 0.5, 150.0 0.25, 200.0 0.1, 250.0 0.0 }
+		rate 0.3207710437710437 { 100.0 1.0, 125.0 0.8700000047683716, 150.0 0.824999988079071, 200.0 0.35499998927116394, 250.0 0.0 }
 			color=rate units=CAD end
 	end
 end

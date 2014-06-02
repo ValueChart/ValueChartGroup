@@ -76,7 +76,6 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
             JLabel warning = new JLabel("WARNING: SuperUser.vc file not in directory");
             warning.setForeground(Color.red);
             warning.setAlignmentX(LEFT_ALIGNMENT);
-            warning.setBorder(BorderFactory.createLineBorder(Color.red));
             add(warning);
         }
         add(Box.createRigidArea(new Dimension(0,5)));
