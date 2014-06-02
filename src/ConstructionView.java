@@ -178,7 +178,8 @@ public class ConstructionView extends JPanel implements ChangeListener, ActionLi
     	if (fromCon)
     		if (chart != null)
         		chart.closeChart();
-    	chart = new ValueChart(this,  filename, list, ValueChart.DEFAULT_DISPLAY, ValueChart.DEFAULT_COL_WIDTH, true, false,ValueChart.COLORFORUSER);   
+    	chart = new ValueChart(this,  filename, list, ValueChart.DEFAULT_DISPLAY, ValueChart.DEFAULT_COL_WIDTH, true, false,ValueChart.COLORFORUSER);  
+    	ValueChartsPlus.chart = chart;
     }
     
     public void setRowHeight(int ht){

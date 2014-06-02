@@ -3,6 +3,7 @@ This class that brings all the classes together
  */
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
 import java.util.*;
@@ -1450,7 +1451,13 @@ public class ValueChart extends JPanel {
                 ch.updateAll();
             }
         }
-        closeChart();
+        ValueChartsPlus.chart = ch;
+        if (close) {
+            closeChart();
+        } else {
+            chartFrame.setTitle(chartFrame.getTitle() + " (past)");
+            
+        }
     }
 
     //To paint the chart using colors from attributes
@@ -1507,7 +1514,22 @@ public class ValueChart extends JPanel {
 //            pnlOpt = new SensitivityAnalysisOptions(this);
 //            chartFrame.getContentPane().add(pnlOpt);
 //        }
-        chartFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        chartFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        WindowListener exitListener = new WindowAdapter() {
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                for (int i = 0; i < chartFrame.getContentPane().getComponentCount(); i++) {
+                    if (chartFrame.getContentPane().getComponent(i) instanceof ValueChart) {
+                        ValueChart ch = (ValueChart) chartFrame.getContentPane().getComponent(i);
+                        if (ValueChartsPlus.chart == ch) {
+                            System.exit(0);
+                        }
+                    }
+                }
+            }
+        };
+        chartFrame.addWindowListener(exitListener);
         chartFrame.getContentPane().add(this);
 //        chartFrame.getContentPane().setSize(chartFrame.getContentPane().getSize().width, Toolkit.getDefaultToolkit().getScreenSize().height);
         chartFrame.validate();
