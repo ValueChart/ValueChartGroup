@@ -1,0 +1,73 @@
+color area 0.003921569 0.4 0.36862746
+color skytrain-distance 0.40392157 0.6627451 0.8117647
+color size 0.40392157 0.0 0.050980393
+color internet-access 0.8901961 0.101960786 0.10980392
+color rate 0.99607843 0.76862746 0.30980393
+
+
+attributes
+	attributes Hotel 1.0009999999999997
+		attributes location *
+			area 0.060066889632107004 { "nightlife" 0.0, "beach" 0.05999999865889549, "airport" 1.0 }
+				color=area end
+			skytrain-distance 0.06993311036789299 { 1.0 1.0, 3.0 0.9350000023841858, 5.0 0.7649999856948853, 7.0 0.4000000059604645, 9.0 0.0 }
+				color=skytrain-distance units=blocks end
+		end
+		attributes room *
+			size 0.10312794612794603 { 200.0 0.0, 250.0 0.44999998807907104, 300.0 1.0, 350.0 0.75, 400.0 0.5099999904632568 }
+				color=size units=sq-ft end
+			internet-access 0.31087205387205363 { "none" 0.0, "lowspeed" 0.5, "highspeed" 1.0 }
+				color=internet-access end
+		end
+		rate 0.457 { 100.0 1.0, 125.0 0.8149999976158142, 150.0 0.5950000286102295, 200.0 0.1, 250.0 0.0 }
+			color=rate units=CAD end
+	end
+end
+
+entry "Sheraton"
+	area "nightlife"
+	skytrain-distance 7.0
+	size 300.0
+	internet-access "lowspeed"
+	rate 125.0
+end
+
+entry "Hilton"
+	area "nightlife"
+	skytrain-distance 2.0
+	size 200.0
+	internet-access "lowspeed"
+	rate 100.0
+end
+
+entry "Shangri-la"
+	area "beach"
+	skytrain-distance 2.0
+	size 250.0
+	internet-access "highspeed"
+	rate 150.0
+end
+
+entry "Radisson"
+	area "airport"
+	skytrain-distance 8.0
+	size 200.0
+	internet-access "highspeed"
+	rate 130.0
+end
+
+entry "Hyatt"
+	area "airport"
+	skytrain-distance 1.0
+	size 225.0
+	internet-access "none"
+	rate 100.0
+end
+
+entry "Rosewood"
+	area "beach"
+	skytrain-distance 1.0
+	size 275.0
+	internet-access "none"
+	rate 110.0
+end
