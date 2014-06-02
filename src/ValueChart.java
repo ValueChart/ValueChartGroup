@@ -657,7 +657,7 @@ public class ValueChart extends JPanel {
     	}
     	
     	// add elements to al, including duplicates
-    	HashSet hs = new HashSet();
+    	LinkedHashSet<IndividualAttributeMaps> hs = new LinkedHashSet<IndividualAttributeMaps>();
     	hs.addAll(listOfAttributeMaps);
     	listOfAttributeMaps.clear();
     	listOfAttributeMaps.addAll(hs);
@@ -1675,7 +1675,7 @@ public class ValueChart extends JPanel {
 
     public void alignDisplayPanel() {
         int height = (int) (mainPane.getHeight()/this.heightScalingConstant);
-        int width = mainPane.getSize().width;
+        int width = mainPane.getPreferredSize().width;
 
         displayPanel.setPrefHeight(height);
         displayPanel.setMaximumSize(displayPanel.getPreferredSize());
