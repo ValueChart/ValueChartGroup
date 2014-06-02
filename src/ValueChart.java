@@ -441,8 +441,8 @@ public class ValueChart extends JPanel {
         displayPanel = new DisplayPanel(colWidthGroup,this);
         displayPanel.setRootPane(mainPane);
         displayPanel.setEntries(entryList);
+        pnlDisp = new JPanel();
 
-        pnlDisp = new JPanel();        
         pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
         if (displayType == SIDE_DISPLAY) {
             pnlDisp.add(Box.createHorizontalGlue());
@@ -1748,5 +1748,4 @@ public class ValueChart extends JPanel {
 			}
 		}    	
 	}
-	
 }
