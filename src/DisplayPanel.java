@@ -57,18 +57,18 @@ public class DisplayPanel extends JComponent {
     	int numEntries = entryList.size();
     	Vector cellList = new Vector(16);
     	rootPane.getAttributeCells(cellList);
-    	double[] weights;	//array of entry weights (values)
         double[] accumulatedRatios = new double[numEntries * noOfUsers];
         int j = 0;
     	for (int i = 0; i < numEntries; i++) {//for each alternative    	
     		int users=0;
     		double avgAlternativeScore = 0;
+    		String entryName = entryList.get(i).name;
     		for(IndividualEntryMap e : chart.listOfEntryMaps){//for each user
     			for (Iterator it = cellList.iterator(); it.hasNext();) {//for each attribute
     				AttributeCell cell = (AttributeCell) it.next();
-         			weights = e.getEntryWeights(cell.getName());
+         			double weight = e.getEntryWeight(cell.getName(), entryName);
          			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());///chart.heightScalingConstant;
-                    accumulatedRatios[j] += or * weights[i];
+                    accumulatedRatios[j] += or * weight;
     			}    			
     			String srcKey = e.username;
 				double srcValue = accumulatedRatios[j];
@@ -81,17 +81,17 @@ public class DisplayPanel extends JComponent {
 						topAltforUsers.remove(srcKey);
 						
 						maxTotalScores.put(srcKey, srcValue);   
-						topAltforUsers.put(srcKey, e.entryList.get(i).name);
+						topAltforUsers.put(srcKey, entryName);
 					}
 				}else{
 					maxTotalScores.put(srcKey, srcValue);
-					topAltforUsers.put(srcKey, e.entryList.get(i).name);
+					topAltforUsers.put(srcKey, entryName);
 				}
                 avgAlternativeScore += accumulatedRatios[j];
                 j++;
                 users++;
     		}
-    		averageTotalScores.put(entryList.get(i).name, avgAlternativeScore/users);    		
+    		averageTotalScores.put(entryName, avgAlternativeScore/users);    		
     	}
 		
     	
@@ -170,7 +170,6 @@ public class DisplayPanel extends JComponent {
         }
         Vector cellList = new Vector(16);
         rootPane.getAttributeCells(cellList);
-        double[] weights;	//array of entry weights (values)6
         double[] accumulatedRatios = new double[numEntries * noOfUsers];
         
        
@@ -182,6 +181,7 @@ public class DisplayPanel extends JComponent {
             int j = 0;
             //for each alternative
             for (int i = 0; i < numEntries; i++) { 
+                String entryName = chart.entryList.get(i).name; 
             	x+=padding/3;
                 g.setColor(Color.white);
                 ((Graphics2D) g).setStroke(new BasicStroke());
@@ -192,12 +192,12 @@ public class DisplayPanel extends JComponent {
         				//for each attribute
         				for (Iterator it = cellList.iterator(); it.hasNext();) { 
             				AttributeCell cell = (AttributeCell) it.next();
-                 			weights = e.getEntryWeights(cell.getName());
+                 			double weight = e.getEntryWeight(cell.getName(), entryName);
                  			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());//chart.heightScalingConstant;
-    	                    accumulatedRatios[j] += or * weights[i];
+    	                    accumulatedRatios[j] += or * weight;
     	                    h = (int) Math.round(accumulatedRatios[j] * totalHeight) - ypos[j];
     	                    ChartEntry entry = (ChartEntry) entryList.get(i);
-    	                    if (e.entryList.get(i).isMasked()) {
+    	                    if (e.findEntry(entryName).isMasked()) {
     	                        g.setColor(Color.lightGray);
     	                    } else {
 //    	                        g.setColor(cell.getUserColorFromAttributeMap(e.username));
@@ -213,7 +213,7 @@ public class DisplayPanel extends JComponent {
             	            //Draw average line
             	            if(showAvg){
             	            	g.setColor(Color.BLACK);
-                				avgH = (int) Math.round(averageTotalScores.get(e.entryList.get(i).name)*totalHeight);
+                				avgH = (int) Math.round(averageTotalScores.get(entryName)*totalHeight);
                 				g.drawLine(x-1, totalHeight - avgH, x + userWidth -1, totalHeight - avgH);
             	            }
     	                    ypos[j] += h;
@@ -288,6 +288,7 @@ public class DisplayPanel extends JComponent {
             
         	//for each alternative
             for (int i = 0; i < numEntries; i++) {
+                String entryName = chart.entryList.get(i).name;
             	HashMap<String,Double> temp = new HashMap<String,Double>();
         		if(!chart.listOfEntryMaps.isEmpty()){
         			//for each user    			
@@ -296,9 +297,9 @@ public class DisplayPanel extends JComponent {
         				for (Iterator it = cellList.iterator(); it.hasNext();) {
         					AttributeCell cell = (AttributeCell) it.next();
         					String attrName = cell.getName();
-                 			weights = e.getEntryWeights(cell.getName());
+                 			double weight = e.getEntryWeight(cell.getName(), entryName);
                  			double or = cell.getHeightFromAttributeMap(e.username,attrName);//chart.heightScalingConstant;
-    	                    accumulatedRatios[j] += or * weights[i];    	                    
+    	                    accumulatedRatios[j] += or * weight;    	                    
     	                    if(!attrColorMap.containsKey(attrName)){
     	                    	attrColorMap.put(attrName, cell.getColor());
     	                    }	

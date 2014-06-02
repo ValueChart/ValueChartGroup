@@ -1,23 +1,23 @@
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.LinkedHashMap;
 
 
 public class IndividualEntryMap {
 	String username;
-	ArrayList<ChartEntry> entryList;
+	private LinkedHashMap<String, ChartEntry> entryMap;
 	
-	public IndividualEntryMap(String filename,ArrayList<ChartEntry> entries){
-		this.username = filename;
-		this.entryList = entries;
+	public IndividualEntryMap(String filename, ArrayList<ChartEntry> listOfEntries){
+		username = filename;
+		entryMap = new LinkedHashMap<String, ChartEntry>();
+		for (ChartEntry entry : listOfEntries)
+		    entryMap.put(entry.name, entry);
 	}
 	
 	public double[] getEntryWeights(String attributeName) {
-        double[] weights = new double[entryList.size()];
+        double[] weights = new double[entryMap.size()];
         int i = 0;
-        for (Iterator it = entryList.iterator(); it.hasNext();) {
-            AttributeValue value = ((ChartEntry) it.next()).attributeValue(attributeName);
+        for (ChartEntry entry : entryMap.values()) {
+            AttributeValue value = entry.attributeValue(attributeName);
             if (value != null) {
                 weights[i] = value.weight();
             } else {
@@ -27,5 +27,22 @@ public class IndividualEntryMap {
         }
         return weights;
     }	
+	
+	public double getEntryWeight(String attributeName, String entryName) {
+	    if (entryMap.containsKey(entryName)) {
+	        AttributeValue value = findEntry(entryName).attributeValue(attributeName);
+	        if (value != null)
+	            return value.weight();
+	    }
+	    return 0;
+	}
+	
+	public LinkedHashMap<String, ChartEntry> getEntryMap() {
+	    return entryMap;
+	}
+	
+	public ChartEntry findEntry(String name) {
+	    return entryMap.get(name);
+	}
 	
 }

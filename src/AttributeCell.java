@@ -290,7 +290,7 @@ public class AttributeCell extends JComponent {
                 ChartEntry tempentry = (ChartEntry) entryList.get(i);
 
                 //get the report location if associated with the entries
-                File reportFile = (File) tempentry.map.get("report");
+                File reportFile = tempentry.getReport();
 
                 if (reportFile != null) {
                     controller[i] = new SwingController();
@@ -422,61 +422,60 @@ public class AttributeCell extends JComponent {
                 g.drawLine(x-1, 0, x-1, cellHeight - 1); 
                 
                 for(IndividualEntryMap e : chart.listOfEntryMaps){
-        			for(ChartEntry entryForEachUser : e.entryList){
-        				if(entryForSuperUser.name.equals(entryForEachUser.name)){
-            				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
-            				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
-            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
+                    ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
+    				if(entryForEachUser != null){
+        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
+        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
 //            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
-            	            int h = 0;
-            	            int hpos = cellHeight;
-            	            if (individualValue != null) {
-            	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
-            	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
-            	            }
+        	            int h = 0;
+        	            int hpos = cellHeight;
+        	            if (individualValue != null) {
+        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+        	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
+        	            }
 //            	            g.setColor(color);
 //            	            g.setColor(getUserColorFromAttributeMap(e.username));
-            	            int wthresh = Math.max(hpos, thresholdPos);
-            	            //thresholded
-            	            if (wthresh < individualHeight) {
-            	                g.setColor(Color.darkGray);
-            	                g.fillRect(x, wthresh, userWidth, h);
-            	            }
-            	            //regular
-            	            if (wthresh > hpos) {
+        	            int wthresh = Math.max(hpos, thresholdPos);
+        	            //thresholded
+        	            if (wthresh < individualHeight) {
+        	                g.setColor(Color.darkGray);
+        	                g.fillRect(x, wthresh, userWidth, h);
+        	            }
+        	            //regular
+        	            if (wthresh > hpos) {
 //            	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
 //            	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
-            	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
-            	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
-            	            }
+        	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
+        	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
+        	            }
 
-            	            g.setColor(Color.WHITE);
-            	            g.fillRect(x, 0, userWidth, cellHeight - h);
+        	            g.setColor(Color.WHITE);
+        	            g.fillRect(x, 0, userWidth, cellHeight - h);
 
-            	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+        	            g.setFont(new Font("Verdana", Font.BOLD, 10));
 
-            	            try {
-            	                if (entryForEachUser.getShowFlag()) {
-            	                    g.setColor(Color.darkGray);
-            	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
-            	                }
-            	            } catch (java.lang.NullPointerException ne) {
-            	            }
-            	            
-            	            //To draw weight rectangles
-            	            g.setColor(Color.red);
-            	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
-            	            
-            	            g.setColor(Color.lightGray);
-            	            x += userWidth;
-            	            ((Graphics2D) g).setStroke(new BasicStroke());
-            	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
+        	            try {
+        	                if (entryForEachUser.getShowFlag()) {
+        	                    g.setColor(Color.darkGray);
+        	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
+        	                }
+        	            } catch (java.lang.NullPointerException ne) {
+        	            }
+        	            
+        	            //To draw weight rectangles
+        	            g.setColor(Color.red);
+        	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
+        	            
+        	            g.setColor(Color.lightGray);
+        	            x += userWidth;
+        	            ((Graphics2D) g).setStroke(new BasicStroke());
+        	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
 
-            	            if (x > width) {
-            	                break;
-            	            }        	         
-        				}
-        			}
+        	            if (x > width) {
+        	                break;
+        	            }        	         
+    				}
         		}
                 
               //To separate a bundle of users within an alternative - bold black lines
@@ -514,18 +513,17 @@ public class AttributeCell extends JComponent {
             for(ChartEntry entryForSuperUser : entryList){//for each criteria
             	int totalIndividualHeight = 0;
 	            for(IndividualEntryMap e : chart.listOfEntryMaps){//for each user
-	    			for(ChartEntry entryForEachUser : e.entryList){//for each alternative
-	    				if(entryForSuperUser.name.equals(entryForEachUser.name)){
-	        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
-	        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
-	        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);
-	        				int h = 0;	        	            
-	        	            if (individualValue != null) {
-	        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
-	        	                totalIndividualHeight += h;	        	                
-	        	            }	
-	    				}
-	    			}
+	                ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
+    				if(entryForSuperUser != null){
+        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
+        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);
+        				int h = 0;	        	            
+        	            if (individualValue != null) {
+        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+        	                totalIndividualHeight += h;	        	                
+        	            }	
+    				}
 	    		}
 	            
 	            totalIndividualHeight /= chart.users.size()-1; 
@@ -634,10 +632,9 @@ public class AttributeCell extends JComponent {
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
     		for(IndividualEntryMap e : chart.listOfEntryMaps){
     			if(userName.equals(a.userName) && userName.equals(e.username) && entryName.equals(a.topAlternative)){
-    				for (int j = 0; j < e.entryList.size(); j++) {
-    		            if(entryName.equals(e.entryList.get(j).name)){
-    		            	aColor = a.userColor;
-    		            }
+    			    ChartEntry entry = e.findEntry(entryName);
+    				if(entry != null){
+		            	aColor = a.userColor;
     		        }
     			}
     		}
@@ -821,7 +818,7 @@ public class AttributeCell extends JComponent {
                     attributeMeta.add(detailMenuItem);
 
                     //Now check if this attribute exists in the report, if not then don't show the menu items to zoom to details
-                    final int bookmarkIndex = criteriaBookmarkExistsInReport((OutlineItem) entry.map.get("OutlineItem"), entry.name.toString(), attributeName);
+                    final int bookmarkIndex = criteriaBookmarkExistsInReport(entry.getOutlineItem(), entry.name.toString(), attributeName);
 
                     //This menu item opens one pdf report specific for this entry for the given attribute
                     if (bookmarkIndex > 0) {
@@ -834,7 +831,7 @@ public class AttributeCell extends JComponent {
                                 ChartEntry tempentry = (ChartEntry) entryList.get(index); //get the current entry
                                 if (tempentry.map.get("Report Frame") != null) { //check if the entry has an associated report
                                     //The JFram and SwingController inputs were created in ValueChart.java when the initial data was loaded
-                                    zoomToReport((JFrame) tempentry.map.get("Report Frame"), (SwingController) tempentry.map.get("Report Controller"), (OutlineItem) tempentry.map.get("OutlineItem"), bookmarkIndex, true); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
+                                    zoomToReport(tempentry.getReportFrame(), tempentry.getReportController(), tempentry.getOutlineItem(), bookmarkIndex, true); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
                                 } else {
                                     System.out.println("There is no associated report for scenario/entry #" + (index + 1));
                                 }
@@ -853,9 +850,9 @@ public class AttributeCell extends JComponent {
                                     ChartEntry tempentry = (ChartEntry) entryList.get(i); //get the entry
                                     if (tempentry.map.get("Report Frame") != null) { //check if there is an associated report
                                         //The JFrame and SwingController inputs were created in ValueChart.java when the initial data was loaded
-                                        int tempbookmarkIndex = criteriaBookmarkExistsInReport((OutlineItem) tempentry.map.get("OutlineItem"), tempentry.name.toString(), attributeName);
+                                        int tempbookmarkIndex = criteriaBookmarkExistsInReport(tempentry.getOutlineItem(), tempentry.name.toString(), attributeName);
                                         if (tempbookmarkIndex >= 0) {
-                                        zoomToReport((JFrame) tempentry.map.get("Report Frame"), (SwingController) tempentry.map.get("Report Controller"), (OutlineItem) tempentry.map.get("OutlineItem"), tempbookmarkIndex, false); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
+                                        zoomToReport(tempentry.getReportFrame(), tempentry.getReportController(), tempentry.getOutlineItem(), tempbookmarkIndex, false); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
                                         }
                                     } else {
                                         System.out.println("There is no associated report for scenario/entry #" + (index + 1));
@@ -876,9 +873,9 @@ public class AttributeCell extends JComponent {
                                     ChartEntry tempentry = (ChartEntry) entryList.get(i); //get the entry
                                     if (tempentry.map.get("Report Frame") != null) { //check if there is an associated report
                                         //The JFram and SwingController inputs were created in ValueChart.java when the initial data was loaded
-                                        int tempbookmarkIndex = criteriaBookmarkExistsInReport((OutlineItem) tempentry.map.get("OutlineItem"), tempentry.name.toString(), attributeName);
+                                        int tempbookmarkIndex = criteriaBookmarkExistsInReport(tempentry.getOutlineItem(), tempentry.name.toString(), attributeName);
                                         if (tempbookmarkIndex >= 0) {
-                                            zoomToReport((JFrame) tempentry.map.get("Report Frame"), (SwingController) tempentry.map.get("Report Controller"), (OutlineItem) tempentry.map.get("OutlineItem"), tempbookmarkIndex, true); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
+                                            zoomToReport(tempentry.getReportFrame(), tempentry.getReportController(), tempentry.getOutlineItem(), tempbookmarkIndex, true); //Go the the bookmark in the PDF (bookmark names should be assocaited with attribute)
                                         }
                                     } else {
                                         System.out.println("There is no associated report for scenario/entry #" + (index + 1));

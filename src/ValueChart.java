@@ -1044,7 +1044,7 @@ public class ValueChart extends JPanel {
             //         This method also adds a double slash when the user enters a single (necessary for java opening the file)
             if (attributeName.startsWith("report=")) {
                 File reportFileLocation = new File(attributeName.substring(7).replace("$", " ").replace("\\", "\\\\"));
-                entry.map.put("report", reportFileLocation);
+                entry.setReport(reportFileLocation);
 
                 //***Now create the windows necessary to hold the pdf in view
                 //build a controller
@@ -1074,8 +1074,8 @@ public class ValueChart extends JPanel {
                 window.setSize(new Dimension(800,600));
                 
                 //The Frame and controller are the only aspects of the report frame that need to be modified from elsewhere in the program (particularly AttributeCell, so they become part of the hashmap
-                entry.map.put("Report Frame", window);
-                entry.map.put("Report Controller", controller);
+                entry.setReportFrame(window);
+                entry.setReportController(controller);
 
                 //Now add the outline and bookmark items to the hash map
                 OutlineItem entryItem = null;
@@ -1090,7 +1090,7 @@ public class ValueChart extends JPanel {
                     // find the node you need
                 }
                 
-                entry.map.put("OutlineItem", entryItem);
+                entry.setOutlineItem(entryItem);
                 //entry.map.put("Outlines", entryOutlines); //this doesn't need to be added, it is only the items that are needed for locating
                 
                 
@@ -1129,7 +1129,7 @@ public class ValueChart extends JPanel {
             //         This method also adds a double slash when the user enters a single (necessary for java opening the file)
             if (attributeName.startsWith("report=")) {
                 File reportFileLocation = new File(attributeName.substring(7).replace("$", " ").replace("\\", "\\\\"));
-                entry.map.put("report", reportFileLocation);
+                entry.setReport(reportFileLocation);
 
                 //***Now create the windows necessary to hold the pdf in view
                 //build a controller
@@ -1159,8 +1159,8 @@ public class ValueChart extends JPanel {
                 window.setSize(new Dimension(800,600));
                 
                 //The Frame and controller are the only aspects of the report frame that need to be modified from elsewhere in the program (particularly AttributeCell, so they become part of the hashmap
-                entry.map.put("Report Frame", window);
-                entry.map.put("Report Controller", controller);
+                entry.setReportFrame(window);
+                entry.setReportController(controller);
 
                 //Now add the outline and bookmark items to the hash map
                 OutlineItem entryItem = null;
@@ -1175,7 +1175,7 @@ public class ValueChart extends JPanel {
                     // find the node you need
                 }
                 
-                entry.map.put("OutlineItem", entryItem);
+                entry.setOutlineItem(entryItem);
                 //entry.map.put("Outlines", entryOutlines); //this doesn't need to be added, it is only the items that are needed for locating
                 
                 
@@ -1236,16 +1236,16 @@ public class ValueChart extends JPanel {
 		else{
 			for(int i = 0; i<list.size(); i++){
 				System.out.println("Username: " + list.get(i).username + "\n");				
-				printChartEntry(list.get(i).entryList);
+				printChartEntry(list.get(i).getEntryMap());
 				System.out.println("\n");
 			}
 		}
 	}
     
-    public void printChartEntry(ArrayList<ChartEntry> list){
-		for(int i = 0; i <list.size() ; i++){
-			System.out.println("Entry: " + list.get(i).name);
-			HashMap<String,AttributeValue> map = list.get(i).map;
+    public void printChartEntry(LinkedHashMap<String, ChartEntry> entryMap){
+		for (ChartEntry entry : entryMap.values()) {
+			System.out.println("Entry: " + entry.name);
+			HashMap<String,AttributeValue> map = entry.map;
 			for(Map.Entry<String, AttributeValue> e : map.entrySet()){
 //				String key = e.toString();			
 				System.out.println("Attribute name: " + e.getKey() + " " + "Attribute value: " + e.getValue().weight());
