@@ -386,6 +386,26 @@ public class AttributeCell extends JComponent {
             return -1;
         }
     }
+    
+    // http://www.splitbrain.org/blog/2008-09/18-calculating_color_contrast_with_php
+    public static boolean useBlackForeground(Color background) {
+        int black = 0;
+        int r = background.getRed();
+        int g = background.getGreen();
+        int b = background.getBlue();
+        
+        // brightness
+        int bright = (299 * r + 587 * g + 114 * b) / 1000;
+        black += (bright >= 125 ? 1 : 0);
+        
+        // luminosity
+        double lumo = 0.2126 * Math.pow(r/255, 2.2) +
+                0.7152 * Math.pow(g/255, 2.2) +
+                0.0722 * Math.pow(b/255, 2.2);
+        black += (lumo >= 5 ? 1 : 0);
+        
+        return (black >= 1);
+    }
 
     public void paint(Graphics g) {
         int width = getWidth();

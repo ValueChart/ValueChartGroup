@@ -66,14 +66,14 @@ public class ValueChart extends JPanel {
     String filename;
     Vector objs;
     Vector alts;
-    Vector prims;
+    private HashMap<String, BaseTableContainer> prims;
     ConstructionView con;
     
     String data;
     double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0 
     ArrayList<IndividualAttributeMaps> listOfAttributeMaps = new ArrayList<IndividualAttributeMaps>();     //map of attributes for all users
-    Map<String,Double> maxWeightMap = new HashMap<String,Double>(); //Map of attributes with maximum weights
-    Map<String,Double> minWeightMap = new HashMap<String,Double>(); //Map of attributes with minimum weights
+    HashMap<String,Double> maxWeightMap = new HashMap<String,Double>(); //Map of attributes with maximum weights
+    HashMap<String,Double> minWeightMap = new HashMap<String,Double>(); //Map of attributes with minimum weights
     ArrayList<IndividualEntryMap> listOfEntryMaps = new ArrayList<IndividualEntryMap>(); //map of entries for all users
     ArrayList<HashMap<String,Double>> listOfWeightMaps = new ArrayList<HashMap<String,Double>>();
     HashMap<String,Double> averageAttributeWeights = new HashMap<String,Double>();
@@ -100,6 +100,10 @@ public class ValueChart extends JPanel {
     boolean isNew = true;
     LastInteraction last_int;
     LastInteraction next_int;
+    private HashMap<String, Integer> rankVarWeight = null;
+    private HashMap<String, Integer> rankVarUtil = null;
+    private HashMap<String, Integer> rankVarScore = null;
+    public static final ColorHeatMap heatMapColors = new ColorHeatMap(9);
     
     //***Added so that there is one frame that allows display of pdf reports from value chart. This window is not used for each of the attribute/entry reports.
     //Those are contained within the AttributeCell class. Rather, this is for anywhere else on the interface (it started with a need to have one report window to display the report for the criteria details)
@@ -192,6 +196,10 @@ public class ValueChart extends JPanel {
         colWidth = w;
     }
 
+    public void updateMainPane() {
+        mainPane.repaint();
+    }
+    
     public void updateDisplay() {
         displayPanel.repaint();
     }
@@ -223,7 +231,7 @@ public class ValueChart extends JPanel {
         for (it = pane.getRows(); it.hasNext();) {
             BaseTableContainer btc = (BaseTableContainer) (it.next());
             if (btc.table instanceof AttributeCell) {
-                prims.add(btc);
+                prims.put(btc.getName(), btc);
                 btc.adjustHeaderWidth();//added for rotate
             } else {
                 setPrims((TablePane) btc.table);
@@ -232,31 +240,29 @@ public class ValueChart extends JPanel {
     }
 
     public void setConnectingFields() {
-        for (Iterator it = getPrims().iterator(); it.hasNext();) {
-            BaseTableContainer btc = (BaseTableContainer) it.next();
-            for (int i = 0; i < con.getObjPanel().getPrimitiveObjectives().size(); i++) {
-                JObjective obj = (JObjective) con.getObjPanel().getPrimitiveObjectives().get(i);
-                if (obj.getName().equals(btc.getName())) {
-                    AttributeCell ac = (AttributeCell) btc.getTable();
-                    obj.setDomain(ac.getDomain());
-                    obj.setUnit(ac.getUnits());
-                    double pc = btc.getOverallRatio();
-                    obj.setWeight(String.valueOf(pc));
-                    //connect ac and obj
-                    ac.obj = obj;
-                    obj.acell = ac;
-                    if (obj.domain_type == JObjective.CONTINUOUS) {
-                        if (obj.getUnit().equals("CAD")) {
-                            obj.setDecimalFormat("0.00");
-                        }
-                        if (obj.maxC > 100) {
-                            obj.setDecimalFormat("0");
-                        } else {
-                            obj.setDecimalFormat("0.0");
-                        }
-                        if (ac.cg != null) {
-                            ac.cg.repaint();
-                        }
+        for (int i = 0; i < con.getObjPanel().getPrimitiveObjectives().size(); i++) {
+            JObjective obj = (JObjective) con.getObjPanel().getPrimitiveObjectives().get(i);
+            BaseTableContainer btc = findPrimitive(obj.getName());
+            if (btc != null) {
+                AttributeCell ac = (AttributeCell) btc.getTable();
+                obj.setDomain(ac.getDomain());
+                obj.setUnit(ac.getUnits());
+                double pc = btc.getOverallRatio();
+                obj.setWeight(String.valueOf(pc));
+                //connect ac and obj
+                ac.obj = obj;
+                obj.acell = ac;
+                if (obj.domain_type == JObjective.CONTINUOUS) {
+                    if (obj.getUnit().equals("CAD")) {
+                        obj.setDecimalFormat("0.00");
+                    }
+                    if (obj.maxC > 100) {
+                        obj.setDecimalFormat("0");
+                    } else {
+                        obj.setDecimalFormat("0.0");
+                    }
+                    if (ac.cg != null) {
+                        ac.cg.repaint();
                     }
                 }
             }
@@ -310,8 +316,12 @@ public class ValueChart extends JPanel {
         return alts;
     }
 
-    public Vector getPrims() {
+    public HashMap<String, BaseTableContainer> getPrims() {
         return prims;
+    }
+    
+    public BaseTableContainer findPrimitive(String name) {
+        return prims.get(name);
     }
 
 //READS
@@ -329,10 +339,9 @@ public class ValueChart extends JPanel {
         }
         con.setChart(this);
 //        set prim obj list for rolling up the absolute tree    	
-        prims = new Vector();
+        prims = new HashMap<String, BaseTableContainer>();
         setPrims(mainPane);
-        for (Iterator it = prims.iterator(); it.hasNext();) {
-            BaseTableContainer btc = (BaseTableContainer) it.next();
+        for (BaseTableContainer btc : prims.values()) {
             btc.setRollUp();
         }
         ((BaseTableContainer) mainPane.rowList.get(0)).setAbstractRatios();
@@ -1286,6 +1295,9 @@ public class ValueChart extends JPanel {
         }
     }
     
+    /////////////////////
+    // GROUP ACTIONS
+
     public void setTopChoices(boolean tc){
     	topChoices = tc;
     }
@@ -1297,6 +1309,52 @@ public class ValueChart extends JPanel {
     public void showAverageWeights(boolean b) {
     	showAvgWeights = b;
 	}
+    
+    // gives rank weight from 0-8, 8 being the strongest colour
+    public HashMap<String, Integer> rankVarianceScore() {
+        if (rankVarScore != null) return rankVarScore;
+        
+        rankVarScore = CriteriaStatistics.rankVarianceScore(listOfWeightMaps, maxWeightMap);
+        return rankVarScore;
+    }
+    
+    // gives rank weight from 0-8, 8 being the strongest colour
+    public HashMap<String, Integer> rankVarianceWeight() {
+        if (rankVarWeight != null) return rankVarWeight;
+        
+        rankVarWeight = CriteriaStatistics.rankVarianceWeight(listOfWeightMaps);
+        return rankVarWeight;
+    }
+    
+ // gives rank weight from 0-8, 8 being the strongest colour
+    public HashMap<String, Integer> rankVarianceUtility() {
+        //TODO
+        return null;
+    }
+    
+    public void setCriteriaHightlight(int type) {
+        HashMap<String, Integer> ranks = null;
+        if (type == CriteriaStatistics.SCORE)
+            ranks = rankVarianceScore();
+        else if (type == CriteriaStatistics.WEIGHT)
+            ranks = rankVarianceWeight();
+        else if (type == CriteriaStatistics.UTILITY)
+            ranks = rankVarianceUtility();
+        
+        if (ranks == null) return;
+        for (BaseTableContainer base : prims.values()) {
+            Integer rank = ranks.get(base.getName());
+            if (rank != null) {
+                base.setHighLight(rank);
+            }
+        }
+    }
+    
+    public void clearCriteriaHightlight() {
+        for (BaseTableContainer base : prims.values()) {
+            base.setHighLight(-1);
+        }
+    }
 
 //SHOWS/FRAMES
     

@@ -58,6 +58,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     int preferredHeaderWidth = 0;
     String weight;
     JPopupMenu popAttribute;
+    int highlight = -1;
 
     public BaseTableContainer(JComponent table, ValueChart chart) {
         this(table, null, chart, -1);
@@ -855,10 +856,10 @@ public class BaseTableContainer extends Box implements ActionListener {
         }
 
         public void pump(BaseTableContainer base, boolean up) {
-            Vector prims = chart.getPrims();
+            HashMap<String, BaseTableContainer> prims = chart.getPrims();
             double othercount = -1;
-            for (Iterator it = prims.iterator(); it.hasNext();) {
-                if (((BaseTableContainer) it.next()).rollUpRatio > 0) {
+            for(BaseTableContainer btc : prims.values()) {
+                if (btc.rollUpRatio > 0) {
                     othercount = othercount + 1;
                 }
             }
@@ -866,8 +867,7 @@ public class BaseTableContainer extends Box implements ActionListener {
             if (!up) {
                 pump = -pump;
             }
-            for (Iterator it = prims.iterator(); it.hasNext();) {
-                BaseTableContainer b = (BaseTableContainer) it.next();
+            for(BaseTableContainer b : prims.values()) {
                 //int bsize = b.getHeight(); //height of primitive at start			
                 if (b == base) {
                     b.setRollUpRatio(b.rollUpRatio + pump);
@@ -883,12 +883,11 @@ public class BaseTableContainer extends Box implements ActionListener {
                     }
                 }
             }
-            for (Iterator it = chart.getPrims().iterator(); it.hasNext();) {
-                BaseTableContainer b = (BaseTableContainer) it.next();
+            for(BaseTableContainer b : prims.values()) {
                 b.setExactSize(b.getWidth(), (int) Math.round(b.rollUpRatio * chart.mainPane.getHeight()));
             }
-            for (Iterator it = chart.getPrims().iterator(); it.hasNext();) {
-                upSize((BaseTableContainer) it.next());
+            for(BaseTableContainer b : prims.values()) {
+                upSize(b);
             }
             realignAll(chart.mainPane);
         }
@@ -992,5 +991,21 @@ public class BaseTableContainer extends Box implements ActionListener {
             //go to the valuechart report
             chart.zoomToReport(this.getName());
         }*/
+    }
+
+    public void setHighLight(int rank) {
+        if(table instanceof AttributeCell){
+            highlight = rank;
+            if (highlight < 0) {
+                header.setForeground(Color.black);
+                header.setOpaque(false);
+            } else {
+                Color back = ValueChart.heatMapColors.get(rank);
+                boolean black = AttributeCell.useBlackForeground(back);
+                header.setForeground((black ? Color.black : Color.white));
+                header.setBackground(back);
+                header.setOpaque(true);
+            }
+        }
     }
 }
