@@ -88,6 +88,7 @@ public class ValueChart extends JPanel {
     boolean topChoices = false;
     boolean showAvgWeights = false;
     boolean generateAvgGVC = false;
+    boolean hideNonCompete = false;
     
     boolean pump = false;
     boolean pump_increase = true;
@@ -1287,6 +1288,10 @@ public class ValueChart extends JPanel {
     
     public void setTopChoices(boolean tc){
     	topChoices = tc;
+    }
+    
+    public void setHideNonCompeting(boolean h) {
+        hideNonCompete = h;
     }
     
     public void showAverageWeights(boolean b) {

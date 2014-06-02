@@ -595,11 +595,12 @@ public class AttributeCell extends JComponent {
 //    	else if(choice == ValueChart.COLORFORATTRIBUTE){
 //    		aColor = getAttributeColorFromAttributeMap(attrName,user);
 //    	}    		
-    	if(!chart.topChoices){
-    		aColor = getUserColorFromAttributeMap(filename);
-    	}
-    	else{
-    		aColor = setTopAlternativeColor(filename, entryName, attrName);
+    	if(chart.topChoices) {
+    	    aColor = setTopAlternativeColor(filename, entryName, attrName);
+    	} else if (chart.hideNonCompete) {
+    	    aColor = setHideNonCompeteColor(filename, entryName);
+    	} else {
+    	    aColor = getUserColorFromAttributeMap(filename);
     	}
     	return aColor;
     }
@@ -642,6 +643,21 @@ public class AttributeCell extends JComponent {
     		}
 		}
     	return aColor;
+    }
+    
+    public Color setHideNonCompeteColor(String userName, String entryName) {
+        HashSet<String> top = new HashSet<String>();
+        Color userColor = Color.GRAY;
+        for (IndividualAttributeMaps a : chart.listOfAttributeMaps) {
+            top.add(a.topAlternative);
+            if (a.userName.equals(userName))
+                userColor = a.userColor;
+        }
+        if (top.contains(entryName)) {
+            return userColor;
+        } else {
+            return Color.GRAY;
+        }
     }
     
     

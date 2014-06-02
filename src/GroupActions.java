@@ -380,6 +380,13 @@ public class GroupActions extends JPanel implements ActionListener {
 		else if("generateAvgGVC".equals(ae.getActionCommand())){
 			chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
 		}
+		else if ("hideNonCompAlts".equals(ae.getActionCommand())) {
+		    if (hideUncompetitiveAlts.isSelected())
+		        chart.setHideNonCompeting(true);
+		    else
+		        chart.setHideNonCompeting(false);
+            chart.updateAll();
+        }
 	}
 	
 	public void printMessage(String str){
