@@ -1314,7 +1314,7 @@ public class ValueChart extends JPanel {
     public HashMap<String, Integer> rankVarianceScore() {
         if (rankVarScore != null) return rankVarScore;
         
-        rankVarScore = CriteriaStatistics.rankVarianceScore(listOfWeightMaps, maxWeightMap);
+        rankVarScore = CriteriaStatistics.rankVarianceScore(listOfEntryMaps);
         return rankVarScore;
     }
     
