@@ -192,7 +192,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 		}
 		
         if ("Reload".equals(ae.getActionCommand())) {
-            chart.resetDisplay(chart.displayType, chart.colWidth, true, chart.show_graph,ValueChart.COLORFORUSER,null);
+            if (ae.getSource() instanceof MenuEntry) 
+                ((MenuEntry)(ae.getSource())).setEnabled(false);
+            chart.resetDisplay(chart.displayType, chart.colWidth, false, chart.show_graph,ValueChart.COLORFORUSER,null);
         }
 		
 		if ("Save".equals(ae.getActionCommand())){

@@ -26,7 +26,7 @@ public class EntryNamePanel extends JPanel implements ActionListener {
             AffineTransform.getRotateInstance(-Math.PI / 6.0);
     public static Font VLABELFONT = LABELFONT.deriveFont(ANGLEFONT);
     private static final int ANG_WD = 90;
-    private static final int ANG_HT = 50;
+    static final int ANG_HT = 50;
     Vector labelList;
     int panelHeight = 0;
     int colWidth = 0;
@@ -232,8 +232,8 @@ public class EntryNamePanel extends JPanel implements ActionListener {
                 //The JFrame and SwingController inputs were created in ValueChart.java when the initial data was loaded
                 //Since the window is initially hidden, or when the user closes the window is become hidden (not closed), we need to check this first
                 //But only show the window if the request has been such
-                JFrame window = (JFrame) tempentry.map.get("Report Frame"); //get the window associated with the chart
-                SwingController controller = (SwingController) tempentry.map.get("Report Controller"); //get the controller associated with the window
+                JFrame window = tempentry.getReportFrame(); //get the window associated with the chart
+                SwingController controller = tempentry.getReportController(); //get the controller associated with the window
                 
                 zoomToReport(window, controller, tempentry.name.toString()); //if there is a bookmark with the name of this entry, go to it, otherwise it will take you to the first page of the report
             } else {

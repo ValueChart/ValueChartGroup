@@ -72,21 +72,21 @@ public abstract class AttributeDomain
 
 	*/
 	
-	public static AttributeDomain getInfo(Vector xval, Vector yval, int type){
+	public static AttributeDomain getInfo(Vector<Object> xval, Vector<Double> yval, int type){
 		AttributeDomain domain = null;
 		if (type == DISCRETE){	      	
 			domain = new DiscreteAttributeDomain();
             for (int i=0; i<yval.size(); i++ ){	      	
-            	Double dbl = (Double) yval.get(i);
-            	((DiscreteAttributeDomain)domain).addElement(xval.get(i).toString(), dbl.doubleValue());
+            	Double dbl = yval.get(i);
+            	domain.getDiscrete().addElement(xval.get(i).toString(), dbl.doubleValue());
             }
 		}	
 		else {
 	      	domain = new ContinuousAttributeDomain();
             for (int i=0; i<yval.size(); i++ ){	    
-	      		Double d =  (Double)yval.get(i);
+	      		Double d =  yval.get(i);
 	      		Double k =  (Double)xval.get(i);	      		
-	      		((ContinuousAttributeDomain)domain).addKnot(k.doubleValue(), d.doubleValue());      		
+	      		domain.getContinuous().addKnot(k.doubleValue(), d.doubleValue());      		
             }
 	    }
 		return domain;		
@@ -159,10 +159,10 @@ public abstract class AttributeDomain
 	    		   ": weight should be within [0,1]");
 	       } 
 	      if (domain.getType() == DISCRETE)
-	       { ((DiscreteAttributeDomain)domain).addElement(ordstr, val);
+	       { domain.getDiscrete().addElement(ordstr, val);
 	       }
 	      else
-	       { ((ContinuousAttributeDomain)domain).addKnot(ordval, val);
+	       { domain.getContinuous().addKnot(ordval, val);
 	       }
 	      c = scanReader.scanChar (" %c");
 	      if (c == '}')
@@ -175,4 +175,8 @@ public abstract class AttributeDomain
 	    }	   
 	   return domain;
 	 }
+
+    public abstract ContinuousAttributeDomain getContinuous();
+    
+    public abstract DiscreteAttributeDomain getDiscrete();
 }

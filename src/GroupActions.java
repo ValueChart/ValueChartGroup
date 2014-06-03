@@ -42,8 +42,6 @@ public class GroupActions extends JPanel implements ActionListener {
 	JRadioButton topChoice;
 	JRadioButton topTwoChoices;
 	JLabel disagreement;
-	JRadioButton controversialWeight;
-	JRadioButton controversialValueFunction;
 	JCheckBox showAverageAlternatives;
 	JCheckBox showAverageWeights;
 	JCheckBox hideUncompetitiveAlts;
@@ -62,6 +60,8 @@ public class GroupActions extends JPanel implements ActionListener {
 	HashMap<String,Color> tempUserColorMap;
 	int mousedOver = -1;
 	boolean showLegend = true;
+
+	JComboBox<String> selectVarMode;
 	
 	public GroupActions(ValueChart ch) {
 		chart = ch;
@@ -74,7 +74,6 @@ public class GroupActions extends JPanel implements ActionListener {
 		}		
 		ButtonGroup grpColor = new ButtonGroup();
 		ButtonGroup grpDetails = new ButtonGroup();
-		ButtonGroup grpControversy = new ButtonGroup();
 		
 		forAttributes = new JRadioButton("Attributes");
 		forAttributes.setActionCommand("attributes");
@@ -180,22 +179,17 @@ public class GroupActions extends JPanel implements ActionListener {
         topTwoChoices.setFont(font);		
         grpDetails.add(topTwoChoices);
         
-        disagreement = new JLabel("Highlight Disagreed Criteria");
+        disagreement = new JLabel("Criteria Variance HeatMap");
         disagreement.setFont(font);
+        String[] selectOpt = {"None", "by Score","by Weight","by Utility"};
         
-        controversialWeight = new JRadioButton("By Weight");
-        controversialWeight.setActionCommand("controversyByWeight");
-        controversialWeight.setEnabled(true);
-        controversialWeight.addActionListener(this);
-        controversialWeight.setFont(font);
-        grpControversy.add(controversialWeight);
-        
-        controversialValueFunction = new JRadioButton("By Utility");
-        controversialValueFunction.setActionCommand("controversyByValueFunction");
-        controversialValueFunction.setEnabled(true);
-        controversialValueFunction.addActionListener(this);
-        controversialValueFunction.setFont(font);
-        grpControversy.add(controversialValueFunction);
+        selectVarMode = new JComboBox<String>(selectOpt);
+        selectVarMode.setSelectedIndex(0);
+        selectVarMode.setActionCommand("varSelect");
+        selectVarMode.addActionListener(this);
+        selectVarMode.setFont(font);
+        selectVarMode.setMaximumSize(selectVarMode.getPreferredSize());
+        selectVarMode.setAlignmentX(LEFT_ALIGNMENT);
         
         generateAvgGVC = new JButton("Average Group VC");
         generateAvgGVC.setActionCommand("generateAvgGVC");
@@ -240,8 +234,7 @@ public class GroupActions extends JPanel implements ActionListener {
         pnlDetails.add(Box.createHorizontalStrut(5));
         
         pnlDetails.add(disagreement);
-        pnlDetails.add(controversialWeight);
-        pnlDetails.add(controversialValueFunction);
+        pnlDetails.add(selectVarMode);
         
         pnlDetails.add(Box.createHorizontalStrut(5));
         pnlDetails.add(new JSeparator(SwingConstants.HORIZONTAL));
@@ -379,6 +372,27 @@ public class GroupActions extends JPanel implements ActionListener {
 		}
 		else if("generateAvgGVC".equals(ae.getActionCommand())){
 			chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
+		}
+		else if ("hideNonCompAlts".equals(ae.getActionCommand())) {
+		    if (hideUncompetitiveAlts.isSelected())
+		        chart.setHideNonCompeting(true);
+		    else
+		        chart.setHideNonCompeting(false);
+            chart.updateAll();
+        }
+		else if ("varSelect".equals(ae.getActionCommand())) {
+		    String s = (String)(((JComboBox<String>) ae.getSource()).getSelectedItem());
+		    if (s.equals("None")) {
+                chart.clearCriteriaHightlight();
+		    } else if (s.equals("by Score")) {
+		        chart.setCriteriaHightlight(CriteriaStatistics.SCORE);
+		    } else if (s.equals("by Weight")) {
+	            chart.setCriteriaHightlight(CriteriaStatistics.WEIGHT);
+	        } else if (s.equals("by Utility")) {
+	            chart.setCriteriaHightlight(CriteriaStatistics.UTILITY);
+	        }
+            chart.updateMainPane();
+            
 		}
 	}
 	

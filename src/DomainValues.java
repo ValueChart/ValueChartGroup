@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -60,16 +61,15 @@ import javax.swing.table.DefaultTableModel;
 		public void showData(ChartEntry entry){
 
 			rows = new Vector();
-			Vector prims = chart.getPrims();
+			HashMap<String, BaseTableContainer> prims = chart.getPrims();
 			//lblAlt.setText(entry.name);
 			//lblAlt.setLocation(0, lblAlt.getLocation().y);
 			//lblAlt.setPreferredSize(new Dimension(getWidth(), lblAlt.getHeight()));
 			//lblAlt.setMaximumSize(new Dimension(getWidth(), lblAlt.getHeight()));
 			
 	        setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(0,0,0,0), entry.name, 0, 0));
-			for (Iterator it = prims.iterator(); it.hasNext();){
+	        for(BaseTableContainer base : prims.values()) {
 				data = new Vector();
-				BaseTableContainer base = (BaseTableContainer)it.next();
 				String s = (base.getName());				
 				AttributeValue val = (AttributeValue)entry.map.get(s);				
 				data.add(s);

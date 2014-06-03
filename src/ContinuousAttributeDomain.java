@@ -1,164 +1,206 @@
-import java.util.Iterator;
-import java.util.Vector;
-
+import java.util.*;
 
 //This is an important class. In fact, I believe most of the interaction with the continuous domain
 //can be done through this class.
 //If you are successful using this class, in theory, you can ignore AttributeDomain class
 //More comments are added below
 
-public class ContinuousAttributeDomain extends AttributeDomain
-{
-	public class Knot
-	 {
-	   double ord;
-	   double val;
+public class ContinuousAttributeDomain extends AttributeDomain {
+    ContGraph contGraph;
 
-	   Knot (double ord, double val)
-	    { this.ord = ord;
-	      this.val = val;
-	    }
+    public Double getValue(double x) {
+        return knotMap.get(x);
+    }
 
-	   double interpolate (Knot next, double x)
-	    {
-	      return val + (next.val-val)/(next.ord-ord)*(x-ord);
-	    }
-	 }
-	
-	public Knot getKnot (double ord)
-	 { for (Iterator it=knotList.iterator(); it.hasNext(); ) 
-	    { Knot k = (Knot)it.next();
-	      if (k.ord == ord)
-	       { return k;
-	       }
-	    }
-	   return null;
-	 }
+    // sorted in increasing x value
+    private TreeMap<Double, Double> knotMap;
 
-	Vector knotList;
+    // the constructor carries a Vector list of elements
+    public ContinuousAttributeDomain() {
+        super();
+        knotMap = new TreeMap<Double, Double>();
+    }
 
-        //the constructor carries a Vector list of elements
-	public ContinuousAttributeDomain()
-	 { super();
-	   knotList = new Vector(32);
-	 }
+    // Returns type.
+    public int getType() {
+        return CONTINUOUS;
+    }
 
-        //Returns type.
-	public int getType()
-	 { return CONTINUOUS;
-	 }
-	
-        //This function will help you find the weight for a particular element x.
-        //In continuous domain, the x-axis is always double which maps to another double value on the y-axis
-	public double weight (double x)
-	 {
-	   Knot k1, k2;
-	   if (knotList.size() < 2)
-	    { throw new IllegalStateException ("incomplete knot list"); 
-	    }
-	   Iterator it = knotList.iterator();
-	   k1 = (Knot)it.next();
-	   k2 = (Knot)it.next();
-	   if (x < k1.ord)
-	    { throw new IllegalArgumentException (
-"input " + x + " is out of range");
-	    }
-	   while (x > k2.ord && it.hasNext())
-	    { k1 = k2;
-	      k2 = (Knot)it.next();
-	    }
-	   if (x > k2.ord)
-	    { throw new IllegalArgumentException (
-"input " + x + " is out of range");
-	    }
-	   return k1.interpolate (k2, x);
-	 }
+    private Double interpolate(double x) {
+        Map.Entry<Double, Double> first = knotMap.floorEntry(x);
+        Map.Entry<Double, Double> second = knotMap.ceilingEntry(x);
 
-        //Returns all the x-axis elements. This is useful if you need to display all the elements in the continuous domain.
-	public double[] getKnots()
-	 {
-	   double[] knotvals = new double[knotList.size()];
-	   int i = 0;
-	   for (Iterator it=knotList.iterator(); it.hasNext(); ) 
-	    { Knot knot = (Knot)it.next();
-	      knotvals[i++] = knot.ord;
-	    }
-	   return knotvals;
-	 }
+        if (first == null)
+            return knotMap.firstEntry().getValue();
+        if (second == null)
+            return knotMap.lastEntry().getValue();
+        if (first.getKey() == x)
+            return first.getValue();
 
-        //Returns all the y-axis weights. This is useful together with getKnots, to get all the elements in the domain
-	public double[] getWeights()
-	 {
-	   double[] weights = new double[knotList.size()];
-	   int i = 0;
-	   for (Iterator it=knotList.iterator(); it.hasNext(); ) 
-	    { Knot knot = (Knot)it.next();
-	      weights[i++] = knot.val;
-	    }
-	   return weights;
-	 }
+        return first.getValue() + (second.getValue() - first.getValue()) / (second.getKey() - first.getKey()) * (x - first.getKey());
+    }
 
-        //Returns the minmum element on the x-axis
-	public double getMin ()
-	 {
-	   if (knotList.size() < 2)
-	    { throw new IllegalStateException ("incomplete knot list"); 
-	    }
-	   return ((Knot)knotList.firstElement()).ord;
-	 }
+    // This function will help you find the weight for a particular element x.
+    // In continuous domain, the x-axis is always double which maps to another
+    // double value on the y-axis
+    public Double weight(double x) {
+        if (knotMap.size() < 2) {
+            throw new IllegalStateException("incomplete knot list");
+        }
 
-        //Returns the maximum element on the y-axis
-	public double getMax ()
-	 {
-	   if (knotList.size() < 2)
-	    { throw new IllegalStateException ("incomplete knot list"); 
-	    }
-	   return ((Knot)knotList.lastElement()).ord;
-	 }
+        if (x < knotMap.firstKey() || x > knotMap.lastKey()) {
+            throw new IllegalArgumentException("input " + x
+                    + " is out of range");
+        }
 
-        //This add an element to the Vector List. when the data file is read, this is called repeatedly.
-        //In the future, this function will be useful for people to add/remove domain values
-	public void addKnot (double ord, double val)
-	 {
-	   Knot knot = new Knot (ord, val);
-	   if (knotList.size() == 0)
-	    { knotList.add (knot);
-	      return;
-	    }
-	   Knot k1;
-	   Iterator it = knotList.iterator();
-	   k1 = (Knot)it.next();
-	   int index = 0;
-	   while (ord > k1.ord && it.hasNext())
-	    { k1 = (Knot)it.next();
-	      index++;
-	    }
-	   if (ord > k1.ord)
-	    { knotList.add (index+1, knot);
-	    }
-	   else if (ord == k1.ord)
-	    { k1.val = val;
-	    }
-	   else
-	    { knotList.add (index, knot);
-	    }
-	 }
+        return interpolate(x);
+    }
 
-        //This one is for removing domain values.
-	public void removeKnot (double ord)
-	 {
-	   Iterator it = knotList.iterator();
-	   while (it.hasNext())
-	    { if (((Knot)it.next()).ord == ord)
-	       { it.remove();
-		 break;
-	       }
-	    }
-	 }
-	
-	public void changeWeight (double ord, double val)
-	 {
-		Knot k = getKnot(ord);
-		k.val = val;
-	 }
+    // Returns all the x-axis elements. This is useful if you need to display
+    // all the elements in the continuous domain.
+    public double[] getKnots() {
+        double[] knotvals = new double[knotMap.size()];
+        int i = 0;
+        for (Iterator<Double> it = knotMap.keySet().iterator(); it.hasNext();) {
+            knotvals[i++] = it.next();
+        }
+
+        return knotvals;
+    }
+
+    // Returns all the y-axis weights. This is useful together with getKnots, to
+    // get all the elements in the domain
+    public double[] getWeights() {
+        double[] weights = new double[knotMap.size()];
+        int i = 0;
+        for (Map.Entry<Double, Double> entry : knotMap.entrySet()) {
+            weights[i++] = entry.getValue();
+        }
+        return weights;
+    }
+
+    // Returns the minimum element on the x-axis
+    public double getMin() {
+        if (knotMap.size() < 2) {
+            return Double.MAX_VALUE;
+        }
+        return knotMap.firstKey();
+    }
+
+    // Returns the maximum element on the x-axis
+    public double getMax() {
+        if (knotMap.size() < 2) {
+            return Double.MIN_VALUE;
+        }
+        return knotMap.lastKey();
+    }
+
+    // This add an element to the Vector List. when the data file is read, this
+    // is called repeatedly.
+    // In the future, this function will be useful for people to add/remove
+    // domain values
+    public void addKnot(double ord, double val) {
+        double y;
+        if (val > 1.0)
+            y = 1.0;
+        else if (val < 0.0)
+            y = 0.0;
+        else
+            y = val;
+
+        knotMap.put(ord, y);
+    }
+
+    // This one is for removing domain values.
+    public void removeKnot(double ord) {
+        knotMap.remove(ord);
+    }
+
+    public void changeWeight(double ord, double val) {
+        if (val > 1.0)
+            knotMap.put(ord, 1.0);
+        else if (val < 0.0)
+            knotMap.put(ord, 0.0);
+        else
+            knotMap.put(ord, val);
+    }
+
+    // scales weights so they fall in range [0, 1]
+    public void normalize() {
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        for (Map.Entry<Double, Double> entry : knotMap.entrySet()) {
+            double currVal = entry.getValue();
+            if (currVal > max) {
+                max = currVal;
+            }
+            if (currVal < min) {
+                min = currVal;
+            }
+        }
+        if ((min == 0 && max == 1) || min == max)
+            return;
+
+        double range = max - min;
+        double shift = min;
+
+        for (Map.Entry<Double, Double> entry : knotMap.entrySet()) {
+            entry.setValue((entry.getValue() - shift) / range);
+        }
+    }
+
+    // new range for x-axis
+    public boolean updateRange(double min, double max) {
+        if ((min == getMin() && max == getMax()) || max <= min)
+            return true;
+
+        // no knots yet
+        if (knotMap.isEmpty()) {
+            knotMap.put(min, 0.5);
+            knotMap.put(min + (max - min) / 2, 0.5);
+            knotMap.put(max, 0.5);
+            return false;
+        }
+
+        // new range larger than current range
+        if (max < knotMap.firstKey())
+            return false;
+        // new range smaller than current range
+        if (min > knotMap.lastKey())
+            return false;
+
+        Double curr;
+        if (min != getMin()) {
+            knotMap.put(min, interpolate(min));
+            curr = knotMap.firstKey();
+            while (curr < min) {
+                knotMap.remove(curr);
+                curr = knotMap.firstKey();
+            }
+        }
+        if (max != getMax()) {
+            knotMap.put(max, interpolate(max));
+            curr = knotMap.lastKey();
+            while (curr > max) {
+                knotMap.remove(curr);
+                curr = knotMap.lastKey();
+            }
+        }
+
+        normalize();
+        if (contGraph != null)
+            contGraph.plotPoints();
+        return true;
+    }
+
+    @Override
+    public ContinuousAttributeDomain getContinuous() {
+        return this;
+    }
+
+    @Override
+    public DiscreteAttributeDomain getDiscrete() {
+        return null;
+    }
+
 }
