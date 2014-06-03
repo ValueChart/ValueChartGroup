@@ -489,7 +489,7 @@ public class DefineAlternativesPanel extends JPanel implements ActionListener, T
 		                                JOptionPane.YES_NO_CANCEL_OPTION);
 		                        //c)add the new discrete value 
 		                        if (n == JOptionPane.YES_OPTION) {
-		                        	DiscreteAttributeDomain dom = (DiscreteAttributeDomain)obj.domain;
+		                        	DiscreteAttributeDomain dom = obj.domain.getDiscrete();
 		                        	dom.addElement(entered, 0.5); 		                        	
 		                        	updateTable(); //d. update for new combobox item
 		                        }

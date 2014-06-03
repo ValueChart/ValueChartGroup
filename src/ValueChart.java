@@ -1328,8 +1328,10 @@ public class ValueChart extends JPanel {
     
  // gives rank weight from 0-8, 8 being the strongest colour
     public HashMap<String, Integer> rankVarianceUtility() {
-        //TODO
-        return null;
+        if (rankVarUtil != null) return rankVarUtil;
+        
+        rankVarUtil = CriteriaStatistics.rankVarianceUtility(listOfAttributeMaps);
+        return rankVarUtil;
     }
     
     public void setCriteriaHightlight(int type) {
@@ -1712,11 +1714,11 @@ public class ValueChart extends JPanel {
             last.domain = domain;
             if (domain != null) {
                 if (domain.getType() == AttributeDomain.DISCRETE) {
-                    DiscreteAttributeDomain d = ((DiscreteAttributeDomain) domain);
-                    last.weight = (d.getEntry(elt)).weight;
+                    DiscreteAttributeDomain d = domain.getDiscrete();
+                    last.weight = d.getEntryWeight(elt);
                 } else {
-                    ContinuousAttributeDomain c = ((ContinuousAttributeDomain) domain);
-                    last.weight = (c.getKnot(knot)).val;
+                    ContinuousAttributeDomain c = domain.getContinuous();
+                    last.weight = c.weight(knot);
                 }
             }
 
@@ -1749,11 +1751,11 @@ public class ValueChart extends JPanel {
                         dg.plotPoints();
                     } else if (pnlUtil instanceof ContinuousUtilityGraph) {
                         ContinuousUtilityGraph cug = (ContinuousUtilityGraph) pnlUtil;
-                        ((ContinuousAttributeDomain) domain).changeWeight(knot, weight);
+                        domain.getContinuous().changeWeight(knot, weight);
                         cug.acell.cg.plotPoints();
                     } else if (pnlUtil instanceof DiscreteUtilityGraph) {
                         DiscreteUtilityGraph dug = (DiscreteUtilityGraph) pnlUtil;
-                        ((DiscreteAttributeDomain) domain).changeWeight(elt, weight);
+                        domain.getDiscrete().changeWeight(elt, weight);
                         dug.acell.dg.plotPoints();
                     }
                     updateAll();

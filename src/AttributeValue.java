@@ -15,7 +15,7 @@ public class AttributeValue
 		if (d.getType() != AttributeDomain.DISCRETE)
 			throw new IllegalArgumentException ("Symbolic values must be associated with discrete domains");	    
 		try{
-			((DiscreteAttributeDomain)d).weight(s);
+			d.getDiscrete().getEntryWeight(s);
 	    }catch (Exception e){
 	    	throw new IllegalArgumentException ("Attribute value " + s + " unknown"); 
 	    }
@@ -28,7 +28,7 @@ public class AttributeValue
 		if (d.getType() != AttributeDomain.CONTINUOUS)
 			throw new IllegalArgumentException ("Numeric values must be associated with continous domains");
 		try{
-			((ContinuousAttributeDomain)d).weight(n);
+			d.getContinuous().weight(n);
 		}catch (Exception e){
 			throw new IllegalArgumentException ("Attribute value " + n + " out of range"); 
 		}
@@ -57,10 +57,10 @@ public class AttributeValue
 	public double weight()
 	 {
 	   if (domain.getType() == AttributeDomain.DISCRETE)
-	    { return ((DiscreteAttributeDomain)domain).weight (str);
+	    { return domain.getDiscrete().getEntryWeight(str);
 	    }
 	   else
-	    { return ((ContinuousAttributeDomain)domain).weight (num);
+	    { return domain.getContinuous().weight (num);
 	    }
 	 }
 }

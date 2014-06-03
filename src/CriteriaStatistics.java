@@ -164,4 +164,9 @@ public class CriteriaStatistics {
         
         return rankVarScore;
     }
+    
+    public static HashMap<String, Integer> rankVarianceUtility(ArrayList<IndividualAttributeMaps> listOfAttributeMaps) {
+        // TODO
+        return null;
+    }
 }

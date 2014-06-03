@@ -163,7 +163,7 @@ public class AttributeCell extends JComponent {
         String worst = "";
         DecimalFormat df = obj.decimalFormat;
         if (domain.getType() == AttributeDomain.DISCRETE) {
-            DiscreteAttributeDomain dd = (DiscreteAttributeDomain) domain;
+            DiscreteAttributeDomain dd = domain.getDiscrete();
             String elt[] = dd.getElements();
             double wt[] = dd.getWeights();
             for (int j = 0; j < wt.length; j++) {
@@ -175,7 +175,7 @@ public class AttributeCell extends JComponent {
                 }
             }
         } else {
-            ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
+            ContinuousAttributeDomain cd = domain.getContinuous();
             double kt[] = cd.getKnots();
             double wt[] = cd.getWeights();
             for (int j = 0; j < wt.length; j++) {
@@ -188,16 +188,16 @@ public class AttributeCell extends JComponent {
             }
         }
                 if (domain.getType() == AttributeDomain.DISCRETE){ 
-         DiscreteAttributeDomain dd = (DiscreteAttributeDomain)domain;
+         DiscreteAttributeDomain dd = domain.getDiscrete();
          String[] elements = dd.getElements();
          String msg = null;
          for (int i=0; i<elements.length; i++){ 
-         msg = elements[i] + " " + dd.weight(elements[i]);
+         msg = elements[i] + " " + dd.getEntryWeight(elements[i]);
          domainPopup.add(msg);
          }
          }
          else{ 
-         ContinuousAttributeDomain cd = (ContinuousAttributeDomain)domain;
+         ContinuousAttributeDomain cd = domain.getContinuous();
          String rangeMsg = "[" + cd.getMin() + ", " + cd.getMax() + "]";
          if (units != null)
          rangeMsg += " " + units;
@@ -224,12 +224,11 @@ public class AttributeCell extends JComponent {
 //This is added to display utility graph
     public void getUtility(AttributeDomain domain) {
         if (domain.getType() == AttributeDomain.DISCRETE) {
-            DiscreteAttributeDomain dd =
-                    (DiscreteAttributeDomain) domain;
+            DiscreteAttributeDomain dd = domain.getDiscrete();
             new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
 
         } else {
-            ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
+            ContinuousAttributeDomain cd =  domain.getContinuous();
             new ContinuousUtilityGraph(chart, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
         }
     }
@@ -237,24 +236,23 @@ public class AttributeCell extends JComponent {
     //This will make function call to get utility graph
     public void makeUtility(AttributeDomain domain) {
         if (domain.getType() == AttributeDomain.DISCRETE) {
-            DiscreteAttributeDomain dd =
-                    (DiscreteAttributeDomain) domain;
+            DiscreteAttributeDomain dd = domain.getDiscrete();
             new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
 
         } else {
-            ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
+            ContinuousAttributeDomain cd = domain.getContinuous();
             new ContinuousUtilityGraph(chart, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, null, this);
         }
     }
 
     public ContGraph makeContGraph(AttributeDomain domain) {
-        ContinuousAttributeDomain cd = (ContinuousAttributeDomain) domain;
+        ContinuousAttributeDomain cd = domain.getContinuous();
         cg = new ContGraph(chart, cd, cd.getKnots(), cd.getWeights(), getUnits(), attributeName, color, this);
         return cg;
     }
 
     public DiscGraph makeDiscGraph(AttributeDomain domain) {
-        DiscreteAttributeDomain dd = (DiscreteAttributeDomain) domain;
+        DiscreteAttributeDomain dd = domain.getDiscrete();
         dg = new DiscGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, color);
         return dg;
     }

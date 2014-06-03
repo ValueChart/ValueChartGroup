@@ -77,15 +77,15 @@ public class IndividualAttributeMaps {
 			AttributeDomain domain = attributeDomainMap.get(key);
 			if(domain.getType() == AttributeDomain.DISCRETE){
 				System.out.println(key);
-				String[] elements = ((DiscreteAttributeDomain) domain).getElements();
-		        double[] weights = ((DiscreteAttributeDomain) domain).getWeights();
+				String[] elements = domain.getDiscrete().getElements();
+		        double[] weights = domain.getDiscrete().getWeights();
 				for(int i =0; i < elements.length;i++){
 					System.out.println(elements[i] + " " + weights[i]);
 				}
 			}else{
 				System.out.println(key);
-				double[] elements = ((ContinuousAttributeDomain) domain).getKnots();
-		        double[] weights = ((ContinuousAttributeDomain) domain).getWeights();
+				double[] elements = domain.getContinuous().getKnots();
+		        double[] weights = domain.getContinuous().getWeights();
 				for(int i =0; i < elements.length;i++){
 					System.out.println(elements[i] + " " + weights[i]);
 				}
@@ -125,15 +125,15 @@ public class IndividualAttributeMaps {
 				AttributeDomain domain = cell.getDomain();
 				if(domain.getType() == AttributeDomain.DISCRETE){
 					System.out.println(cell.getName());
-					String[] elements = ((DiscreteAttributeDomain) domain).getElements();
-			        double[] weights = ((DiscreteAttributeDomain) domain).getWeights();
+					String[] elements = domain.getDiscrete().getElements();
+			        double[] weights = domain.getDiscrete().getWeights();
 					for(int i =0; i < elements.length;i++){
 						System.out.println(elements[i] + " " + weights[i]);
 					}
 				}else{
 					System.out.println(cell.getName());
-					double[] elements = ((ContinuousAttributeDomain) domain).getKnots();
-			        double[] weights = ((ContinuousAttributeDomain) domain).getWeights();
+					double[] elements = domain.getContinuous().getKnots();
+			        double[] weights = domain.getContinuous().getWeights();
 					for(int i =0; i < elements.length;i++){
 						System.out.println(elements[i] + " " + weights[i]);
 					}

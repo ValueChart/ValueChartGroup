@@ -220,12 +220,12 @@ public class JObjective extends JLabel{
     	JPanel pnl = new JPanel();
     	pnl.setLayout(new FlowLayout());
         if (domain_type == DISCRETE) {
-        	DiscreteAttributeDomain dd = (DiscreteAttributeDomain)domain;
+        	DiscreteAttributeDomain dd = domain.getDiscrete();
         	DiscreteUtilityGraph dug = new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), name, dvf, acell);
             pnl.add(dug);        	
         }
         else {
-        	ContinuousAttributeDomain cd = (ContinuousAttributeDomain)domain;
+        	ContinuousAttributeDomain cd = domain.getContinuous();
             ContinuousUtilityGraph cug = new ContinuousUtilityGraph(chart, cd, cd.getKnots(), cd.getWeights(), unit, name, dvf, acell);
             pnl.add(cug);            
         }
