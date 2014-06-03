@@ -979,11 +979,12 @@ public class BaseTableContainer extends Box implements ActionListener {
 
         
     public void actionPerformed(ActionEvent ae) {
-//SANJANA
     	
-    	/*        if (("Value Function SA...").equals(ae.getActionCommand())) {
-            ((AttributeCell) table).makeUtility(((AttributeCell) table).domain);
-        } else if (("Set Color...").equals(ae.getActionCommand())) {
+        // TODO
+    	if (("Value Function SA...").equals(ae.getActionCommand())) {
+            ((AttributeCell) table).makeUtility(((AttributeCell) table).domain, true);
+        }  
+    	/* else if (("Set Color...").equals(ae.getActionCommand())) {
             new ColorSelection(table, chart, header);
         } else if (("Edit").equals(ae.getActionCommand())) {
             chart.showEditView(0);

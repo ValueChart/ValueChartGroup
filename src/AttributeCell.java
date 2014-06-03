@@ -234,7 +234,13 @@ public class AttributeCell extends JComponent {
     }
 
     //This will make function call to get utility graph
-    public void makeUtility(AttributeDomain domain) {
+    public void makeUtility(AttributeDomain domain, boolean box) {
+        if (box) {
+            BoxPlotGraph boxPlot = new BoxPlotGraph(chart, attributeName);
+            boxPlot.showGraph();
+            return;
+        }
+        
         if (domain.getType() == AttributeDomain.DISCRETE) {
             DiscreteAttributeDomain dd = domain.getDiscrete();
             new DiscreteUtilityGraph(chart, dd, dd.getElements(), dd.getWeights(), attributeName, null, this);
