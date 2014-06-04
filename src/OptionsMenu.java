@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -140,6 +139,8 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         
         menu = new MenuTitle("Window");         
         menuItem = new MenuEntry("Open comparison view");
+        menu.add(menuItem);
+        menuItem = new MenuEntry("Open average group ValueChart");
         menu.add(menuItem);
 
         add(menu);
@@ -293,6 +294,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 			chart.setConnectingFields();
 			chart.compareDisplay(chart.displayType, chart.colWidth);
 		}
+		else if ("Open average group ValueChart".equals(ae.getActionCommand())){
+		    chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
+        }
 
 	}
 	

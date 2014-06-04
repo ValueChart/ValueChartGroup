@@ -1,12 +1,9 @@
 //This class is for picking colors to distinguish users or attributes 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -18,16 +15,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.event.MouseInputAdapter;
 
 
 public class GroupActions extends JPanel implements ActionListener {
@@ -46,13 +38,10 @@ public class GroupActions extends JPanel implements ActionListener {
 	JCheckBox showAverageWeights;
 	JCheckBox hideUncompetitiveAlts;
 	
-	JButton generateAvgGVC;
-	
 	JComboBox<String> userList;
 	JButton remapColors;
 	Vector<String> users;
 	ValueChart chart;
-	JPanel pnlUserColors;
 	UserLegendPanel legendMain;
 	JPanel pnlMaster;
 	JPanel pnlDetails;
@@ -116,18 +105,6 @@ public class GroupActions extends JPanel implements ActionListener {
         for(int i = 0 ; i < users.size() ; i++){
             tempUserColorMap.put(users.get(i), getUserColorFromAttributeMap(chart, users.get(i)));
         }
-                
-        
-        pnlUserColors = new JPanel();
-        pnlUserColors.setLayout(new BoxLayout(pnlUserColors, BoxLayout.Y_AXIS));
-        pnlUserColors.add(forUsers);
-//        pnlUserColors.add(legendMain);
-//        pnlUserColors.add(forAttributes);
-//        pnlUserColors.add(userList);
-        pnlUserColors.add(forIntensity);
-        pnlUserColors.add(remapColors);
-        pnlUserColors.add(Box.createVerticalGlue());
-//        pnlUserColors.add(Box.createGlue());
         
         none = new JRadioButton("Default");
         none.setActionCommand("none");
@@ -177,13 +154,7 @@ public class GroupActions extends JPanel implements ActionListener {
         selectVarMode.addActionListener(this);
         selectVarMode.setFont(font);
         selectVarMode.setMaximumSize(selectVarMode.getPreferredSize());
-        selectVarMode.setAlignmentX(LEFT_ALIGNMENT);
-        
-        generateAvgGVC = new JButton("Average Group VC");
-        generateAvgGVC.setActionCommand("generateAvgGVC");
-        generateAvgGVC.setEnabled(true);
-        generateAvgGVC.setFont(font);
-        generateAvgGVC.addActionListener(this);                
+        selectVarMode.setAlignmentX(LEFT_ALIGNMENT);              
         
         showAverageAlternatives = new JCheckBox("Show Average Alternatives");
         showAverageAlternatives.setActionCommand("showAverageAlternatives");
@@ -214,7 +185,6 @@ public class GroupActions extends JPanel implements ActionListener {
 //        pnlDetails.add(allAgree);
 //        pnlDetails.add(mostVariedHeights);
         pnlDetails.add(topChoice);
-        pnlDetails.add(generateAvgGVC);
         
 //        pnlDetails.add(topTwoChoices);
         pnlDetails.add(Box.createHorizontalStrut(5));
@@ -235,15 +205,12 @@ public class GroupActions extends JPanel implements ActionListener {
 //        pnlDetails.add(Box.createVerticalGlue());
 //        pnlDetails.add(Box.createGlue());
         
-        pnlUserColors.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), "Apply color for:", 0, 0, font));
         legendMain.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), "Users:", 0, 0, font));
         pnlDetails.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), "Details", 0, 0, font));
         
         
         pnlUserNColors = new JPanel();
         pnlUserNColors.setLayout(new BoxLayout(pnlUserNColors, BoxLayout.Y_AXIS));
-        pnlUserColors.setAlignmentX(CENTER_ALIGNMENT);
-        pnlUserNColors.add(pnlUserColors);
         pnlUserNColors.add(legendMain);
         
         pnlMaster = new JPanel();
@@ -357,9 +324,6 @@ public class GroupActions extends JPanel implements ActionListener {
 			else
 				chart.showAverageWeights(false);
 			chart.updateAll();
-		}
-		else if("generateAvgGVC".equals(ae.getActionCommand())){
-			chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
 		}
 		else if ("hideNonCompAlts".equals(ae.getActionCommand())) {
 		    if (hideUncompetitiveAlts.isSelected())
