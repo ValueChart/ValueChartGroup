@@ -45,7 +45,7 @@ public class CriteriaStatistics {
             for (Double v : vals) {
                 var += Math.pow(v-mean, 2);
             }
-            var = var / (vals.size()-1);
+            var = var / vals.size();
             vars.put(pair.getKey(), var);
             
             if (var < varMin)
@@ -136,7 +136,7 @@ public class CriteriaStatistics {
                 for (Double v : vals) {
                     var += Math.pow(v-mean, 2);
                 }
-                var = var / (vals.size()-1);
+                var = var / vals.size();
                 varMed.add(var);
             }
             
@@ -177,7 +177,6 @@ public class CriteriaStatistics {
             // for each criteria
             for (Map.Entry<String, AttributeDomain> attrDom : iam.attributeDomainMap.entrySet()) {
                 
-                int xCount;
                 AttributeDomain dom = attrDom.getValue();
                 double[] yval = dom.getWeights();
                 String[] xStr = dom.getElements();
@@ -243,7 +242,7 @@ public class CriteriaStatistics {
                 for (Double v : vals) {
                     var += Math.pow(v-mean, 2);
                 }
-                var = var / (vals.size()-1);
+                var = var / vals.size();
                 varMed.add(var);
             }
             
