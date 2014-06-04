@@ -53,12 +53,11 @@ public class GroupActions extends JPanel implements ActionListener {
 	Vector<String> users;
 	ValueChart chart;
 	JPanel pnlUserColors;
-	JPanel legendMain;
+	UserLegendPanel legendMain;
 	JPanel pnlMaster;
 	JPanel pnlDetails;
 	JPanel pnlUserNColors;
 	HashMap<String,Color> tempUserColorMap;
-	int mousedOver = -1;
 	boolean showLegend = true;
 
 	JComboBox<String> selectVarMode;
@@ -113,21 +112,10 @@ public class GroupActions extends JPanel implements ActionListener {
         remapColors.addActionListener(this);
         remapColors.setFont(font);
         
-        legendMain = new JPanel();
-        legendMain.setLayout(new BoxLayout(legendMain, BoxLayout.Y_AXIS));
+        legendMain = new UserLegendPanel(chart, this);
         for(int i = 0 ; i < users.size() ; i++){
-        	Users userLegend = new Users();
-            userLegend.setLegendColor(getUserColorFromAttributeMap(users.get(i)));
-            userLegend.setLegendFont(font);
-            userLegend.setLegendName(users.get(i).substring(0,users.get(i).length()-3));                 
-            legendMain.add(userLegend.legend);
-            tempUserColorMap.put(users.get(i), getUserColorFromAttributeMap(users.get(i)));
+            tempUserColorMap.put(users.get(i), getUserColorFromAttributeMap(chart, users.get(i)));
         }
-        
-//        legendMain.addMouseListener(mh);
-        legendMain.add(Box.createVerticalGlue());
-//        legendMain.add(Box.createHorizontalGlue());
-//        legendMain.add(Box.createGlue());
                 
         
         pnlUserColors = new JPanel();
@@ -268,7 +256,7 @@ public class GroupActions extends JPanel implements ActionListener {
 	}
 		
 	//Get a distinct color for every user 
-    public Color getUserColorFromAttributeMap(String filename){
+    public static Color getUserColorFromAttributeMap(ValueChart chart, String filename){
     	Color aColor = Color.BLACK;
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
     		
@@ -399,100 +387,5 @@ public class GroupActions extends JPanel implements ActionListener {
 	public void printMessage(String str){
 		System.out.println(str);
 	}
-	
-	
-    private class Users extends JComponent{
-    	JPanel legend;
-    	JLabel legendColor;
-        JLabel legendName;
-        
-        public Users(){
-        	legend = new JPanel();
-        	legend.setLayout(new BoxLayout(legend, BoxLayout.X_AXIS));
-        	legend.setMaximumSize(new Dimension(100, 20));
-        	legend.setMinimumSize(new Dimension(75, 20));
-        	legend.setPreferredSize(new Dimension(75, 20));
-        	legendColor = new JLabel();
-        	legendName = new JLabel();
-        	setLegendColor();
-        	setLegendName();
-        	legend.add(legendName);
-        	legend.add(legendColor);
-        	add(legend);
-        	MouseHandler mouseHandler = new MouseHandler();
-        	legend.addMouseListener(mouseHandler);
-        	legend.addMouseMotionListener(mouseHandler);
-        }        
-       
-		public void setLegendColor(){
-        	legendColor.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder()));
-        	legendColor.setOpaque(true);
-        	legendColor.setMinimumSize(new Dimension(10,10));
-            legendColor.setMaximumSize(new Dimension(25,20));
-            legendColor.setPreferredSize(new Dimension(10,20));
-        }
-        
-        public void setLegendName(){
-        	legendName.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.BLACK), BorderFactory.createEmptyBorder()));
-        	legendName.setMinimumSize(new Dimension(10,10));
-            legendName.setMaximumSize(new Dimension(50,20));
-            legendName.setPreferredSize(new Dimension(50,20));
-        }
-        
-        public void setLegendFont(Font font){
-        	legendName.setFont(font);
-        }
-        
-        public void setLegendColor(Color color){
-        	legendColor.setBackground(color);
-        }
-        
-        public void setLegendName(String name){
-        	legendName.setText(name);
-        }
-        
-        public void addLegend(){
-        	super.add(legend);
-        }
-        
-        public String getLegendName(){
-        	return legendName.getText();
-        }
-        
-        public Color getLegendColor(){
-        	return legendColor.getBackground();
-        }
-        
-        class MouseHandler extends MouseInputAdapter {
-        	int idx = 0;
-            public void mousePressed(MouseEvent me) {
-            	if ((me.getModifiers() & MouseEvent.BUTTON1_MASK) != 0) {   
-            		if(me.getClickCount() == 2){
-            			//set color of attribute cell of all other users excepted the selected one to gray
-//            			Color userColor = getUserColorFromAttributeMap( getLegendName() );
-//            			setUserColorInAttributeMap( getLegendName(), userColor);
-//            			chart.updateAll();
-//            			System.out.println("Mouse pressed; # of clicks: "+getLegendName() +" "+ me.getClickCount());
-            		}
-            	}
-            }
-            
-            public void mouseMoved(MouseEvent me){
-            	legend.setToolTipText("<html><blockquote><left><font size=\"4\">" + getLegendName() +"</left></blockquote></html>");
-            	Color userColor = getUserColorFromAttributeMap( getLegendName() );
-    			setUserColorInAttributeMap( getLegendName(), userColor);
-    			chart.updateAll();    			
-            }
-            
-            public void mouseExited(MouseEvent me) {
-                mousedOver = -1;
-                setUserColorInAttributeMapBack();
-                chart.updateAll();
-            }
-            
-        }
-        
-        
-    }
 
 }
