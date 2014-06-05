@@ -35,7 +35,7 @@ public class CriteriaStatistics {
         
         double varMin = Double.MAX_VALUE;
         double varMax = Double.MIN_VALUE;
-        HashMap<String, Double> vars = new HashMap<String, Double>();
+        HashMap<String, Double> stdevs = new HashMap<String, Double>();
         for (Map.Entry<String, Double> pair : attributeMeans.entrySet()) {
             double var = 0;
             ArrayList<Double> vals = attributeVals.get(pair.getKey());
@@ -46,7 +46,7 @@ public class CriteriaStatistics {
                 var += Math.pow(v-mean, 2);
             }
             var = var / vals.size();
-            vars.put(pair.getKey(), var);
+            stdevs.put(pair.getKey(), Math.sqrt(var));
             
             if (var < varMin)
                 varMin = var;
@@ -56,10 +56,13 @@ public class CriteriaStatistics {
         
         if (varMin >= varMax) return null;
         
+        double sdMin = Math.sqrt(varMin);
+        double sdMax = Math.sqrt(varMax);
+        
         HashMap<String, Integer> rankVarWeight = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> var : vars.entrySet()) {
-            int rank = (int) Math.round((var.getValue() - varMin) / (varMax - varMin) * 8);
-            rankVarWeight.put(var.getKey(), rank);
+        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
+            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
+            rankVarWeight.put(sd.getKey(), rank);
         }
         
         return rankVarWeight;
@@ -118,7 +121,7 @@ public class CriteriaStatistics {
         
         double varMin = Double.MAX_VALUE;
         double varMax = Double.MIN_VALUE;
-        HashMap<String, Double> vars = new HashMap<String, Double>();
+        HashMap<String, Double> stdevs = new HashMap<String, Double>();
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
             // a variance is calculated for each criteria, each alternative
@@ -152,15 +155,18 @@ public class CriteriaStatistics {
             if (var > varMax)
                 varMax = var;
             
-            vars.put(valuesMap.getKey(), var);
+            stdevs.put(valuesMap.getKey(), Math.sqrt(var));
         }
         
         if (varMin >= varMax) return null;
         
+        double sdMin = Math.sqrt(varMin);
+        double sdMax = Math.sqrt(varMax);
+        
         HashMap<String, Integer> rankVarScore = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> var : vars.entrySet()) {
-            int rank = (int) Math.round((var.getValue() - varMin) / (varMax - varMin) * 8);
-            rankVarScore.put(var.getKey(), rank);
+        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
+            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
+            rankVarScore.put(sd.getKey(), rank);
         }
         
         return rankVarScore;
@@ -224,7 +230,7 @@ public class CriteriaStatistics {
         
         double varMin = Double.MAX_VALUE;
         double varMax = Double.MIN_VALUE;
-        HashMap<String, Double> vars = new HashMap<String, Double>();
+        HashMap<String, Double> stdevs = new HashMap<String, Double>();
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
             // a variance is calculated for each criteria, each x-coordinate
@@ -258,15 +264,18 @@ public class CriteriaStatistics {
             if (var > varMax)
                 varMax = var;
             
-            vars.put(valuesMap.getKey(), var);
+            stdevs.put(valuesMap.getKey(), Math.sqrt(var));
         }
         
         if (varMin >= varMax) return null;
         
+        double sdMin = Math.sqrt(varMin);
+        double sdMax = Math.sqrt(varMax);
+        
         HashMap<String, Integer> rankVarScore = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> var : vars.entrySet()) {
-            int rank = (int) Math.round((var.getValue() - varMin) / (varMax - varMin) * 8);
-            rankVarScore.put(var.getKey(), rank);
+        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
+            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
+            rankVarScore.put(sd.getKey(), rank);
         }
         
         return rankVarScore;
