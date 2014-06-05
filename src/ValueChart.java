@@ -470,9 +470,12 @@ public class ValueChart extends JPanel {
             pnlDisp.add(Box.createHorizontalGlue());
         } else {
 //            pnlDisp.add(Box.createHorizontalStrut(0));
-            pnlGroupActions = new GroupActions(this);   
-            if(!generateAvgGVC)
-            	pnlDisp.add(pnlGroupActions);
+            if(generateAvgGVC) {
+                pnlGroupActions = new GroupActions(this, true);
+            } else {
+                pnlGroupActions = new GroupActions(this, false);
+            }
+            pnlDisp.add(pnlGroupActions);
             pnlGroupActions.setPreferredSize(new Dimension((mainPane.getDepth() - 1) * headerWidth + (show_graph ? graphWidth : 0), pnlGroupActions.getPreferredSize().height));
             pnlGroupActions.setMaximumSize(new Dimension((mainPane.getDepth() - 1) * headerWidth, pnlGroupActions.getMaximumSize().height));
             pnlGroupActions.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -150,7 +150,8 @@ public class BaseTableContainer extends Box implements ActionListener {
 
         popAttribute = new JPopupMenu();
 
-        JMenuItem menuItem = new JMenuItem("Value Function SA...");
+        JMenuItem menuItem = new JMenuItem("Value Function Analysis");
+        
         menuItem.addActionListener(this);
         popAttribute.add(menuItem);
         //only show this menu item if the item is connected to a report and bookmark
@@ -159,6 +160,8 @@ public class BaseTableContainer extends Box implements ActionListener {
             menuItem.addActionListener(this);
             popAttribute.add(menuItem);
         }
+        // TODO
+        /*
         popAttribute.addSeparator();
         menuItem = new JMenuItem("Set Color...");
         menuItem.addActionListener(this);
@@ -166,6 +169,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         menuItem = new JMenuItem("Edit");
         menuItem.addActionListener(this);
         popAttribute.add(menuItem);
+        */
         add(popAttribute);
         this.table = table;
         this.name = name;
@@ -981,7 +985,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
     	
         // TODO
-    	if (("Value Function SA...").equals(ae.getActionCommand())) {
+    	if (("Value Function Analysis").equals(ae.getActionCommand())) {
             ((AttributeCell) table).makeUtility(((AttributeCell) table).domain, true);
         }  
     	/* else if (("Set Color...").equals(ae.getActionCommand())) {

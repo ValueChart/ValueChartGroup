@@ -517,21 +517,6 @@ public class AttributeCell extends JComponent {
         	g.setColor(Color.lightGray);
             ((Graphics2D) g).setStroke(new BasicStroke(1));
             g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
-            
-          //To draw the average lines
-            if(chart.showAvgWeights){
-            	int averageHeight = 0;
-        		averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
-                g.setColor(Color.BLACK);
-                g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
-                
-                g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
-                g.setFont(new Font("Verdana", Font.PLAIN, 8));            
-                g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width,cellHeight - averageHeight);
-                
-                
-            }
-        	
         }
         else if(chart.generateAvgGVC){
             for(ChartEntry entryForSuperUser : entryList){//for each criteria
@@ -585,6 +570,20 @@ public class AttributeCell extends JComponent {
     	            ((Graphics2D) g).setStroke(new BasicStroke(1));
     	            g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
             }
+        }
+        
+        //To draw the average lines
+        if(chart.showAvgWeights){
+            int averageHeight = 0;
+            averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
+            g.setColor(Color.BLACK);
+            g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
+            
+            g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
+            g.setFont(new Font("Verdana", Font.PLAIN, 8));            
+            g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width,cellHeight - averageHeight);
+            
+            
         }
         
 //        if (thresholdPos > 0) {
