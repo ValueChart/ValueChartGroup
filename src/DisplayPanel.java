@@ -282,14 +282,13 @@ public class DisplayPanel extends JComponent {
             } 
         }
         else if(chart.generateAvgGVC){
-        	int[] ypos = new int[numEntries];	//position of x, starts all at 0
             int h=0, x = align_right;
             int j = 0;
             
         	//for each alternative
             for (int i = 0; i < numEntries; i++) {
                 String entryName = chart.entryList.get(i).name;
-            	HashMap<String,Double> temp = new HashMap<String,Double>();
+            	LinkedHashMap<String,Double> temp = new LinkedHashMap<String,Double>();
         		if(!chart.listOfEntryMaps.isEmpty()){
         			//for each user    			
         			for(IndividualEntryMap e : chart.listOfEntryMaps){
@@ -315,29 +314,24 @@ public class DisplayPanel extends JComponent {
         				j++;        	            
                     }
     			}
-        		HashMap<String,Double> temp_clone = new HashMap<String,Double>();
-        		temp_clone.putAll(temp);
-            	for(String key : temp_clone.keySet()){    		
+            	for(String key : temp.keySet()){    		
             		double srcValue = temp.get(key)/(chart.users.size()-1);
-            		temp.remove(key);
             		temp.put(key, srcValue);
             	}
             	
-//        		System.out.println(attrColorMap);
-            	for(Map.Entry<String, Double> entry : temp.entrySet()){
+            	// traverse in reverse insertion order
+                ListIterator<Map.Entry<String, Double>> iter = new ArrayList(
+                        temp.entrySet()).listIterator(temp.size());
+
+                while (iter.hasPrevious()) {
+                    Map.Entry<String, Double> entry = iter.previous();
             		String attrName = entry.getKey();
-            		System.out.println(attrName+" "+attrColorMap.get(attrName));
-            		h = (int) Math.round(entry.getValue() * totalHeight) - ypos[i];
-            		g.setColor(Color.blue);
-                    g.fillRect(x, totalHeight - h - ypos[i], colWidth, h);
+            		h = (int) Math.round(entry.getValue() * totalHeight);
+              		g.setColor(attrColorMap.get(attrName));
+                    g.fillRect(x, totalHeight - h, colWidth, h);
                     g.setColor(Color.lightGray);
-                    g.drawLine(x, totalHeight - h - ypos[i], x + colWidth - 1, totalHeight - h - ypos[i]);
-                    g.setColor(Color.lightGray);
+                    g.drawLine(x, totalHeight - h, x + colWidth - 1, totalHeight - h);
     	            g.drawLine(x-1, 0, x-1, getHeight() - 1);
-    	            ypos[i] += h;
-                    if (x > totalWidth) {
-                        break;
-                    }
             	}
         		x += colWidth;
         		h=0;
