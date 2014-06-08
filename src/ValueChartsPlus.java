@@ -1,10 +1,9 @@
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -39,6 +38,7 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
     JButton btnCancel;   
     JPanel pnlButtons;
     private boolean hasSuperUser = false;
+    JPopupMenu popAttribute;
 
     public ValueChartsPlus(){  
         //Set up the File List
@@ -52,6 +52,14 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
       
         scrList.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         setList();
+
+        popAttribute = new JPopupMenu();
+
+        JMenuItem menuItem = new JMenuItem("Select All");
+        
+        menuItem.addActionListener(this);
+        popAttribute.add(menuItem);
+        lstFiles.addMouseListener(new PopupListener());
 
         //Set up file Open/Create and Cancel command buttons 
         btnOpen = new JButton("  Open ");
@@ -107,6 +115,8 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
                 System.exit(0);
             else
                 frame.dispose();
+        } else if (e.getActionCommand().equals("Select All")) {
+        	lstFiles.setSelectionInterval(0, listModel.size());
         }
 	}
     
@@ -245,6 +255,22 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
         });
     }
 
+    class PopupListener extends MouseAdapter{
+    	public void mousePressed(MouseEvent e) {
+    		showPopup(e);
+        }
+
+        public void mouseReleased(MouseEvent e) {
+        	showPopup(e);
+        }
+
+        private void showPopup(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                popAttribute.show(e.getComponent(),
+                           e.getX(), e.getY());
+            }
+        }
+    }
 	
 }
 
