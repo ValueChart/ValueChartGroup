@@ -33,7 +33,8 @@ public class GroupActions extends JPanel implements ActionListener {
 	JLabel disagreement;
 	JCheckBox showAverageAlternatives;
 	JCheckBox showAverageWeights;
-	JCheckBox hideUncompetitiveAlts;
+	JCheckBox showAverageScores;
+    JCheckBox hideUncompetitiveAlts;
 	
 	JComboBox<String> userList;
 	Vector<String> users;
@@ -139,6 +140,13 @@ public class GroupActions extends JPanel implements ActionListener {
         showAverageWeights.addActionListener(this);
         showAverageWeights.setFont(font);
         
+        showAverageScores = new JCheckBox("Show Average Scores");
+        showAverageScores.setActionCommand("showAverageScores");
+        showAverageScores.setEnabled(true);
+        showAverageScores.setSelected(false);
+        showAverageScores.addActionListener(this);
+        showAverageScores.setFont(font);
+        
         if (!averageChart) {
             hideUncompetitiveAlts = new JCheckBox("Hide non-competitive Alternatives");
             hideUncompetitiveAlts.setActionCommand("hideNonCompAlts");
@@ -178,6 +186,7 @@ public class GroupActions extends JPanel implements ActionListener {
         pnlDetails.add(showAverageWeights);
         
         if (!averageChart) {
+            pnlDetails.add(showAverageScores);
             pnlDetails.add(hideUncompetitiveAlts);
         }
         
@@ -286,6 +295,13 @@ public class GroupActions extends JPanel implements ActionListener {
 				chart.showAverageWeights(false);
 			chart.updateAll();
 		}
+		else if("showAverageScores".equals(ae.getActionCommand())){
+            if (showAverageScores.isSelected())
+                chart.showAverageScores(true);
+            else
+                chart.showAverageScores(false);
+            chart.updateAll();
+        }
 		else if ("hideNonCompAlts".equals(ae.getActionCommand())) {
 		    if (hideUncompetitiveAlts.isSelected())
 		        chart.setHideNonCompeting(true);

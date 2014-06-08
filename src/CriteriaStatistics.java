@@ -1,6 +1,7 @@
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -9,10 +10,10 @@ public class CriteriaStatistics {
     public static final int SCORE = 1, WEIGHT = 2, UTILITY = 3;
     
     // gives rank weight from 0-8, 8 being the strongest colour
-    public static HashMap<String, Integer> rankVarianceWeight(ArrayList<HashMap<String, Double>> listOfWeightMaps) {
+    public static HashMap<String, Integer> rankVarianceWeight(LinkedHashMap<String, HashMap<String, Double>> listOfWeightMaps) {
         HashMap<String, ArrayList<Double>> attributeVals = new HashMap<String, ArrayList<Double>>();
         HashMap<String, Double> attributeMeans = new HashMap<String, Double>();
-        for (HashMap<String, Double> a : listOfWeightMaps) {
+        for (HashMap<String, Double> a : listOfWeightMaps.values()) {
             for (Map.Entry<String, Double> pair : a.entrySet()) {
                 String key = pair.getKey();
                 Double value = pair.getValue();
@@ -68,52 +69,59 @@ public class CriteriaStatistics {
         return rankVarWeight;
     }
     
-    public static HashMap<String, Integer> rankVarianceScore(ArrayList<IndividualEntryMap> listOfEntryMaps) {
+    public static HashMap<String, Integer> rankVarianceScore(ValueChart chart) {
+        LinkedHashMap<String,IndividualEntryMap> listOfEntryMaps = chart.listOfEntryMaps;
+        HashMap<String,Double> maxWeightMap = chart.maxWeightMap;
+        LinkedHashMap<String,HashMap<String,Double>> listOfWeightMaps = chart.listOfWeightMaps;
         
         // for each criteria, for each alternative
         HashMap<String, HashMap<String, Double>> attributeMeans = new HashMap<String, HashMap<String, Double>>();
         HashMap<String, HashMap<String, ArrayList<Double>>> attributeValues = new HashMap<String, HashMap<String, ArrayList<Double>>>();
         
         // for each user
-        for (IndividualEntryMap iem : listOfEntryMaps) {
+        for (Map.Entry<String, IndividualEntryMap> iem : listOfEntryMaps.entrySet()) {
             
             // for each alternative
-            for (Map.Entry<String, ChartEntry> entry : iem.getEntryMap().entrySet()) {
+            for (Map.Entry<String, ChartEntry> entry : iem.getValue().getEntryMap().entrySet()) {
                 
                 // for each criteria
                 for (Map.Entry<String, AttributeValue> attrVal : entry.getValue().map.entrySet()) {
                     
                     // get criteria 
-                    String key = attrVal.getKey();
-                    HashMap<String, Double> means = attributeMeans.get(key);
-                    HashMap<String, ArrayList<Double>> valuesMap = attributeValues.get(key);
+                    String critkey = attrVal.getKey();
+                    HashMap<String, Double> means = attributeMeans.get(critkey);
+                    HashMap<String, ArrayList<Double>> valuesMap = attributeValues.get(critkey);
                     if (means == null) {
                         means = new HashMap<String, Double>();
-                        attributeMeans.put(key, means);
+                        attributeMeans.put(critkey, means);
                     } 
                     if (valuesMap == null) {
                         valuesMap = new HashMap<String, ArrayList<Double>>();
-                        attributeValues.put(key, valuesMap);
+                        attributeValues.put(critkey, valuesMap);
                     }
                     
                     // get alternative
-                    key = entry.getKey();
-                    ArrayList<Double> values = valuesMap.get(key);
+                    String attrkey = entry.getKey();
+                    ArrayList<Double> values = valuesMap.get(attrkey);
                     
                     // get the weight
                     double val = attrVal.getValue().weight();
+                    // scale it relative to the maximum assigned weight
+                    double scale = listOfWeightMaps.get(iem.getKey()).get(critkey);
+                    scale /= maxWeightMap.get(critkey);
+                    val *= scale;
                     
                     if (values == null) {
                         values = new ArrayList<Double>();
-                        valuesMap.put(key, values);
+                        valuesMap.put(attrkey, values);
                     }
                     values.add(val);
                     
-                    Double mean = means.get(key);
+                    Double mean = means.get(attrkey);
                     if (mean == null) {
-                        means.put(key, val);
+                        means.put(attrkey, val);
                     } else {
-                        means.put(key, mean + val);
+                        means.put(attrkey, mean + val);
                     }
                 }
             }

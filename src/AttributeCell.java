@@ -445,21 +445,19 @@ public class AttributeCell extends JComponent {
                 g.setColor(Color.lightGray);
                 g.drawLine(x-1, 0, x-1, cellHeight - 1); 
                 
-                for(IndividualEntryMap e : chart.listOfEntryMaps){
+                for(IndividualEntryMap e : chart.listOfEntryMaps.values()){
                     ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
     				if(entryForEachUser != null){
         				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
         				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
         				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
-//            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight); //
-        	            int h = 0;
+
+        				int h = 0;
         	            int hpos = cellHeight;
         	            if (individualValue != null) {
         	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
         	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
         	            }
-//            	            g.setColor(color);
-//            	            g.setColor(getUserColorFromAttributeMap(e.username));
         	            int wthresh = Math.max(hpos, thresholdPos);
         	            //thresholded
         	            if (wthresh < individualHeight) {
@@ -468,8 +466,6 @@ public class AttributeCell extends JComponent {
         	            }
         	            //regular
         	            if (wthresh > hpos) {
-//            	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
-//            	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
         	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
         	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
         	            }
@@ -490,12 +486,23 @@ public class AttributeCell extends JComponent {
         	            //To draw weight rectangles
         	            g.setColor(Color.red);
         	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
+
         	            
         	            g.setColor(Color.lightGray);
         	            x += userWidth;
         	            ((Graphics2D) g).setStroke(new BasicStroke());
         	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
 
+        	            if(chart.showAvgScores){
+        	                int averageHeight = 0;
+        	                double avgScore = chart.averageAttributeScores.get(attributeName).get(entryForSuperUser.name);
+        	                averageHeight = (int) Math.round(avgScore*cellHeight);
+        	                g.setColor(Color.BLACK);
+        	                ((Graphics2D) g).setStroke(new BasicStroke(2));
+        	                g.drawLine(x-userWidth, cellHeight - averageHeight, x, cellHeight - averageHeight);
+        	                ((Graphics2D) g).setStroke(new BasicStroke());
+        	            }
+        	            
         	            if (x > width) {
         	                break;
         	            }        	         
@@ -512,6 +519,7 @@ public class AttributeCell extends JComponent {
                 g.setColor(Color.BLACK);
                 ((Graphics2D) g).setStroke(new BasicStroke());
                 g.drawLine(x-3, 0, x-3, cellHeight - 1); 
+                
             }
         	
         	g.setColor(Color.lightGray);
@@ -519,9 +527,9 @@ public class AttributeCell extends JComponent {
             g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
         }
         else if(chart.generateAvgGVC){
-            for(ChartEntry entryForSuperUser : entryList){//for each criteria
+            for(ChartEntry entryForSuperUser : entryList){//for each alternative
             	int totalIndividualHeight = 0;
-	            for(IndividualEntryMap e : chart.listOfEntryMaps){//for each user
+	            for(IndividualEntryMap e : chart.listOfEntryMaps.values()){//for each user
 	                ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
     				if(entryForSuperUser != null){
         				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
@@ -545,30 +553,38 @@ public class AttributeCell extends JComponent {
 //    	                g.setColor(Color.darkGray);
 //    	                g.fillRect(x, wthresh, userWidth, h);
 //    	            }
-    	            //regular
-    	            if (wthresh > hpos) {
-//        	                g.setColor(getUserColorFromAttributeMap(e.username));        	            	 
-//        	            	g.setColor(chooseColor(chart.colorChoice,e.username,attributeName,chart.userToPickAttributeColor));
+	            //regular
+	            if (wthresh > hpos) {
 //    	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
-    	                g.fillRect(x, hpos, colWidth, wthresh - hpos);            	               
-    	            }
+	                g.fillRect(x, hpos, colWidth, wthresh - hpos);            	               
+	            }
 
-    	            g.setColor(Color.WHITE);
-    	            g.fillRect(x, 0, colWidth, cellHeight - totalIndividualHeight);
+	            g.setColor(Color.WHITE);
+	            g.fillRect(x, 0, colWidth, cellHeight - totalIndividualHeight);
 
-    	            g.setFont(new Font("Verdana", Font.BOLD, 10));    	            
-    	            g.setColor(Color.lightGray);
-    	            x += colWidth;
-    	            ((Graphics2D) g).setStroke(new BasicStroke());
-    	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
+	            g.setFont(new Font("Verdana", Font.BOLD, 10));    	            
+	            g.setColor(Color.lightGray);
+	            x += colWidth;
+	            ((Graphics2D) g).setStroke(new BasicStroke());
+	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
 
-    	            if (x > width) {
-    	                break;
-    	            } 
-    	            
-    	            g.setColor(Color.lightGray);
-    	            ((Graphics2D) g).setStroke(new BasicStroke(1));
-    	            g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
+                if(chart.showAvgScores){
+                    int averageHeight = 0;
+                    double avgScore = chart.averageAttributeScores.get(attributeName).get(entryForSuperUser.name);
+                    averageHeight = (int) Math.round(avgScore*cellHeight);
+                    g.setColor(Color.BLACK);
+                    ((Graphics2D) g).setStroke(new BasicStroke(2));
+                    g.drawLine(x-userWidth, cellHeight - averageHeight, x, cellHeight - averageHeight);
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                }
+	            
+	            if (x > width) {
+	                break;
+	            } 
+	            
+	            g.setColor(Color.lightGray);
+	            ((Graphics2D) g).setStroke(new BasicStroke(1));
+	            g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
             }
         }
         
@@ -576,13 +592,10 @@ public class AttributeCell extends JComponent {
         if(chart.showAvgWeights){
             int averageHeight = 0;
             averageHeight = (int) Math.round(chart.averageAttributeWeights.get(attributeName)*cellHeight/maxAttributeWeight);
-            g.setColor(Color.BLACK);
-            g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);
-            
-            g.drawLine(width-3, cellHeight - averageHeight, width+6, cellHeight - averageHeight);
+            g.setColor(Color.RED);
+            g.drawLine(3, cellHeight - averageHeight, width-6, cellHeight - averageHeight);         
             g.setFont(new Font("Verdana", Font.PLAIN, 8));            
-            g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width,cellHeight - averageHeight);
-            
+            g.drawString(String.valueOf(chart.averageAttributeWeights.get(attributeName)*100), width,cellHeight - averageHeight);              
             
         }
         
@@ -653,7 +666,7 @@ public class AttributeCell extends JComponent {
     public Color setTopAlternativeColor(String userName, String entryName, String attrName){
     	Color aColor = Color.GRAY;
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
-    		for(IndividualEntryMap e : chart.listOfEntryMaps){
+    		for(IndividualEntryMap e : chart.listOfEntryMaps.values()){
     			if(userName.equals(a.userName) && userName.equals(e.username) && entryName.equals(a.topAlternative)){
     			    ChartEntry entry = e.findEntry(entryName);
     				if(entry != null){

@@ -7,8 +7,6 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import java.util.*;
-import java.util.List;
-import java.util.Map.Entry;
 import java.io.*;
 
 import acme.misc.*;
@@ -64,7 +62,7 @@ public class ValueChart extends JPanel {
     Vector<ChartEntry> entryList;    
     ArrayList<String> users = null;
     String filename;
-    Vector objs;
+    Vector<JObjective> objs;
     Vector alts;
     private HashMap<String, BaseTableContainer> prims;
     ConstructionView con;
@@ -74,9 +72,10 @@ public class ValueChart extends JPanel {
     ArrayList<IndividualAttributeMaps> listOfAttributeMaps = new ArrayList<IndividualAttributeMaps>();     //map of attributes for all users
     HashMap<String,Double> maxWeightMap = new HashMap<String,Double>(); //Map of attributes with maximum weights
     HashMap<String,Double> minWeightMap = new HashMap<String,Double>(); //Map of attributes with minimum weights
-    ArrayList<IndividualEntryMap> listOfEntryMaps = new ArrayList<IndividualEntryMap>(); //map of entries for all users
-    ArrayList<HashMap<String,Double>> listOfWeightMaps = new ArrayList<HashMap<String,Double>>();
+    LinkedHashMap<String,IndividualEntryMap> listOfEntryMaps = new LinkedHashMap<String,IndividualEntryMap>(); //map of entries for all users
+    LinkedHashMap<String,HashMap<String,Double>> listOfWeightMaps = new LinkedHashMap<String,HashMap<String,Double>>();
     HashMap<String,Double> averageAttributeWeights = new HashMap<String,Double>();
+    HashMap<String,HashMap<String, Double>> averageAttributeScores = new HashMap<String,HashMap<String, Double>>();
     ArrayList<ChartEntry> averageAttributeValues = new ArrayList<ChartEntry>();
     Set<Color> listOfUserColors = new HashSet<>();
     ArrayList<Color> colorList;
@@ -89,6 +88,7 @@ public class ValueChart extends JPanel {
     boolean showAvgWeights = false;
     boolean generateAvgGVC = false;
     boolean hideNonCompete = false;
+    boolean showAvgScores = false;
     
     boolean pump = false;
     boolean pump_increase = true;
@@ -124,7 +124,10 @@ public class ValueChart extends JPanel {
         users = list;
         generateAvgGVC = avgGVC;
 //        colWidthGroup =  padWidth * 2 + userWidth * users.size();
-        colWidthGroup =  userWidth * (list.size()-1) + padWidth;
+        if (avgGVC)
+            colWidthGroup = userWidth*2;
+        else
+            colWidthGroup =  userWidth * (list.size()-1) + padWidth;
         colorChoice = colorOption;
         setDisplayType(type);
     	             
@@ -294,15 +297,15 @@ public class ValueChart extends JPanel {
     }
 
     Vector setAlts() {
-        Iterator it;
+        Iterator<ChartEntry> it;
         Vector alts = new Vector();
         for (it = entryList.iterator(); it.hasNext();) {
             HashMap datamap = new HashMap();
-            ChartEntry entry = (ChartEntry) it.next();
+            ChartEntry entry = it.next();
             datamap.put("name", entry.name);
             datamap.putAll(entry.map);
-            for (Iterator it2 = objs.iterator(); it2.hasNext();) {
-                JObjective obj = (JObjective) (it2.next());
+            for (Iterator<JObjective> it2 = objs.iterator(); it2.hasNext();) {
+                JObjective obj = it2.next();
                 if (!datamap.containsKey(obj.getName())) {
                     datamap.put(obj.getName(), "0");
                 } else {
@@ -357,7 +360,7 @@ public class ValueChart extends JPanel {
     }
 
     private void setConst() {
-        objs = new Vector();
+        objs = new Vector<JObjective>();
         setObjs(mainPane, "root");
         alts = new Vector();
         alts = setAlts();
@@ -370,7 +373,7 @@ public class ValueChart extends JPanel {
     private void doread(ScanfReader scanReader)
             throws IOException {
 
-        entryList = new Vector(10);
+        entryList = new Vector<ChartEntry>(10);
         HashMap colorList = new HashMap(10);
         boolean attributesRead = false;
 
@@ -529,7 +532,8 @@ public class ValueChart extends JPanel {
         }
 
         if (displayType == DEFAULT_DISPLAY) {
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));            
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));         
+            add(Box.createVerticalGlue());
             add(displayWithNames);
             add(Box.createRigidArea(new Dimension(0, 5)));            
 //        }
@@ -679,7 +683,7 @@ public class ValueChart extends JPanel {
 		            }
 		        }
 		        IndividualEntryMap iem = new IndividualEntryMap(filename, listOfEntries);
-		        listOfEntryMaps.add(iem);
+		        listOfEntryMaps.put(filename,iem);
 	        }
     	}
     	
@@ -691,17 +695,9 @@ public class ValueChart extends JPanel {
 
     	//assign a distinct color for each user
     	generateRandomColor(listOfAttributeMaps);    	
-
-//    	System.out.println("Size of list of attribute maps:" + listOfAttributeMaps.size() + "\n");
-//    	printlistOfAttributeMaps(listOfAttributeMaps);    	
-//    	System.out.println("Max Weight map: ");    	
-    	getMaxWeightMap();
-//    	System.out.println("Color Map: ");
-//    	printAttributeColorMap(listOfAttributeMaps);
-//    	System.out.println("\n" + "Size of list of entry map:" + listOfEntryMaps.size() + "\n");
-//    	printEntryMap(listOfEntryMaps);
-//    	printlistOfAttributeMaps(listOfAttributeMaps);
-//    	System.out.println("Size of user color list: "+listOfUserColors);
+  	
+    	AlternativeStatistics.setMaxWeightMap(this);
+    	AlternativeStatistics.setAverageScoreMap(this);
     }
 
     private double readHeightRatio(ScanfReader scanReader)
@@ -807,76 +803,13 @@ public class ValueChart extends JPanel {
 //    	iam.userColor = generateRandomColor();
     	
         if(!iam.attributeWeightMap.isEmpty()){
-        	listOfWeightMaps.add(iam.attributeWeightMap);
+        	listOfWeightMaps.put(iam.userName, iam.attributeWeightMap);
         }       
         listOfAttributeMaps.add(iam);    
 //        printlistOfAttributeMaps(listOfAttributeMaps);
 //        System.out.println("Attribute cell name: "+pane.getAttributeCellGroup(scanReader.scanString()).getName());
 //        iam.printContainerList();
     }
-    
-    private void getMaxWeightMap(){    	
-//    	ArrayList<Map<String,Double>> listOfWeightMaps = getWeightMap();    	
-    	if(listOfWeightMaps.isEmpty()){
-    		System.out.println("List of weight maps is empty");
-    	}
-    	else{
-    		if(listOfWeightMaps.size() > 1){
-    			HashSet hs = new HashSet();
-    	    	hs.addAll(listOfWeightMaps);
-    	    	listOfWeightMaps.clear();
-    	    	listOfWeightMaps.addAll(hs);
-    			for(HashMap<String, Double> aMap : listOfWeightMaps){
-//    				maxWeightMap = aMap;
-    				for(Map.Entry<String,Double> entry : aMap.entrySet()){
-    					String srcKey = entry.getKey();
-    					double srcValue = entry.getValue();
-    					if(maxWeightMap.containsKey(srcKey)){
-    						double destValue = maxWeightMap.get(srcKey);
-    						if(destValue <= srcValue){
-    							maxWeightMap.remove(srcKey);
-    							maxWeightMap.put(srcKey, srcValue);    							
-    						}
-    					}
-    					if(minWeightMap.containsKey(srcKey)){
-    						double destValue = minWeightMap.get(srcKey);
-    						if(destValue >= srcValue){
-    							minWeightMap.remove(srcKey);
-    							minWeightMap.put(srcKey, srcValue);    							
-    						}    						
-    					}
-    					if(averageAttributeWeights.containsKey(srcKey)){
-    						double destValue = averageAttributeWeights.get(srcKey);
-    						destValue += srcValue;
-    						averageAttributeWeights.put(srcKey,destValue);
-    					}
-    					else{
-    						maxWeightMap.put(srcKey, srcValue);
-    						minWeightMap.put(srcKey, srcValue);
-    						averageAttributeWeights.put(srcKey,srcValue);
-    					}
-    						
-					}
-				}
-			}
-    		else if(listOfWeightMaps.size() == 1){
-    			maxWeightMap.putAll(listOfWeightMaps.get(0));
-    			minWeightMap.putAll(listOfWeightMaps.get(0));
-    			averageAttributeWeights.putAll(listOfWeightMaps.get(0));
-    		}	
-    	}
-    	HashMap<String,Double> averageAttributeWeights_clone = new HashMap<String,Double>();
-    	averageAttributeWeights_clone.putAll(averageAttributeWeights);
-    	for(String key : averageAttributeWeights_clone.keySet()){    		
-    		double srcValue = averageAttributeWeights.get(key)/(users.size()-1);
-    		averageAttributeWeights.remove(key);
-    		averageAttributeWeights.put(key, srcValue);
-    	}
-//    	System.out.println(minWeightMap);
-//    	System.out.println(maxWeightMap);
-//    	System.out.println(averageAttributeWeights);
-//    	System.out.println(users.size());
-	}
     
    
     //This function returns a list of maps; each map has attributes and their weights for individual user  
@@ -1313,11 +1246,15 @@ public class ValueChart extends JPanel {
     	showAvgWeights = b;
 	}
     
+    public void showAverageScores(boolean b) {
+        showAvgScores = b;
+    }
+    
     // gives rank weight from 0-8, 8 being the strongest colour
     public HashMap<String, Integer> rankVarianceScore() {
         if (rankVarScore != null) return rankVarScore;
         
-        rankVarScore = CriteriaStatistics.rankVarianceScore(listOfEntryMaps);
+        rankVarScore = CriteriaStatistics.rankVarianceScore(this);
         return rankVarScore;
     }
     

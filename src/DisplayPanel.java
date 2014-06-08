@@ -63,7 +63,7 @@ public class DisplayPanel extends JComponent {
     		int users=0;
     		double avgAlternativeScore = 0;
     		String entryName = entryList.get(i).name;
-    		for(IndividualEntryMap e : chart.listOfEntryMaps){//for each user
+    		for(IndividualEntryMap e : chart.listOfEntryMaps.values()){//for each user
     			for (Iterator it = cellList.iterator(); it.hasNext();) {//for each attribute
     				AttributeCell cell = (AttributeCell) it.next();
          			double weight = e.getEntryWeight(cell.getName(), entryName);
@@ -188,7 +188,7 @@ public class DisplayPanel extends JComponent {
                 g.drawLine(x-3, 0, x-3, totalHeight - 1);            
         		if(!chart.listOfEntryMaps.isEmpty()){
         			//for each user    			
-        			for(IndividualEntryMap e : chart.listOfEntryMaps){    				
+        			for(IndividualEntryMap e : chart.listOfEntryMaps.values()){    				
         				//for each attribute
         				for (Iterator it = cellList.iterator(); it.hasNext();) { 
             				AttributeCell cell = (AttributeCell) it.next();
@@ -212,9 +212,11 @@ public class DisplayPanel extends JComponent {
             	            
             	            //Draw average line
             	            if(showAvg){
+            	                ((Graphics2D) g).setStroke(new BasicStroke(2));
             	            	g.setColor(Color.BLACK);
                 				avgH = (int) Math.round(averageTotalScores.get(entryName)*totalHeight);
                 				g.drawLine(x-1, totalHeight - avgH, x + userWidth -1, totalHeight - avgH);
+                				((Graphics2D) g).setStroke(new BasicStroke());
             	            }
     	                    ypos[j] += h;
     	                    if (x > totalWidth) {
@@ -291,7 +293,7 @@ public class DisplayPanel extends JComponent {
             	LinkedHashMap<String,Double> temp = new LinkedHashMap<String,Double>();
         		if(!chart.listOfEntryMaps.isEmpty()){
         			//for each user    			
-        			for(IndividualEntryMap e : chart.listOfEntryMaps){
+        			for(IndividualEntryMap e : chart.listOfEntryMaps.values()){
         				//for each attribute
         				for (Iterator it = cellList.iterator(); it.hasNext();) {
         					AttributeCell cell = (AttributeCell) it.next();
