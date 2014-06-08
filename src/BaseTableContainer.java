@@ -364,16 +364,19 @@ public class BaseTableContainer extends Box implements ActionListener {
 //        	pct = s *chart.heightScalingConstant * 100;
 //        	System.out.println(name+" "+s +" "+chart.heightScalingConstant);
 //        	pct = (int)(s * 100);
+        	String text = "";
         	if (getHeight() < 30) {
-                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<small> [MAX: " + max + "%,  MIN: "+ min + "%]</small></left></html>");
+                text = "<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<small> [MIN: " + min + "%,  MAX: "+ max + "%";
             } else {
-                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<br>&nbsp;&nbsp;<small> [MAX: " + max + "%, MIN: " + min + "%]</small></left></html>");
+                text = "<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<br>&nbsp;&nbsp;<small> [MIN: " + min + "%,  MAX: "+ max + "%";
             }
-//        	if(chart.showAvgWeights){
-//        		header.setText("<html><right><small> AVG:" + avg + "%</small></right></html>");
-//        	}
-            //header.setText(s);
-            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') + "<br><small> [MAX: " + max + "%, MIN: " + min + "%]</small></left></blockquote></html>");
+        	if(chart.showAvgWeights){
+        		text += "<br>&nbsp;&nbsp;&nbsp; AVG: " + avg + "%]</small></left></html>";
+        	} else {
+        		text += "]</small></left></html>";
+        	}
+        	header.setText(text);
+            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') + "<br><small> [MIN: " + min + "%,  AVG: "+ avg + "%,  MAX: "+ max + "%]</small></left></blockquote></html>");
             header.setFont(new Font("Verdana", Font.PLAIN, 12));
         }
         else{

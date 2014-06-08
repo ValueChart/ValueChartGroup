@@ -125,7 +125,7 @@ public class GroupActions extends JPanel implements ActionListener {
         selectVarMode.setAlignmentX(LEFT_ALIGNMENT);              
         
         if (!averageChart) {
-            showAverageAlternatives = new JCheckBox("Show Average Alternatives");
+            showAverageAlternatives = new JCheckBox("Show Average Overall Ranking");
             showAverageAlternatives.setActionCommand("showAverageAlternatives");
             showAverageAlternatives.setEnabled(true);
             showAverageAlternatives.setSelected(false);
@@ -148,7 +148,7 @@ public class GroupActions extends JPanel implements ActionListener {
         showAverageScores.setFont(font);
         
         if (!averageChart) {
-            hideUncompetitiveAlts = new JCheckBox("Hide non-competitive Alternatives");
+            hideUncompetitiveAlts = new JCheckBox("Highlight Favourite Alternatives");
             hideUncompetitiveAlts.setActionCommand("hideNonCompAlts");
             hideUncompetitiveAlts.setEnabled(true);
             hideUncompetitiveAlts.setSelected(false);
@@ -293,7 +293,8 @@ public class GroupActions extends JPanel implements ActionListener {
 				chart.showAverageWeights(true);
 			else
 				chart.showAverageWeights(false);
-			chart.updateAll();
+			chart.mainPane.updateSizesAndHeights();
+			chart.updateMainPane();
 		}
 		else if("showAverageScores".equals(ae.getActionCommand())){
             if (showAverageScores.isSelected())
