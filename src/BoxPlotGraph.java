@@ -1,12 +1,15 @@
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,6 +43,15 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
     private DefaultBoxAndWhiskerCategoryDataset data = null;
     private CategoryPlot plot;
     private JCheckBox showAll;
+    private JCheckBox showMinMax;
+    // indices in plot that contain the respective datasets
+    private int boxIndex = 0;
+    private int minMaxIndex = 1;
+    private int usersStartIndex = 2;
+    private DefaultCategoryDataset empty = new DefaultCategoryDataset();
+    private DefaultCategoryDataset minMaxData = null;
+    private LinkedHashMap<String, Pair<Double, String>> minLabels = null;
+    private LinkedHashMap<String, Pair<Double, String>> maxLabels = null;
     
     public BoxPlotGraph(ValueChart ch, String attrName) {        
         decimalFormat = new DecimalFormat("#.##");
@@ -99,10 +111,10 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         renderer.setFillBox(false);
         plot = new CategoryPlot();  
         
-        plot.setDataset(0, data);
-        plot.setRenderer(0, renderer);
-        plot.setDomainAxis(0, xAxis);
-        plot.setRangeAxis(0, yAxis);
+        plot.setDataset(boxIndex, data);
+        plot.setRenderer(boxIndex, renderer);
+        plot.setDomainAxis(boxIndex, xAxis);
+        plot.setRangeAxis(boxIndex, yAxis);
 
         JFreeChart plotChart = new JFreeChart(
             "Value Function Statistics for " + attributeName,
@@ -117,13 +129,23 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         
         // make user panel
         UserLegendPanel legendMain = new UserLegendPanel(chart, this);
+        
+        JPanel pnl = new JPanel();
+        pnl.setLayout(new BoxLayout(pnl, BoxLayout.Y_AXIS));
         showAll = new JCheckBox("All Users");
         showAll.setActionCommand("showAll");
         showAll.addActionListener(this);
-        showAll.setAlignmentX(CENTER_ALIGNMENT);
-        legendMain.add(showAll);
+        showAll.setAlignmentX(LEFT_ALIGNMENT);
+        pnl.add(showAll);
+        showMinMax = new JCheckBox("Extreme Users");
+        showMinMax.setActionCommand("showMinMax");
+        showMinMax.addActionListener(this);
+        showMinMax.setAlignmentX(LEFT_ALIGNMENT);
+        pnl.add(showMinMax);
+        pnl.setAlignmentX(CENTER_ALIGNMENT);
+        legendMain.add(pnl);
+
         panel.add(legendMain);
-        
         setContentPane(panel);
         
         chartReady = true;
@@ -164,7 +186,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
             }
         }
         
-        plot.setDataset(1, userPlot);
+        plot.setDataset(usersStartIndex, userPlot);
         LineAndShapeRenderer renderer = new LineAndShapeRenderer();
         renderer.setSeriesStroke(0, new BasicStroke(2));
         renderer.setSeriesPaint(0, userColor);
@@ -180,7 +202,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
             renderer.setSeriesLinesVisible(0, false);
         } 
         
-        plot.setRenderer(1, renderer);
+        plot.setRenderer(usersStartIndex, renderer);
     }
     
     public void plotAllUsers() {
@@ -188,7 +210,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         
         // key: x-coord
         // value: y-coord
-        int j = 1;
+        int j = usersStartIndex;
         for (IndividualAttributeMaps iam : listOfAttributeMaps) {
         	DefaultCategoryDataset userPlot = new DefaultCategoryDataset();
             String user = iam.userName;
@@ -227,15 +249,123 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
             j++;
         }
     }
+    
+    public void plotMinMax() {
+        if (!showMinMax.isSelected()) return;
+        
+        String minKey = "min";
+        String maxKey = "max";
+        Integer minIdx = 1;
+        Integer maxIdx = 0;
+
+        if (minMaxData == null) {
+            minMaxData = new DefaultCategoryDataset();
+            ArrayList<IndividualAttributeMaps> listOfAttributeMaps = chart.listOfAttributeMaps;
+            
+            // key: xkey
+            // value: Pair<yval, users>
+            minLabels = new LinkedHashMap<String, Pair<Double, String>>();
+            maxLabels = new LinkedHashMap<String, Pair<Double, String>>();
+            
+            for (IndividualAttributeMaps iam : listOfAttributeMaps) {
+                String user = iam.userName.split(".vc")[0];
+                AttributeDomain dom = iam.attributeDomainMap.get(attributeName);
+                if (dom != null) {
+                    double[] wts = dom.getWeights();
+                    String[] xStr = dom.getElements();
+                    double[] xNum = dom.getKnots();
+                        
+                    for (int i = 0; i < wts.length; i++) {
+                        String xkey = (xStr != null ? xStr[i] : decimalFormat.format(xNum[i]));
+                        double yval = wts[i];
+                        Pair<Double, String> currMin = minLabels.get(xkey);
+                        Pair<Double, String> currMax = maxLabels.get(xkey);
+                        if (currMin == null) {
+                            minLabels.put(xkey, new Pair<Double, String>(yval, user));
+                            maxLabels.put(xkey, new Pair<Double, String>(yval, user));
+                        } else {
+                            if (currMin.first > yval) {
+                                minLabels.put(xkey, new Pair<Double, String>(yval, user));
+                            } 
+                            if (currMin.first.equals(yval)) {
+                                if (currMin.second.charAt(currMin.second.length()-1) != '*') {
+                                    currMin.second = currMin.second + ", " + user + "*";
+                                }
+                            }
+                            if (currMax.first < yval) {
+                                maxLabels.put(xkey, new Pair<Double, String>(yval, user));
+                            } 
+                            if (currMax.first.equals(yval)) {
+                                if (currMax.second.charAt(currMax.second.length()-1) != '*') {
+                                    currMax.second = currMax.second + ", " + user + "*";
+                                }
+                            }
+                        }  
+                    }
+                }
+                
+            }
+            for (Map.Entry<String, Pair<Double, String>> entry : minLabels.entrySet()) {
+                minMaxData.addValue(entry.getValue().first, minKey, entry.getKey());
+            }
+            for (Map.Entry<String, Pair<Double, String>> entry : maxLabels.entrySet()) {
+                minMaxData.addValue(entry.getValue().first, maxKey, entry.getKey());
+            }
+        }
+        
+        plot.setDataset(minMaxIndex, minMaxData);
+        
+        LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+        // min
+        renderer.setSeriesStroke(minIdx, new BasicStroke(2));
+        renderer.setSeriesPaint(minIdx, Color.darkGray);
+        Polygon triangle = new Polygon();
+        triangle.addPoint(-4, -4);
+        triangle.addPoint(4, -4);
+        triangle.addPoint(0, 4);
+        renderer.setSeriesShape(minIdx, triangle);
+        renderer.setSeriesFillPaint(minIdx, Color.lightGray);
+        renderer.setSeriesOutlineStroke(minIdx, new BasicStroke(2));
+        renderer.setSeriesOutlinePaint(minIdx, Color.darkGray);
+        renderer.setUseFillPaint(true);
+        renderer.setUseOutlinePaint(true);
+        renderer.setSeriesLinesVisible(minIdx.intValue(), false);
+        
+        //max
+        renderer.setSeriesStroke(maxIdx, new BasicStroke(2));
+        renderer.setSeriesPaint(maxIdx, Color.darkGray);
+        triangle = new Polygon();
+        triangle.addPoint(-4, 4);
+        triangle.addPoint(4, 4);
+        triangle.addPoint(0, -4);
+        renderer.setSeriesShape(maxIdx, triangle);
+        renderer.setSeriesFillPaint(maxIdx, Color.lightGray);
+        renderer.setSeriesOutlineStroke(maxIdx, new BasicStroke(2));
+        renderer.setSeriesOutlinePaint(maxIdx, Color.darkGray);
+        renderer.setSeriesLinesVisible(maxIdx.intValue(), false);
+        
+        MinMaxItemLabelGenerator gen = new MinMaxItemLabelGenerator();
+        gen.setLabels(minLabels, maxLabels);
+        renderer.setBaseItemLabelGenerator(gen);
+        renderer.setBaseItemLabelsVisible(true);
+        renderer.setBaseItemLabelFont(new Font("Verdana", Font.BOLD, 10));
+        
+        plot.setRenderer(minMaxIndex, renderer);
+    }
 
     public void clearUserAttributePlot() {
     	if (showAll.isSelected()) return;
-        if (plot.getDatasetCount() > 1) {
-            for (int i = 1; i < plot.getDatasetCount(); i++) {
-            	plot.setDataset(i, null);
-            }
+        for (int i = usersStartIndex; i < plot.getDatasetCount(); i++) {
+        	plot.setDataset(i, null);
         }
         repaint();
+    }
+    
+    public void clearMinMaxUserPlot() {
+        if (showMinMax.isSelected()) return;
+        if (plot.getDatasetCount() > 1) {
+            plot.setDataset(minMaxIndex, empty);
+        }
     }
 
 	@Override
@@ -244,7 +374,11 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
 			clearUserAttributePlot();
 			if (showAll.isSelected())
 				plotAllUsers();
-		}
+		} else if (e.getActionCommand().equals("showMinMax")) {
+		    clearMinMaxUserPlot();
+            if (showMinMax.isSelected())
+                plotMinMax();
+        }
 	}
 
 }
