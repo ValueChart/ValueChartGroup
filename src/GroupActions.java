@@ -112,7 +112,7 @@ public class GroupActions extends JPanel implements ActionListener {
             grpDetails.add(topTwoChoices);
 		}
 		
-        disagreement = new JLabel("Criteria Variance HeatMap");
+        disagreement = new JLabel("Criteria Disagreement HeatMap");
         disagreement.setFont(font);
         String[] selectOpt = {"None", "by Score","by Weight","by Utility"};
         

@@ -103,7 +103,7 @@ public class ValueChart extends JPanel {
     private HashMap<String, Integer> rankVarWeight = null;
     private HashMap<String, Integer> rankVarUtil = null;
     private HashMap<String, Integer> rankVarScore = null;
-    public static final ColorHeatMap heatMapColors = new ColorHeatMap(9);
+    public static final ColorHeatMap heatMapColors = new ColorHeatMap();
     
     //***Added so that there is one frame that allows display of pdf reports from value chart. This window is not used for each of the attribute/entry reports.
     //Those are contained within the AttributeCell class. Rather, this is for anywhere else on the interface (it started with a need to have one report window to display the report for the criteria details)

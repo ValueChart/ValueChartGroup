@@ -142,6 +142,8 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         menuItem = new MenuEntry("Open average group ValueChart");
         menu.add(menuItem);
+        menuItem = new MenuEntry("HeatMap Colors Legend");
+        menu.add(menuItem);
 
         add(menu);
         setOpaque(true);
@@ -296,6 +298,9 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 		}
 		else if ("Open average group ValueChart".equals(ae.getActionCommand())){
 		    chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true);
+        }
+		else if ("HeatMap Colors Legend".equals(ae.getActionCommand())){
+		    new HeatMapLegend();
         }
 
 	}

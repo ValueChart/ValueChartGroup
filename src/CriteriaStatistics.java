@@ -9,7 +9,27 @@ public class CriteriaStatistics {
     
     public static final int SCORE = 1, WEIGHT = 2, UTILITY = 3;
     
-    // gives rank weight from 0-8, 8 being the strongest colour
+    // gives rank weight from 0-ColorHeatMap.MAX_COLOURS-1, 0 being the strongest colour (most variance)
+    public static HashMap<String, Integer> rankFromStdDev(HashMap<String, Double> stdevs) {
+        if (stdevs == null || stdevs.size() < 2) return null;
+        
+        // if we assume a normal distribution:
+        // 99.7% of values will fall within 3 stdevs
+        // since participants can disagree up to 100%, 33% should be a maximal disagreement value
+        // we definitely don't have a normal distribution, but seems a nice place to draw the line
+        int numColors = ColorHeatMap.MAX_COLOURS-1;
+        // accounts for rounding operation
+        double scale = numColors / 0.33;
+        HashMap<String, Integer> rankVarWeight = new HashMap<String, Integer>();
+        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
+            int rank = numColors - (int) Math.floor((sd.getValue()) * scale);
+            if (rank < 0) rank = 0;
+            rankVarWeight.put(sd.getKey(), rank);
+        }
+        
+        return rankVarWeight;
+    }
+    
     public static HashMap<String, Integer> rankVarianceWeight(LinkedHashMap<String, HashMap<String, Double>> listOfWeightMaps) {
         HashMap<String, ArrayList<Double>> attributeVals = new HashMap<String, ArrayList<Double>>();
         HashMap<String, Double> attributeMeans = new HashMap<String, Double>();
@@ -34,8 +54,6 @@ public class CriteriaStatistics {
             }
         }
         
-        double varMin = Double.MAX_VALUE;
-        double varMax = Double.MIN_VALUE;
         HashMap<String, Double> stdevs = new HashMap<String, Double>();
         for (Map.Entry<String, Double> pair : attributeMeans.entrySet()) {
             double var = 0;
@@ -48,25 +66,9 @@ public class CriteriaStatistics {
             }
             var = var / vals.size();
             stdevs.put(pair.getKey(), Math.sqrt(var));
-            
-            if (var < varMin)
-                varMin = var;
-            if (var > varMax)
-                varMax = var;
         }
         
-        if (varMin >= varMax) return null;
-        
-        double sdMin = Math.sqrt(varMin);
-        double sdMax = Math.sqrt(varMax);
-        
-        HashMap<String, Integer> rankVarWeight = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
-            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
-            rankVarWeight.put(sd.getKey(), rank);
-        }
-        
-        return rankVarWeight;
+        return rankFromStdDev(stdevs);
     }
     
     public static HashMap<String, Integer> rankVarianceScore(ValueChart chart) {
@@ -127,8 +129,6 @@ public class CriteriaStatistics {
             }
         }
         
-        double varMin = Double.MAX_VALUE;
-        double varMax = Double.MIN_VALUE;
         HashMap<String, Double> stdevs = new HashMap<String, Double>();
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
@@ -158,26 +158,10 @@ public class CriteriaStatistics {
                 var /= 2;
             }
             
-            if (var < varMin)
-                varMin = var;
-            if (var > varMax)
-                varMax = var;
-            
             stdevs.put(valuesMap.getKey(), Math.sqrt(var));
         }
         
-        if (varMin >= varMax) return null;
-        
-        double sdMin = Math.sqrt(varMin);
-        double sdMax = Math.sqrt(varMax);
-        
-        HashMap<String, Integer> rankVarScore = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
-            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
-            rankVarScore.put(sd.getKey(), rank);
-        }
-        
-        return rankVarScore;
+        return rankFromStdDev(stdevs);
     }
     
     public static HashMap<String, Integer> rankVarianceUtility(ArrayList<IndividualAttributeMaps> listOfAttributeMaps) {
@@ -236,8 +220,6 @@ public class CriteriaStatistics {
             }
         }
         
-        double varMin = Double.MAX_VALUE;
-        double varMax = Double.MIN_VALUE;
         HashMap<String, Double> stdevs = new HashMap<String, Double>();
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
@@ -267,25 +249,9 @@ public class CriteriaStatistics {
                 var /= 2;
             }
             
-            if (var < varMin)
-                varMin = var;
-            if (var > varMax)
-                varMax = var;
-            
             stdevs.put(valuesMap.getKey(), Math.sqrt(var));
         }
-        
-        if (varMin >= varMax) return null;
-        
-        double sdMin = Math.sqrt(varMin);
-        double sdMax = Math.sqrt(varMax);
-        
-        HashMap<String, Integer> rankVarScore = new HashMap<String, Integer>();
-        for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
-            int rank = (int) Math.round((sd.getValue() - sdMin) / (sdMax - sdMin) * 8);
-            rankVarScore.put(sd.getKey(), rank);
-        }
-        
-        return rankVarScore;
+
+        return rankFromStdDev(stdevs);
     }
 }
