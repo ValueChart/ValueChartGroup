@@ -527,6 +527,8 @@ public class AttributeCell extends JComponent {
             g.drawLine(0, cellHeight - 1, width-4, cellHeight - 1);
         }
         else if(chart.generateAvgGVC){
+            if (chart.davidAvgGVC)
+                maxAttributeWeight = chart.averageAttributeWeights.get(attributeName);
             for(ChartEntry entryForSuperUser : entryList){//for each alternative
             	int totalIndividualHeight = 0;
 	            for(IndividualEntryMap e : chart.listOfEntryMaps.values()){//for each user

@@ -87,6 +87,7 @@ public class ValueChart extends JPanel {
     boolean topChoices = false;
     boolean showAvgWeights = false;
     boolean generateAvgGVC = false;
+    boolean davidAvgGVC = false;
     boolean hideNonCompete = false;
     boolean showAvgScores = false;
     
@@ -115,7 +116,7 @@ public class ValueChart extends JPanel {
     OutlineItem item = null; //The items in the bookmark
 
 //CONSTRUCTOR
-    public ValueChart(ConstructionView c, String file, ArrayList<String> list, int type, int colwd, boolean b, boolean graph,int colorOption, boolean avgGVC) {
+    public ValueChart(ConstructionView c, String file, ArrayList<String> list, int type, int colwd, boolean b, boolean graph,int colorOption, boolean avgGVC, boolean dAvgGVC) {
         super();        
         show_graph = graph;
         con = c;
@@ -123,6 +124,7 @@ public class ValueChart extends JPanel {
         filename = file;
         users = list;
         generateAvgGVC = avgGVC;
+        davidAvgGVC = dAvgGVC;
 //        colWidthGroup =  padWidth * 2 + userWidth * users.size();
         if (avgGVC)
             colWidthGroup = userWidth*2;
@@ -719,35 +721,34 @@ public class ValueChart extends JPanel {
     
     private double getMaxHeightRatio(ScanfReader scanReader, String attrName) throws IOException{    	
     	String frac = scanReader.scanString();
-//    	System.out.println(frac);
     	double hr = -1;
     	if(!frac.equals("*")){
-//    		if(frac.equals("1.0")){
-//    			hr = Double.parseDouble(frac);
-//    			return hr;
-//    		}
-//    		else{
-    			if(!maxWeightMap.isEmpty()){
-        			for(Map.Entry<String, Double> entry : maxWeightMap.entrySet()){
-            			if(entry.getKey().equals(attrName)){
-            				hr = entry.getValue();                			
-                			return hr;
-                		}
-                	}
+			if(!maxWeightMap.isEmpty() && !davidAvgGVC){
+    			if(maxWeightMap.containsKey(attrName)){
+    				hr = maxWeightMap.get(attrName);               			
+        			return hr;
         		}
-        		else
-            		System.out.println("Weight Map empty");
-//    		}
+    		} else if (!averageAttributeWeights.isEmpty() && davidAvgGVC) {
+                if(averageAttributeWeights.containsKey(attrName)){
+                    hr = averageAttributeWeights.get(attrName);                        
+                    return hr;
+                }
+    		} else if (maxWeightMap.isEmpty())
+        		System.out.println("Weight Map empty");
     	}
     	return hr;
     }
 
     private double getHeightScalingConstant(){
     	double s = 0.0;
-    	if(!maxWeightMap.isEmpty()){
+    	if(!maxWeightMap.isEmpty() && !davidAvgGVC){
 			for(Map.Entry<String, Double> entry : maxWeightMap.entrySet()){
     			s += entry.getValue();
         	}
+		} else if (!averageAttributeWeights.isEmpty() && davidAvgGVC) {
+            for (Map.Entry<String, Double> entry : averageAttributeWeights.entrySet()) {
+                s += entry.getValue();
+            }
 		}
     	return s;
     }
@@ -1433,7 +1434,7 @@ public class ValueChart extends JPanel {
     }
 
     public void resetDisplay(int type, int colwd, boolean close, boolean graph,int colorOption, String user) {
-    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption,false);
+    	ValueChart ch = new ValueChart(con, filename, users, type, colwd, true, graph,colorOption,false, false);
     	ch.showAbsoluteRatios = this.showAbsoluteRatios;   
     	ch.userToPickAttributeColor = user;
         ch.pump = pump;
@@ -1478,7 +1479,7 @@ public class ValueChart extends JPanel {
     }*/
     
     public void compareDisplay(int type, int colwd) {
-        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,false);
+        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,false, false);
         ch.showAbsoluteRatios = this.showAbsoluteRatios; 
         ch.pump = pump;
         ch.pump_increase = pump_increase;
@@ -1493,8 +1494,8 @@ public class ValueChart extends JPanel {
         }
     }
     
-    public void avgGVCDisplay(int type, int colwd, boolean avgGVC) {
-        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,avgGVC);
+    public void avgGVCDisplay(int type, int colwd, boolean avgGVC, boolean dAvgGVC) {
+        ValueChart ch = new ValueChart(con, filename, users, type, colwd, false, show_graph,ValueChart.COLORFORUSER,avgGVC, dAvgGVC);
         ch.showAbsoluteRatios = this.showAbsoluteRatios; 
         ch.pump = pump;
         ch.pump_increase = pump_increase;

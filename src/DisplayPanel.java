@@ -193,15 +193,13 @@ public class DisplayPanel extends JComponent {
         				for (Iterator it = cellList.iterator(); it.hasNext();) { 
             				AttributeCell cell = (AttributeCell) it.next();
                  			double weight = e.getEntryWeight(cell.getName(), entryName);
-                 			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());//chart.heightScalingConstant;
+                 			double or = cell.getHeightFromAttributeMap(e.username,cell.getName());
     	                    accumulatedRatios[j] += or * weight;
     	                    h = (int) Math.round(accumulatedRatios[j] * totalHeight) - ypos[j];
     	                    ChartEntry entry = (ChartEntry) entryList.get(i);
     	                    if (e.findEntry(entryName).isMasked()) {
     	                        g.setColor(Color.lightGray);
     	                    } else {
-//    	                        g.setColor(cell.getUserColorFromAttributeMap(e.username));
-//    	                    	g.setColor(cell.chooseColor(chart.colorChoice,e.username,cell.getName(),chart.userToPickAttributeColor));
                         		g.setColor(cell.chooseColor(e.username,cell.getName(),entry.name,chart.userToPickAttributeColor));
     	                    }	
     	                    g.fillRect(x, totalHeight - h - ypos[j], userWidth, h);
@@ -227,39 +225,22 @@ public class DisplayPanel extends JComponent {
         	            if (score) {
         	            	int xpos = x + userWidth/6;
         	            	double maxTotalScore = accumulatedRatios[j];
-//            				if(chart.topChoices){
-//        						for(IndividualAttributeMaps iam : chart.listOfAttributeMaps){
-//        							if(e.entryList.get(i).name.equals(iam.topAlternative) && e.username.equals(iam.userName)){
-//        								g.setFont(new Font("DEFAULT",Font.BOLD,12));    
-//                    					g.setColor(Color.RED);
-//        							}
-//        							else{
-//        								g.setFont(new Font("DEFAULT",Font.PLAIN,12));    
-//                    					g.setColor(Color.lightGray);
-//        							}
-//        						}
-//        					}
-//            				else{
-            	            	for(Map.Entry<String, Double> entry : maxTotalScores.entrySet()){
-                        			if(entry.getKey().equals(e.username)){
-                        				if(chart.getMouseOver(e.username)){
-                        					g.setFont(new Font("DEFAULT",Font.PLAIN,10));    
-                        					g.setColor(Color.lightGray);
-                        				}
-                    					else{
-                    						if(maxTotalScore == entry.getValue()){//if score is the max score, bold it
-                            					g.setFont(new Font("DEFAULT",Font.BOLD,10));    
-                            					g.setColor(Color.RED);
-                            				}
-                            				else{
-                            					g.setColor(Color.darkGray);
-                            					g.setFont(new Font("DEFAULT",Font.PLAIN,10));
-                            				}
-                    					}
-                            		}
-                            	}
-//            				}
-//        	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] * chart.heightScalingConstant*100))), xpos, totalHeight - ypos[j] - 5);
+                			if(maxTotalScores.containsKey(e.username)){
+                				if(chart.getMouseOver(e.username)){
+                					g.setFont(new Font("DEFAULT",Font.PLAIN,10));    
+                					g.setColor(Color.lightGray);
+                				}
+            					else{
+            						if(maxTotalScore == maxTotalScores.get(e.username)){//if score is the max score, bold it
+                    					g.setFont(new Font("DEFAULT",Font.BOLD,10));    
+                    					g.setColor(Color.RED);
+                    				}
+                    				else{
+                    					g.setColor(Color.darkGray);
+                    					g.setFont(new Font("DEFAULT",Font.PLAIN,10));
+                    				}
+            					}
+                    		}
         	            	g.drawString(String.valueOf((Math.round(accumulatedRatios[j] *100))), xpos, totalHeight - ypos[j] - 5);
     	                    xpos = xpos + userWidth/6;
         	            }
@@ -285,7 +266,16 @@ public class DisplayPanel extends JComponent {
         }
         else if(chart.generateAvgGVC){
             int h=0, x = align_right;
+            int[] ypos = new int[numEntries];
             int j = 0;
+            
+            double maxAvgScore = Double.MIN_VALUE;
+            if (score) {
+                for (Double s : averageTotalScores.values()) {
+                    if (maxAvgScore < s)
+                        maxAvgScore = s;
+                }
+            }
             
         	//for each alternative
             for (int i = 0; i < numEntries; i++) {
@@ -334,7 +324,22 @@ public class DisplayPanel extends JComponent {
                     g.setColor(Color.lightGray);
                     g.drawLine(x, totalHeight - h, x + colWidth - 1, totalHeight - h);
     	            g.drawLine(x-1, 0, x-1, getHeight() - 1);
+    	            if (ypos[i] <= 0)
+    	                ypos[i] = h;
             	}
+                
+                if (score) {
+                    int xpos = x + colWidth/3;
+                    double val = averageTotalScores.get(entryName);
+                    if (val >= maxAvgScore) {
+                        g.setFont(new Font("DEFAULT",Font.BOLD,10));    
+                        g.setColor(Color.RED);
+                    } else {
+                        g.setColor(Color.black);
+                        g.setFont(new Font("DEFAULT",Font.PLAIN,10));
+                    }
+                    g.drawString(String.valueOf((Math.round(val *100))), xpos, totalHeight-ypos[i]-5);
+                }
         		x += colWidth;
         		h=0;
             } 
