@@ -348,7 +348,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         gen.setLabels(minLabels, maxLabels);
         renderer.setBaseItemLabelGenerator(gen);
         renderer.setBaseItemLabelsVisible(true);
-        renderer.setBaseItemLabelFont(new Font("Verdana", Font.BOLD, 10));
+        renderer.setBaseItemLabelFont(new Font("Verdana", Font.PLAIN, 10));
         
         plot.setRenderer(minMaxIndex, renderer);
     }
