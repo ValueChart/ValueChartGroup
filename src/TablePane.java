@@ -166,7 +166,7 @@ public class TablePane extends JLayeredPane {
 
     public void addRow(BaseTableContainer comp) {
         super.add(comp);
-        rowList.add(comp);
+        rowList.add(0, comp);
     }
     
     public void addRowGroup(BaseTableContainerGroup comp) {
