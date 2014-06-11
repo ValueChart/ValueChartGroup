@@ -96,7 +96,7 @@ public class ValueChart extends JPanel {
     boolean show_graph = true;
     int sa_dir = BaseTableContainer.UP;
     SensitivityAnalysisOptions pnlOpt;
-    public DomainValues pnlDom;
+    public DetailsViewPanel pnlDom;
     OptionsMenu menuOptions;
     boolean isNew = true;
     LastInteraction last_int;
@@ -345,9 +345,13 @@ public class ValueChart extends JPanel {
         con.setChart(this);
 //        set prim obj list for rolling up the absolute tree    	
         prims = new HashMap<String, BaseTableContainer>();
-        setPrims(mainPane);
+        setPrims(mainPane); 
         for (BaseTableContainer btc : prims.values()) {
             btc.setRollUp();
+            if (mainPane.getDepth() <= 2) {
+                btc.setWidth(headerWidth*3/2);
+                btc.repaint();
+            }
         }
         ((BaseTableContainer) mainPane.rowList.get(0)).setAbstractRatios();
         setConnectingFields();
@@ -471,6 +475,9 @@ public class ValueChart extends JPanel {
         pnlDisp = new JPanel();
 
         int headerDepth = (mainPane.getDepth()) * headerWidth/2;
+        if (mainPane.getDepth() <= 2) {
+            headerDepth = headerWidth*3/2;
+        }
         
         pnlDisp.setLayout(new BoxLayout(pnlDisp, BoxLayout.X_AXIS));
         if (displayType == SIDE_DISPLAY) {
@@ -492,8 +499,9 @@ public class ValueChart extends JPanel {
         
         displayWithNames = new JPanel();
         displayWithNames.setLayout(new BoxLayout(displayWithNames, BoxLayout.Y_AXIS));
-//        displayWithNames.add(Box.createVerticalGlue());
+        pnlDisp.setAlignmentX(Box.LEFT_ALIGNMENT);
         displayWithNames.add(pnlDisp);
+        displayWithNames.add(Box.createHorizontalGlue());
 
         //int mainWidth = (entryList.size()+mainPane.getDepth())*colWidth;
         int mainWidth = entryList.size() * colWidthGroup;
@@ -538,6 +546,7 @@ public class ValueChart extends JPanel {
         if (displayType == DEFAULT_DISPLAY) {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));         
             add(Box.createVerticalGlue());
+            displayWithNames.setAlignmentX(Box.LEFT_ALIGNMENT);
             add(displayWithNames);
             add(Box.createRigidArea(new Dimension(0, 5)));            
 //        }
@@ -550,7 +559,7 @@ public class ValueChart extends JPanel {
 //            displayDim.height = mainDim.height;
 //        } 
 //        else{
-            
+            mainPaneWithNames.setAlignmentX(Box.LEFT_ALIGNMENT);
             add(mainPaneWithNames);
 //            displayDim.height = mainDim.height;
 //            if (displayType != SEPARATE_DISPLAY) {
@@ -1581,10 +1590,11 @@ public class ValueChart extends JPanel {
         return chartFrame;
     }
 
+    /*
     public void showDomainVals(int i) {
         ChartEntry c = (ChartEntry) entryList.get(i);
         pnlDom.showData(c);
-    }
+    }*/
 
     public class LastInteraction {
 
@@ -1711,7 +1721,7 @@ public class ValueChart extends JPanel {
 
     public void alignDisplayPanel() {
         int height = (int) (mainPane.getHeight()/this.heightScalingConstant);
-        int width = mainPane.getPreferredSize().width;
+        int width = mainPane.getWidth();
 
         displayPanel.setPrefHeight(height);
         displayPanel.setMaximumSize(displayPanel.getPreferredSize());
@@ -1720,11 +1730,24 @@ public class ValueChart extends JPanel {
         pnlDisp.setPreferredSize(new Dimension(width, height));
         pnlDisp.setMaximumSize(pnlDisp.getPreferredSize());
         pnlDisp.setMinimumSize(pnlDisp.getPreferredSize());
+        
+//        displayWithNames.setPreferredSize(new Dimension(width, mainPane.getHeight()));
+//        displayWithNames.setMaximumSize(displayWithNames.getPreferredSize());
+//        displayWithNames.setMinimumSize(displayWithNames.getPreferredSize());
+        
+        int headerDepth = mainPane.getDepth() * headerWidth/2;
+        if (mainPane.getDepth() <= 2) {
+            headerDepth = headerWidth*3/2;
+        }
+        pnlGroupActions.setPreferredSize(new Dimension(headerDepth, height));
+        pnlGroupActions.setMaximumSize(pnlGroupActions.getPreferredSize());
+        pnlGroupActions.setMinimumSize(pnlGroupActions.getPreferredSize());
 
+//        pnlGroupActions.setBorder(BorderFactory.createLineBorder(Color.MAGENTA,10));
 //        displayPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 10));
 //        displayWithNames.setBorder(BorderFactory.createLineBorder(Color.CYAN, 10));
 //        pnlDisp.setBorder(BorderFactory.createLineBorder(Color.RED, 10));
-
+//        mainPaneWithNames.setBorder(BorderFactory.createLineBorder(Color.GREEN,5));
     }
     
 /*    public void getDisplayPanelHeight(){

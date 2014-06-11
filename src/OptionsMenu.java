@@ -146,6 +146,8 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         menuItem = new MenuEntry("HeatMap Colors Legend");
         menu.add(menuItem);
+        menuItem = new MenuEntry("Alternatives Legend");
+        menu.add(menuItem);
 
         add(menu);
         setOpaque(true);
@@ -306,6 +308,15 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         }
 		else if ("HeatMap Colors Legend".equals(ae.getActionCommand())){
 		    new HeatMapLegend();
+        }
+		else if ("Alternatives Legend".equals(ae.getActionCommand())){
+            DetailsViewPanel altPanel = new DetailsViewPanel(chart);
+            JFrame altFrame = new JFrame();
+            altFrame.setContentPane(altPanel);
+            altFrame.setAlwaysOnTop(true);
+            altFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            altFrame.pack();
+            altFrame.setVisible(true);
         }
 
 	}

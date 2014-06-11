@@ -82,13 +82,13 @@ public class EntryNamePanel extends JPanel implements ActionListener {
             } else {
                 g.setColor(Color.BLACK);
             }
-            g.drawString(labelList.get(i).toString(), (i * colWidth) + (30 + ((int) (colWidth - 30) / 2)), ANG_HT); //center the entry name
+            g.drawString("(" + (i+1) + ") " + labelList.get(i).toString(), (i * colWidth) + (30 + ((int) (colWidth - 30) / 2)), ANG_HT); //center the entry name
             g.setColor(Color.GRAY);
             g.drawLine((i * colWidth), ANG_HT, (i * colWidth) + ANG_WD, 0);
             if (((ChartEntry) chart.entryList.get(i)).getIsMarked()) {
                 g.setColor(Color.blue);
                 //code a polygon or something
-                g.drawString(labelList.get(i).toString(), (i * colWidth) + 21, ANG_HT - 1);
+                g.drawString("(" + (i+1) + ") " + labelList.get(i).toString(), (i * colWidth) + 21, ANG_HT - 1);
             }
         }
         g.drawLine((labelList.size() * colWidth), ANG_HT, (labelList.size() * colWidth) + ANG_WD, 0);
@@ -267,15 +267,13 @@ public class EntryNamePanel extends JPanel implements ActionListener {
         return new Dimension(labelList.size() * colWidth + ANG_WD, ANG_HT + 3);
     }
     int rightClicked = -1;
+    int idx = -1;
 
     class MouseHandler extends MouseInputAdapter {
-
-        int idx = 0;
-
         public void mousePressed(MouseEvent me) {
             //((ChartEntry)chart.entryList.get(idx)).setShowFlag(true);	
             if (idx != -1) {
-                chart.showDomainVals(idx);
+//                chart.showDomainVals(idx);
             }
             //System.out.println("IDX___________ " + idx);
             chart.updateAll();
@@ -331,6 +329,7 @@ public class EntryNamePanel extends JPanel implements ActionListener {
 
         public void mouseExited(MouseEvent me) {
             mousedOver = -1;
+            idx = -1;
             repaint();
         }
     }

@@ -133,7 +133,7 @@ public class BaseTableContainer extends Box implements ActionListener {
             if (chart.getChartTitle().equals(name) || chart.getChartTitle().equals(name.replace('_', ' '))) {
                 dimhead.width = 0; //hides the root/main/left/core/chart/title/primary container. 
             } else if (table instanceof AttributeCell){
-            	dimhead.width = chart.headerWidth;
+                    dimhead.width = chart.headerWidth;
             } else {
             	dimhead.width = chart.headerWidth/2;
             }
@@ -210,6 +210,16 @@ public class BaseTableContainer extends Box implements ActionListener {
             h = Math.min(h, dimcell.height);
         }
         table.setSize(w, h);        
+    }
+    
+    public void setWidth(int w) {
+        Dimension dimhead = header.getPreferredSize();        
+        super.setSize(w, dimhead.height);
+        dimhead.width = w;
+        header.setPreferredSize(dimhead);
+        header.setMaximumSize(dimhead);
+        header.setMinimumSize(dimhead);
+        table.setSize(w, dimhead.height);    
     }
 
     public double getHeightRatio() {
