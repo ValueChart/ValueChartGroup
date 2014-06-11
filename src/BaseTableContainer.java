@@ -376,7 +376,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         		text += "]</small></left></html>";
         	}
         	header.setText(text);
-            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') + "<br><small> [MIN: " + min + "%,  AVG: "+ avg + "%,  MAX: "+ max + "%]</small></left></blockquote></html>");
+            header.setToolTipText("<html><blockquote><left><font size=\"4\">" + name.replace('_', ' ') + "<br><small> [MIN: " + min + "%,  AVG: "+ avg + "%,  MAX: "+ max + "%]</small></left></blockquote></html>");
             header.setFont(new Font("Verdana", Font.PLAIN, 12));
         }
         else{
@@ -386,7 +386,7 @@ public class BaseTableContainer extends Box implements ActionListener {
                 header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' '));
             }
             //header.setText(s);
-            header.setToolTipText("<html><blockquote><left><font size=\"6\">" + name.replace('_', ' ') );
+            header.setToolTipText("<html><blockquote><left><font size=\"4\">" + name.replace('_', ' ') );
             header.setFont(new Font("Verdana", Font.PLAIN, 12));
         }
     }
