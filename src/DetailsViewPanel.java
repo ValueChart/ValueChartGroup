@@ -60,7 +60,7 @@ import javax.swing.table.DefaultTableModel;
             table.setRowSelectionAllowed(true);      
             table.setGridColor(Color.WHITE);
             table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-            (table.getTableHeader()).setVisible(false);
+            table.setTableHeader(null);
             JScrollPane scrollPane = new JScrollPane(table);            
    
             setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));

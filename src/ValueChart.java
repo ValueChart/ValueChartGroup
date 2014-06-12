@@ -35,6 +35,7 @@ public class ValueChart extends JPanel {
     static public final int COLORFORUSER = 1,
     		COLORFORATTRIBUTE = 2,
     		COLORFORINTENSITY = 3;
+    static public final String ICON_FILENAME = "chart_group.png";
     
     int headerWidth = 200; //width of criteria column
     int graphWidth = 100; //width of utility graphs
@@ -173,6 +174,8 @@ public class ValueChart extends JPanel {
         showVC();        
         if (isNew) {
             chartFrame.setJMenuBar(menuOptions);
+            ImageIcon img = new ImageIcon(ICON_FILENAME);
+            chartFrame.setIconImage(img.getImage());
         }
         setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         if (displayType == SEPARATE_DISPLAY) {
@@ -1531,7 +1534,10 @@ public class ValueChart extends JPanel {
     }
 
     void showVC() {
-        chartFrame = new JFrame("ValueChart for " + chartTitle);
+        if (!generateAvgGVC)
+            chartFrame = new JFrame("Group ValueChart for " + chartTitle);
+        else
+            chartFrame = new JFrame("Group ValueChart (Average View) for " + chartTitle);
         chartFrame.getContentPane().setLayout(new BoxLayout(chartFrame.getContentPane(), BoxLayout.Y_AXIS));
 //        if (displayType == SIDE_DISPLAY) {
 //            pnlOpt = new SensitivityAnalysisOptions(this);

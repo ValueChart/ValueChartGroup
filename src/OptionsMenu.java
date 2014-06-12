@@ -142,8 +142,8 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         menuItem = new MenuEntry("Open average group ValueChart");
         menu.add(menuItem);
-        menuItem = new MenuEntry("Open average group ValueChart (David)");
-        menu.add(menuItem);
+        /*menuItem = new MenuEntry("Open average group ValueChart (David)");
+        menu.add(menuItem);*/
         menuItem = new MenuEntry("HeatMap Colors Legend");
         menu.add(menuItem);
         menuItem = new MenuEntry("Alternatives Legend");
@@ -301,11 +301,11 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 			chart.compareDisplay(chart.displayType, chart.colWidth);
 		}
 		else if ("Open average group ValueChart".equals(ae.getActionCommand())){
-		    chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true, false);
+		    chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true, true);
         }
-		else if ("Open average group ValueChart (David)".equals(ae.getActionCommand())){
+		/*else if ("Open average group ValueChart (David)".equals(ae.getActionCommand())){
             chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true, true);
-        }
+        }*/
 		else if ("HeatMap Colors Legend".equals(ae.getActionCommand())){
 		    new HeatMapLegend();
         }
@@ -313,7 +313,6 @@ class OptionsMenu extends JMenuBar implements ActionListener{
             DetailsViewPanel altPanel = new DetailsViewPanel(chart);
             JFrame altFrame = new JFrame();
             altFrame.setContentPane(altPanel);
-            altFrame.setAlwaysOnTop(true);
             altFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             altFrame.pack();
             altFrame.setVisible(true);
