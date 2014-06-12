@@ -6,22 +6,22 @@ import java.util.ArrayList;
 class ColorHeatMap extends ArrayList<Color>{  
     private static final long serialVersionUID = 1L;
     
-    public static final int MAX_COLOURS = 11;
+    public static final int MAX_COLOURS = 5;
 
     ColorHeatMap(){
         
         // red to green
         add(new Color(189,0,38));
         add(new Color(252,78,42));
-        add(new Color(253,141,60));
+        //add(new Color(253,141,60));
         add(new Color(254,178,76));
-        add(new Color(254,217,118));
+        //add(new Color(254,217,118));
         add(new Color(255,237,160));
-        add(new Color(255,255,204));
+        //add(new Color(255,255,204));
         add(new Color(255,255,229));
-        add(new Color(217,240,163));
-        add(new Color(173,221,142));
-        add(new Color(65,171,93));
+        //add(new Color(217,240,163));
+        //add(new Color(173,221,142));
+        //add(new Color(65,171,93));
         
         // yellows
         /*

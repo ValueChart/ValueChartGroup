@@ -183,7 +183,9 @@ public class GroupActions extends JPanel implements ActionListener {
             pnlDetails.add(showAverageAlternatives);
         }
         
-        pnlDetails.add(showAverageWeights);
+        if (!averageChart || (averageChart && !chart.davidAvgGVC)) {
+            pnlDetails.add(showAverageWeights);
+        }
         
         if (!averageChart) {
             pnlDetails.add(showAverageScores);
