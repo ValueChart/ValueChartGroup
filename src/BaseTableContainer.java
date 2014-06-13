@@ -380,7 +380,7 @@ public class BaseTableContainer extends Box implements ActionListener {
             } else {
                 text = "<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<br>&nbsp;&nbsp;<small> [MIN: " + min + "%,  MAX: "+ max + "%";
             }
-        	if(chart.showAvgWeights){
+        	if(chart.showAvgWeights || chart.generateAvgGVC){
         		text += "<br>&nbsp;&nbsp;&nbsp; AVG: " + avg + "%]</small></left></html>";
         	} else {
         		text += "]</small></left></html>";
