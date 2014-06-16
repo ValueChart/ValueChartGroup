@@ -35,6 +35,7 @@ public class ValueChart extends JPanel {
     static public final int COLORFORUSER = 1,
     		COLORFORATTRIBUTE = 2,
     		COLORFORINTENSITY = 3;
+    static public final String IMG_DIR = "img/";
     static public final String ICON_FILENAME = "chart_group.png";
     
     int headerWidth = 200; //width of criteria column
@@ -174,7 +175,7 @@ public class ValueChart extends JPanel {
         showVC();        
         if (isNew) {
             chartFrame.setJMenuBar(menuOptions);
-            ImageIcon img = new ImageIcon(ICON_FILENAME);
+            ImageIcon img = new ImageIcon(IMG_DIR + ICON_FILENAME);
             chartFrame.setIconImage(img.getImage());
         }
         setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
