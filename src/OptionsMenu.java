@@ -144,7 +144,7 @@ class OptionsMenu extends JMenuBar implements ActionListener{
         menu.add(menuItem);
         /*menuItem = new MenuEntry("Open average group ValueChart (David)");
         menu.add(menuItem);*/
-        menuItem = new MenuEntry("HeatMap Colors Legend");
+        menuItem = new MenuEntry("HeatMap Legend");
         menu.add(menuItem);
         menuItem = new MenuEntry("Alternatives Legend");
         menu.add(menuItem);
