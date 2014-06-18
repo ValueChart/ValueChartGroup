@@ -111,7 +111,6 @@ public class CriteriaStatistics {
                     double val = attrVal.getValue().weight();
                     // scale it relative to the maximum assigned weight
                     double scale = listOfWeightMaps.get(iem.getKey()).get(critkey);
-                    scale /= maxWeightMap.get(critkey);
                     val *= scale;
                     
                     if (values == null) {
@@ -134,8 +133,8 @@ public class CriteriaStatistics {
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
             // a variance is calculated for each criteria, each alternative
-            // will take the median variance to get variance for each criteria
-            ArrayList<Double> varMed = new ArrayList<Double>(); 
+            // will take the mean variance to get variance for each criteria
+            double varMean = 0;
             
             // for alternative
             for (Map.Entry<String, ArrayList<Double>> values : valuesMap.getValue().entrySet()) {
@@ -149,17 +148,12 @@ public class CriteriaStatistics {
                     var += Math.pow(v-mean, 2);
                 }
                 var = var / vals.size();
-                varMed.add(var);
+                varMean += var;
             }
             
-            int idx = varMed.size()/2;
-            double var = varMed.get(idx);
-            if (varMed.size() % 2 == 0) {
-                var += varMed.get(idx+1);
-                var /= 2;
-            }
+            varMean /= valuesMap.getValue().size();
             
-            stdevs.put(valuesMap.getKey(), Math.sqrt(var));
+            stdevs.put(valuesMap.getKey(), Math.sqrt(varMean));
         }
         
         return rankFromStdDev(stdevs);
@@ -225,8 +219,8 @@ public class CriteriaStatistics {
         // for each criteria
         for (Map.Entry<String, HashMap<String, ArrayList<Double>>> valuesMap : attributeValues.entrySet()) {
             // a variance is calculated for each criteria, each x-coordinate
-            // will take the median variance to get variance for each criteria
-            ArrayList<Double> varMed = new ArrayList<Double>(); 
+            // will take the mean variance to get variance for each criteria
+            double varMean = 0;
             
             // for x-coord
             for (Map.Entry<String, ArrayList<Double>> values : valuesMap.getValue().entrySet()) {
@@ -240,17 +234,12 @@ public class CriteriaStatistics {
                     var += Math.pow(v-mean, 2);
                 }
                 var = var / vals.size();
-                varMed.add(var);
+                varMean += var;
             }
             
-            int idx = varMed.size()/2;
-            double var = varMed.get(idx);
-            if (varMed.size() % 2 == 0) {
-                var += varMed.get(idx+1);
-                var /= 2;
-            }
+            varMean /= valuesMap.getValue().size();
             
-            stdevs.put(valuesMap.getKey(), Math.sqrt(var));
+            stdevs.put(valuesMap.getKey(), Math.sqrt(varMean));
         }
 
         return rankFromStdDev(stdevs);
