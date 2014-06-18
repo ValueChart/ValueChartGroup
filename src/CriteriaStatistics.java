@@ -24,7 +24,8 @@ public class CriteriaStatistics {
         for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
             int rank = numColors - (int) Math.floor((sd.getValue()) * scale);
             if (rank < 0) rank = 0;
-            rankVarWeight.put(sd.getKey(), rank);
+            //rankVarWeight.put(sd.getKey(), rank);
+            rankVarWeight.put(sd.getKey(), (int)Math.round(sd.getValue()*100));
         }
         
         return rankVarWeight;

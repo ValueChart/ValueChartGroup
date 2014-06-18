@@ -21,7 +21,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     private static final long serialVersionUID = 1L;
     public MouseHandler mouseHandler;
     public JComponent table;
-    public JLabel header;
+    public HeaderLabel header;
     private String name;
     private ValueChart chart;
     private double heightRatio = -1.0;
@@ -66,7 +66,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     
     public BaseTableContainer(JComponent table, String name, ValueChart chart, int width) {
         super(BoxLayout.X_AXIS);
-        header = new JLabel(".00");
+        header = new HeaderLabel(".00", "");
         //Checking if BaseTableContainer is the container holding the attribute bar charts or attribute names
 
         if (table instanceof AttributeCell) { //This container is for the charts (or relative rankings)
@@ -147,9 +147,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         header.addMouseListener(mouseHandler);
         header.addMouseMotionListener(mouseHandler);
         header.setOpaque(false);
-        header.setHorizontalAlignment(JLabel.LEFT); //Label Alignment
-        header.setVerticalAlignment(JLabel.CENTER);
-
+        
         popAttribute = new JPopupMenu();
 
         JMenuItem menuItem = new JMenuItem("Value Function Analysis");
@@ -362,7 +360,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         //*********FORMAT TEXT*********
 //        Integer pct;
         Double pct_d = s * 100 * chart.heightScalingConstant;
-        DecimalFormat twoDForm = new DecimalFormat("#.##");
+        DecimalFormat twoDForm = new DecimalFormat("#.#");
         Double pct = Double.valueOf(twoDForm.format(pct_d));
 //        System.out.println(name+" "+heightRatio+" "+heightScale);
         if(table instanceof AttributeCell){
@@ -374,26 +372,30 @@ public class BaseTableContainer extends Box implements ActionListener {
 //        	pct = s *chart.heightScalingConstant * 100;
 //        	System.out.println(name+" "+s +" "+chart.heightScalingConstant);
 //        	pct = (int)(s * 100);
-        	String text = "";
+        	String mainText = "";
+        	String smallText = "";
         	if (getHeight() < 30) {
-                text = "<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<small> [MIN: " + min + "%,  MAX: "+ max + "%";
+                mainText = name.replace('_', ' ');
+                smallText = "[MIN: " + min + "%,  MAX: "+ max + "%";
             } else {
-                text = "<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' ') + "<br>&nbsp;&nbsp;<small> [MIN: " + min + "%,  MAX: "+ max + "%";
+                mainText = name.replace('_', ' ');
+                smallText = "[MIN: " + min + "%,  MAX: "+ max + "%";
             }
         	if(chart.showAvgWeights || chart.generateAvgGVC){
-        		text += "<br>&nbsp;&nbsp;&nbsp; AVG: " + avg + "%]</small></left></html>";
+        		smallText += "<br>AVG: " + avg + "%]";
         	} else {
-        		text += "]</small></left></html>";
+        		smallText += "]";
         	}
-        	header.setText(text);
+        	header.setMainText(mainText);
+        	header.setSmallText(smallText);
             header.setToolTipText("<html><blockquote><left><font size=\"4\">" + name.replace('_', ' ') + "<br><small> [MIN: " + min + "%,  AVG: "+ avg + "%,  MAX: "+ max + "%]</small></left></blockquote></html>");
             header.setFont(new Font("Verdana", Font.PLAIN, 12));
         }
         else{
         	if (getHeight() < 30) {
-                header.setText("   " + name.replace('_', ' '));
+                header.setMainText(name.replace('_', ' '));
             } else {
-                header.setText("<html><left>" + "&nbsp;&nbsp;&nbsp;" + name.replace('_', ' '));
+                header.setMainText(name.replace('_', ' '));
             }
             //header.setText(s);
             header.setToolTipText("<html><blockquote><left><font size=\"4\">" + name.replace('_', ' ') );
@@ -1016,15 +1018,11 @@ public class BaseTableContainer extends Box implements ActionListener {
     public void setHighLight(int rank) {
         if(table instanceof AttributeCell){
             highlight = rank;
-            if (highlight < 0) {
-                header.setForeground(Color.black);
-                header.setOpaque(false);
+            header.setSliderPosition(rank);
+            if (highlight < HeaderLabel.SLIDER_MIN) {
+                header.setShowSmallText(true);
             } else {
-                Color back = ValueChart.heatMapColors.get(rank);
-                boolean black = AttributeCell.useBlackForeground(back);
-                header.setForeground((black ? Color.black : Color.white));
-                header.setBackground(back);
-                header.setOpaque(true);
+                header.setShowSmallText(false);
             }
         }
     }
