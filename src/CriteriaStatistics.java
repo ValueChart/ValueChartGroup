@@ -17,7 +17,7 @@ public class CriteriaStatistics {
         // 99.7% of values will fall within 3 stdevs
         // since participants can disagree up to 100%, 33% should be a maximal disagreement value
         // we definitely don't have a normal distribution, but seems a nice place to draw the line
-        int numColors = TextureHeatMap.MAX_TEXTURES-1;
+        int numColors = ColorHeatMap.MAX_COLOURS-1;
         // accounts for rounding operation
         double scale = numColors / 0.33;
         HashMap<String, Integer> rankVarWeight = new HashMap<String, Integer>();
