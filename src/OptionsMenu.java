@@ -306,7 +306,7 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 		/*else if ("Open average group ValueChart (David)".equals(ae.getActionCommand())){
             chart.avgGVCDisplay(chart.displayType, ValueChart.DEFAULT_USER_COL_WIDTH,true, true);
         }*/
-		else if ("HeatMap Legend".equals(ae.getActionCommand())){
+		else if ("HeatMap Colors Legend".equals(ae.getActionCommand())){
 		    new HeatMapLegend();
         }
 		else if ("Alternatives Legend".equals(ae.getActionCommand())){
