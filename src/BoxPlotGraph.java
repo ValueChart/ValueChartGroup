@@ -43,7 +43,6 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
     private DefaultBoxAndWhiskerCategoryDataset data = null;
     private CategoryPlot plot;
     private JCheckBox showAll;
-    private JCheckBox showMinMax;
     // indices in plot that contain the respective datasets
     private int boxIndex = 0;
     private int minMaxIndex = 1;
@@ -117,7 +116,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         plot.setRangeAxis(boxIndex, yAxis);
 
         JFreeChart plotChart = new JFreeChart(
-            "Value Function Statistics for " + attributeName,
+            "Score Statistics for " + attributeName,
             plot
         );
         ChartPanel chartPanel = new ChartPanel(plotChart);
@@ -137,16 +136,13 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         showAll.addActionListener(this);
         showAll.setAlignmentX(LEFT_ALIGNMENT);
         pnl.add(showAll);
-        showMinMax = new JCheckBox("Extreme Users");
-        showMinMax.setActionCommand("showMinMax");
-        showMinMax.addActionListener(this);
-        showMinMax.setAlignmentX(LEFT_ALIGNMENT);
-        pnl.add(showMinMax);
         pnl.setAlignmentX(CENTER_ALIGNMENT);
         legendMain.add(pnl);
 
         panel.add(legendMain);
         setContentPane(panel);
+        
+        plotMinMax();
         
         chartReady = true;
     }
@@ -251,7 +247,6 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
     }
     
     public void plotMinMax() {
-        if (!showMinMax.isSelected()) return;
         
         String minKey = "min";
         String maxKey = "max";
@@ -362,7 +357,6 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
     }
     
     public void clearMinMaxUserPlot() {
-        if (showMinMax.isSelected()) return;
         if (plot.getDatasetCount() > 1) {
             plot.setDataset(minMaxIndex, empty);
         }
@@ -374,11 +368,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
 			clearUserAttributePlot();
 			if (showAll.isSelected())
 				plotAllUsers();
-		} else if (e.getActionCommand().equals("showMinMax")) {
-		    clearMinMaxUserPlot();
-            if (showMinMax.isSelected())
-                plotMinMax();
-        }
+		}
 	}
 
 }

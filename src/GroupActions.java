@@ -112,9 +112,9 @@ public class GroupActions extends JPanel implements ActionListener {
             grpDetails.add(topTwoChoices);
 		}
 		
-        disagreement = new JLabel("Criteria Disagreement HeatMap");
+        disagreement = new JLabel("Criteria Disagreement");
         disagreement.setFont(font);
-        String[] selectOpt = {"None", "by Score","by Weight","by Utility"};
+        String[] selectOpt = {"None", "by Product","by Weight","by Score"};
         
         selectVarMode = new JComboBox<String>(selectOpt);
         selectVarMode.setSelectedIndex(0);
@@ -316,12 +316,19 @@ public class GroupActions extends JPanel implements ActionListener {
 		    String s = (String)(((JComboBox<String>) ae.getSource()).getSelectedItem());
 		    if (s.equals("None")) {
                 chart.clearCriteriaHightlight();
-		    } else if (s.equals("by Score")) {
-		        chart.setCriteriaHightlight(CriteriaStatistics.SCORE);
+		    } 
+	        // Popoviciu's inequality: variance <= (max-min)^2/4
+	        // if max = 100 : var <= 0.25, stdev <= 0.5
+		    // if max = 50 (ie. it's really bad if users disagree by 50+%) : var <= 0.0625, stdev <= 0.25
+		    else if (s.equals("by Product")) {
+		        HeaderLabel.DISAGREE_MAX = 25;
+		        chart.setCriteriaHightlight(CriteriaStatistics.PRODUCT);
 		    } else if (s.equals("by Weight")) {
+		        HeaderLabel.DISAGREE_MAX = 25;
 	            chart.setCriteriaHightlight(CriteriaStatistics.WEIGHT);
-	        } else if (s.equals("by Utility")) {
-	            chart.setCriteriaHightlight(CriteriaStatistics.UTILITY);
+	        } else if (s.equals("by Score")) {
+	            HeaderLabel.DISAGREE_MAX = 33;
+	            chart.setCriteriaHightlight(CriteriaStatistics.SCORE);
 	        }
             chart.updateMainPane();
             
