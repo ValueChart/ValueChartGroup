@@ -15,6 +15,7 @@ import javax.swing.JSlider;
 
 public class HeaderLabel extends JPanel {
     private static final long serialVersionUID = 1L;
+    String texture = "";
     private static final int padding = 10;
     private JLabel textLabel = new JLabel();
     BufferedImage tileImage;
@@ -26,9 +27,9 @@ public class HeaderLabel extends JPanel {
     private JProgressBar slider = new JProgressBar();
     private int sliderPos = -1;
     public static final int SLIDER_MIN = 0;
-    public static final int SLIDER_MAX = 33;
+    public static int DISAGREE_MAX = 33;
     private JPanel sliderPanel = new JPanel();
-    
+    public static boolean SHOW_TEXTURE = false;
     
     public HeaderLabel() {
         super();
@@ -74,20 +75,14 @@ public class HeaderLabel extends JPanel {
         Font f = new Font("Arial", Font.PLAIN, 10);
 
         slider.setMinimum(SLIDER_MIN);
-        slider.setMaximum(SLIDER_MAX);
+        slider.setMaximum(DISAGREE_MAX);
         slider.setEnabled(false);
-        slider.setString("Disagreement");
-        slider.setStringPainted(true);
+        slider.setStringPainted(false);
+        slider.setMaximumSize(new Dimension(slider.getMaximumSize().width, 10));
         slider.setFont(f);
         
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.X_AXIS));
-        JLabel label = new JLabel("Low");
-        label.setFont(f);
-        sliderPanel.add(label);
         sliderPanel.add(slider);
-        label = new JLabel("High");
-        label.setFont(f);
-        sliderPanel.add(label);
         
     }
     
@@ -153,19 +148,44 @@ public class HeaderLabel extends JPanel {
         super.setPreferredSize(dim);
     }
 
+    public String getTexture() {
+        return texture;
+    }
+
+    public void setTextureFile(String texture) {
+        this.texture = texture;
+        if (texture == null) {
+            this.setOpaque(false);
+            textLabel.setOpaque(false);
+        } else {
+            try {
+                tileImage = ImageIO.read(new File(texture));
+                setOpaque(true);
+                textLabel.setBackground(Color.white);
+                textLabel.setOpaque(true);
+            } catch (IOException ex) {
+                textLabel.setOpaque(false);
+                setOpaque(false);
+            }
+        }
+    }
+
     public int getSliderPosition() {
         return slider.getValue();
     }
 
     public void setSliderPosition(int value) {
-        if (value > SLIDER_MAX) value = SLIDER_MAX;
         sliderPos = value;
     }
     
     private void addSlider() {
-        if (sliderPos >= SLIDER_MIN && sliderPos <= SLIDER_MAX) {
+        slider.setMaximum(DISAGREE_MAX);
+        if (sliderPos >= SLIDER_MIN) {
             add(sliderPanel, sliderCons);
-            slider.setValue(sliderPos);
+            if (sliderPos <= DISAGREE_MAX)
+                slider.setValue(sliderPos);
+            else
+                slider.setValue(DISAGREE_MAX);
         }
     }
     
@@ -177,8 +197,28 @@ public class HeaderLabel extends JPanel {
         
         removeAll();
         addTextLabel();
-        addSlider();
-        validate();
-        super.paintComponent(g);
+        
+        //if using textures
+        if (SHOW_TEXTURE) {
+            int width = getWidth();
+            if (texture == null || texture.isEmpty() ||tileImage == null) {
+                super.paintComponent(g);
+                return;
+            }
+            
+            int imageW = tileImage.getWidth(this);
+            int imageH = tileImage.getHeight(this);
+     
+            // Tile the image to fill our area.
+            for (int x = 0; x < width; x += imageW) {
+                for (int y = 0; y < height; y += imageH) {
+                    g.drawImage(tileImage, x, y, this);
+                }
+            }
+        } else {
+            addSlider();
+            validate();
+            super.paintComponent(g);
+        }
     }
 }

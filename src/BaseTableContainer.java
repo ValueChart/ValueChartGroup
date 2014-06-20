@@ -1018,11 +1018,22 @@ public class BaseTableContainer extends Box implements ActionListener {
     public void setHighLight(int rank) {
         if(table instanceof AttributeCell){
             highlight = rank;
-            header.setSliderPosition(rank);
-            if (highlight < HeaderLabel.SLIDER_MIN) {
-                header.setShowSmallText(true);
+            
+            if (HeaderLabel.SHOW_TEXTURE) {
+                if (highlight < 0) {
+                    header.setTextureFile(null);
+                    header.setShowSmallText(true);
+                } else {
+                    header.setTextureFile(ValueChart.IMG_DIR + ValueChart.heatMapTextures.get(rank));
+                    header.setShowSmallText(false);
+                }
             } else {
-                header.setShowSmallText(false);
+                header.setSliderPosition(rank);
+                if (highlight < HeaderLabel.SLIDER_MIN) {
+                    header.setShowSmallText(true);
+                } else {
+                    header.setShowSmallText(false);
+                }
             }
         }
     }

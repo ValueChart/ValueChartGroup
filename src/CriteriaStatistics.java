@@ -7,25 +7,23 @@ import java.util.Map;
 
 public class CriteriaStatistics {
     
-    public static final int SCORE = 1, WEIGHT = 2, UTILITY = 3;
+    public static final int PRODUCT = 1, WEIGHT = 2, SCORE = 3;
     
     // gives rank weight from 0-ColorHeatMap.MAX_COLOURS-1, 0 being the strongest colour (most variance)
     public static HashMap<String, Integer> rankFromStdDev(HashMap<String, Double> stdevs) {
         if (stdevs == null || stdevs.size() < 2) return null;
         
-        // if we assume a normal distribution:
-        // 99.7% of values will fall within 3 stdevs
-        // since participants can disagree up to 100%, 33% should be a maximal disagreement value
-        // we definitely don't have a normal distribution, but seems a nice place to draw the line
-        int numColors = ColorHeatMap.MAX_COLOURS-1;
+		int numColors = TextureHeatMap.MAX_TEXTURES-1;
         // accounts for rounding operation
-        double scale = numColors / 0.33;
+        double scale = numColors / HeaderLabel.DISAGREE_MAX * 100;
         HashMap<String, Integer> rankVarWeight = new HashMap<String, Integer>();
         for (Map.Entry<String, Double> sd : stdevs.entrySet()) {
             int rank = numColors - (int) Math.floor((sd.getValue()) * scale);
             if (rank < 0) rank = 0;
-            //rankVarWeight.put(sd.getKey(), rank);
-            rankVarWeight.put(sd.getKey(), (int)Math.round(sd.getValue()*100));
+            if (HeaderLabel.SHOW_TEXTURE)
+                rankVarWeight.put(sd.getKey(), rank);
+            else
+                rankVarWeight.put(sd.getKey(), (int)Math.round(sd.getValue()*100));
         }
         
         return rankVarWeight;
