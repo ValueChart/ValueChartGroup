@@ -41,6 +41,7 @@ public class AttributeCell extends JComponent {
     ContGraph cg;
     DiscGraph dg;
     JObjective obj;
+    HashMap<String, Boolean> showDetails;
     
     double heightScalingConstant = 1.0; //constant for normalizing the heights if total height ratio exceeds 1.0
     double maxAttributeWeight;    
@@ -111,6 +112,10 @@ public class AttributeCell extends JComponent {
     public void setEntryList(String name, Vector list) {
         attributeName = name;
         entryList = list;
+        showDetails = new HashMap<String, Boolean>();
+        for (ChartEntry entry : entryList) {
+            showDetails.put(entry.name, false);
+        }
         Dimension dim =
                 new Dimension(list.size() * colWidth, DEFAULT_HEIGHT);//- & rev xy
         setPreferredSize(dim);
@@ -434,92 +439,143 @@ public class AttributeCell extends JComponent {
         
         if(!chart.generateAvgGVC){
         	for(ChartEntry entryForSuperUser : entryList){
-            	
-            	//To separate a bundle of users within an alternative - white spaces
-            	x+=padding/3;
-                g.setColor(Color.white);
-                ((Graphics2D) g).setStroke(new BasicStroke());
-                g.drawLine(x-3, 0, x-3, cellHeight - 1);
-                
-                ((Graphics2D) g).setStroke(new BasicStroke());
-                g.setColor(Color.lightGray);
-                g.drawLine(x-1, 0, x-1, cellHeight - 1); 
-                
-                for(IndividualEntryMap e : chart.listOfEntryMaps.values()){
-                    ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
-    				if(entryForEachUser != null){
-        				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
-        				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps        				
-        				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight); //        				
+                // show average values
+                if (!showDetails.get(entryForSuperUser.name)) {
+                    int totalIndividualHeight = 0;
+                    for(IndividualEntryMap e : chart.listOfEntryMaps.values()){//for each user
+                        ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
+                        if(entryForSuperUser != null){
+                            AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);//value of alternative for each criteria
+                            double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName); //get heightRatio for each rectangle from the attribute weight maps                     
+                            int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);
+                            int h = 0;                          
+                            if (individualValue != null) {
+                                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+                                totalIndividualHeight += h;                             
+                            }   
+                        }
+                    }
+                    
+                    totalIndividualHeight /= chart.users.size()-1; 
+                    int hpos = cellHeight;
+                    hpos = cellHeight - totalIndividualHeight; //height of rectangle to be drawn as origin is at top left
+                    g.setColor(color);
+                    int wthresh = Math.max(hpos, thresholdPos);
 
-        				int h = 0;
-        	            int hpos = cellHeight;
-        	            if (individualValue != null) {
-        	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
-        	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
-        	            }
-        	            int wthresh = Math.max(hpos, thresholdPos);
-        	            //thresholded
-        	            if (wthresh < individualHeight) {
-        	                g.setColor(Color.darkGray);
-        	                g.fillRect(x, wthresh, userWidth, h);
-        	            }
-        	            //regular
-        	            if (wthresh > hpos) {
-        	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
-        	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
-        	            }
+                    if (wthresh > hpos) {
+                        g.fillRect(x, hpos, colWidth, wthresh - hpos);                             
+                    }
 
-        	            g.setColor(Color.WHITE);
-        	            g.fillRect(x, 0, userWidth, cellHeight - h);
+                    g.setColor(Color.WHITE);
+                    g.fillRect(x, 0, colWidth, cellHeight - totalIndividualHeight);
 
-        	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+                    g.setFont(new Font("Verdana", Font.BOLD, 10));                  
+                    g.setColor(Color.lightGray);
+                    x += colWidth;
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                    g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
 
-        	            try {
-        	                if (entryForEachUser.getShowFlag()) {
-        	                    g.setColor(Color.darkGray);
-        	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
-        	                }
-        	            } catch (java.lang.NullPointerException ne) {
-        	            }
-        	            
-        	            //To draw weight rectangles
-        	            g.setColor(Color.red);
-        	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
-
-        	            
-        	            g.setColor(Color.lightGray);
-        	            x += userWidth;
-        	            ((Graphics2D) g).setStroke(new BasicStroke());
-        	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
-
-        	            if(chart.showAvgScores){
-        	                int averageHeight = 0;
-        	                double avgScore = chart.averageAttributeScores.get(attributeName).get(entryForSuperUser.name);
-        	                averageHeight = (int) Math.round(avgScore*cellHeight);
-        	                g.setColor(Color.BLACK);
-        	                ((Graphics2D) g).setStroke(new BasicStroke(2));
-        	                g.drawLine(x-userWidth, cellHeight - averageHeight, x, cellHeight - averageHeight);
-        	                ((Graphics2D) g).setStroke(new BasicStroke());
-        	            }
-        	            
-        	            if (x > width) {
-        	                break;
-        	            }        	         
-    				}
-        		}
-                
-              //To separate a bundle of users within an alternative - bold black lines
-                x+=padding/3;            
-                g.setColor(Color.white);
-                ((Graphics2D) g).setStroke(new BasicStroke());
-                g.drawLine(x-3, 0, x-3, cellHeight - 1);
-               
-                x+=padding/3;
-                g.setColor(Color.BLACK);
-                ((Graphics2D) g).setStroke(new BasicStroke());
-                g.drawLine(x-3, 0, x-3, cellHeight - 1); 
-                
+                    if(chart.showAvgScores){
+                        int averageHeight = 0;
+                        double avgScore = chart.averageAttributeScores.get(attributeName).get(entryForSuperUser.name);
+                        averageHeight = (int) Math.round(avgScore*cellHeight);
+                        g.setColor(Color.BLACK);
+                        ((Graphics2D) g).setStroke(new BasicStroke(2));
+                        g.drawLine(x-userWidth, cellHeight - averageHeight, x, cellHeight - averageHeight);
+                        ((Graphics2D) g).setStroke(new BasicStroke());
+                    }
+                    
+                    if (x > width) {
+                        break;
+                    } 
+                } else {
+                    //To separate a bundle of users within an alternative - white spaces
+                    x+=padding/3;
+                    g.setColor(Color.white);
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                    g.drawLine(x-3, 0, x-3, cellHeight - 1);
+                    
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                    g.setColor(Color.lightGray);
+                    g.drawLine(x-1, 0, x-1, cellHeight - 1); 
+                    for(IndividualEntryMap e : chart.listOfEntryMaps.values()){
+                        ChartEntry entryForEachUser = e.findEntry(entryForSuperUser.name);
+        				if(entryForEachUser != null){
+        				    //value of alternative for each criteria
+            				AttributeValue individualValue = (AttributeValue) entryForEachUser.map.get(attributeName);
+            				//get heightRatio for each rectangle from the attribute weight maps
+            				double individualHeightRatio = getHeightFromAttributeMap(e.username,attributeName);         				
+            				int individualHeight = (int) Math.round(individualHeightRatio*cellHeight/maxAttributeWeight);        				
+    
+            				int h = 0;
+            	            int hpos = cellHeight;
+            	            if (individualValue != null) {
+            	                h = (int) (individualValue.weight() * individualHeight); //height of individual rectangle (score * weight of criteria)
+            	                hpos = cellHeight - h; //height of rectangle to be drawn as origin is at top left
+            	            }
+            	            int wthresh = Math.max(hpos, thresholdPos);
+            	            //thresholded
+            	            if (wthresh < individualHeight) {
+            	                g.setColor(Color.darkGray);
+            	                g.fillRect(x, wthresh, userWidth, h);
+            	            }
+            	            //regular
+            	            if (wthresh > hpos) {
+            	            	g.setColor(chooseColor(e.username,attributeName,entryForEachUser.name,chart.userToPickAttributeColor));
+            	                g.fillRect(x, hpos, userWidth, wthresh - hpos);            	               
+            	            }
+    
+            	            g.setColor(Color.WHITE);
+            	            g.fillRect(x, 0, userWidth, cellHeight - h);
+    
+            	            g.setFont(new Font("Verdana", Font.BOLD, 10));
+    
+            	            try {
+            	                if (entryForEachUser.getShowFlag()) {
+            	                    g.setColor(Color.darkGray);
+            	                    g.drawString(individualValue.stringValue(), x + 2, wthresh - 5);
+            	                }
+            	            } catch (java.lang.NullPointerException ne) {
+            	            }
+            	            
+            	            //To draw weight rectangles
+            	            g.setColor(Color.red);
+            	            g.drawRect(x, cellHeight - individualHeight, userWidth-2, individualHeight);
+    
+            	            
+            	            g.setColor(Color.lightGray);
+            	            x += userWidth;
+            	            ((Graphics2D) g).setStroke(new BasicStroke());
+            	            g.drawLine(x - 1, 0, x - 1, cellHeight - 1);
+    
+            	            if(chart.showAvgScores){
+            	                int averageHeight = 0;
+            	                double avgScore = chart.averageAttributeScores.get(attributeName).get(entryForSuperUser.name);
+            	                averageHeight = (int) Math.round(avgScore*cellHeight);
+            	                g.setColor(Color.BLACK);
+            	                ((Graphics2D) g).setStroke(new BasicStroke(2));
+            	                g.drawLine(x-userWidth, cellHeight - averageHeight, x, cellHeight - averageHeight);
+            	                ((Graphics2D) g).setStroke(new BasicStroke());
+            	            }
+            	            
+            	            if (x > width) {
+            	                break;
+            	            }        	         
+        				}
+            		}
+                    
+                  //To separate a bundle of users within an alternative - bold black lines
+                    x+=padding/3;            
+                    g.setColor(Color.white);
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                    g.drawLine(x-3, 0, x-3, cellHeight - 1);
+                   
+                    x+=padding/3;
+                    g.setColor(Color.BLACK);
+                    ((Graphics2D) g).setStroke(new BasicStroke());
+                    g.drawLine(x-3, 0, x-3, cellHeight - 1); 
+                    
+                }
             }
         	
         	g.setColor(Color.lightGray);
@@ -833,7 +889,7 @@ public class AttributeCell extends JComponent {
             } else if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) != 0) {
                 final int index = e.getX() / colWidth;
                 if (index >= 0 && index < entryList.size()) {
-                    ChartEntry entry = (ChartEntry) entryList.get(index);
+                    final ChartEntry entry = (ChartEntry) entryList.get(index);
                     AttributeValue value = (AttributeValue) entry.map.get(attributeName);
 
                     //***added to retreive the report location from the hash map (data structure)
@@ -853,6 +909,16 @@ public class AttributeCell extends JComponent {
                     //Add the attribute value to the popup
 
                     JMenuItem detailMenuItem = new JMenuItem("Value: " + msg);
+                    attributeMeta.add(detailMenuItem);
+                    
+                    detailMenuItem = new JMenuItem(showDetails.get(entry.name) ? "Show Average" : "Show Details");
+                    detailMenuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent ae) {
+                            showDetails.put(entry.name, !showDetails.get(entry.name));
+                            repaint();
+                        }
+                    });
                     attributeMeta.add(detailMenuItem);
 
                     //Now check if this attribute exists in the report, if not then don't show the menu items to zoom to details
