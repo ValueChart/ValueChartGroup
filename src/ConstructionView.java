@@ -281,7 +281,7 @@ public class ConstructionView extends JPanel implements ChangeListener, ActionLi
      					//can also determine domain here
      					if (unit){
      						obj.setUnit(st.sval);
-     						obj.setType(JObjective.CONTINUOUS);
+     						obj.setDomainType(JObjective.CONTINUOUS);
      						unit = false;
      					}
      					else if ((st.sval).equals("unit")){
@@ -289,7 +289,7 @@ public class ConstructionView extends JPanel implements ChangeListener, ActionLi
      					}
      					else{
 	    					obj = new JObjective(st.sval);
-	    					obj.setType(JObjective.DISCRETE);	//default to discrete, change to continuous if unit found
+	    					obj.setDomainType(JObjective.DISCRETE);	//default to discrete, change to continuous if unit found
 	    					obj.origin = JObjective.FROM_FILE;
 	    					obj_list.add(obj);
      					}

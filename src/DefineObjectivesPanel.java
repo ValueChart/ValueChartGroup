@@ -140,7 +140,7 @@ public class DefineObjectivesPanel extends JPanel implements ActionListener{
 		if (type!=FROM_DATAFILE){
 			listed_objs = new Vector();
 			JObjective name_obj = new JObjective("name");
-			name_obj.setType(JObjective.DISCRETE);
+			name_obj.setDomainType(JObjective.DISCRETE);
 			listed_objs.add(name_obj);
 		}		
 	}		

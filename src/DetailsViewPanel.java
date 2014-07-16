@@ -110,7 +110,7 @@ import javax.swing.table.DefaultTableModel;
             table.setFont(altFont);
             
             rows = new Vector<Vector<String>>();
-            Vector<ChartEntry> entryList = chart.entryList;
+            Vector<ChartEntry> entryList = chart.getEntryList();
             setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(0,0,0,0), "Alternatives", 0, 0));
             if (entryList == null) return;
             for (int i = 0; i < entryList.size(); i++) {

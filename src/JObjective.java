@@ -129,7 +129,7 @@ public class JObjective extends JLabel{
 			setDiscrete();		
 	}
 	 
-	void setType(int type){
+	void setDomainType(int type){
 		domain_type = type;
 	}
 	

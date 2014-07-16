@@ -181,7 +181,7 @@ public class DisplayPanel extends JComponent {
             int j = 0;
             //for each alternative
             for (int i = 0; i < numEntries; i++) { 
-                String entryName = chart.entryList.get(i).name; 
+                String entryName = chart.chartData.getEntryList().get(i).name; 
             	x+=padding/3;
                 g.setColor(Color.white);
                 ((Graphics2D) g).setStroke(new BasicStroke());
@@ -279,7 +279,7 @@ public class DisplayPanel extends JComponent {
             
         	//for each alternative
             for (int i = 0; i < numEntries; i++) {
-                String entryName = chart.entryList.get(i).name;
+                String entryName = chart.chartData.getEntryList().get(i).name; 
             	LinkedHashMap<String,Double> temp = new LinkedHashMap<String,Double>();
         		if(!chart.listOfEntryMaps.isEmpty()){
         			//for each user    			

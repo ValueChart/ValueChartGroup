@@ -263,11 +263,11 @@ class OptionsMenu extends JMenuBar implements ActionListener{
 		}		
 		else if ("Domain Values".equals(ae.getActionCommand())){
 			if (domMenuItem.isSelected())
-				for(int j=0; j<chart.entryList.size(); j++)
-					((ChartEntry)chart.entryList.get(j)).setShowFlag(true);
+				for(int j=0; j<chart.chartData.getEntryList().size(); j++)
+				    chart.chartData.getEntryList().get(j).setShowFlag(true);
 			else
-				for(int j=0; j<chart.entryList.size(); j++)
-					((ChartEntry)chart.entryList.get(j)).setShowFlag(false);
+				for(int j=0; j<chart.chartData.getEntryList().size(); j++)
+				    chart.chartData.getEntryList().get(j).setShowFlag(false);
 			chart.updateAll();	
 		}				
 		else if ("Total Score".equals(ae.getActionCommand())){

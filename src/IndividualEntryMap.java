@@ -1,15 +1,16 @@
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Vector;
 
 
 public class IndividualEntryMap {
 	String username;
 	private LinkedHashMap<String, ChartEntry> entryMap;
 	
-	public IndividualEntryMap(String filename, ArrayList<ChartEntry> listOfEntries){
+	public IndividualEntryMap(String filename, Vector<ChartEntry> vector){
 		username = filename;
 		entryMap = new LinkedHashMap<String, ChartEntry>();
-		for (ChartEntry entry : listOfEntries)
+		for (ChartEntry entry : vector)
 		    entryMap.put(entry.name, entry);
 	}
 	

@@ -34,7 +34,6 @@ public class AttributeCell extends JComponent {
     private ValueChart chart;
     private String units;
     private double threshold;    
-    AttributeDomain domain;
     JPopupMenu domainPopup;
     JPopupMenu entryPopup;
     JMenuItem entryPopupMenuItem;
@@ -54,17 +53,14 @@ public class AttributeCell extends JComponent {
     JFrame[] window; //the windows created for the attribute, these are used to show the report. They are class variables because we need to toggle visibility from different methods
     JPanel[] viewerComponentPanel; //the panel for which the frame sits on;
 
-    public AttributeCell(ValueChart chart, AttributeDomain domain) {
+    public AttributeCell(ValueChart chart, String attrName) {
         MouseHandler mouseHandler = new MouseHandler();
         addMouseListener(mouseHandler);
         addMouseMotionListener(mouseHandler);
         //addComponentListener(new ResizeHandler());
         this.chart = chart;
-        this.domain = domain;
-//        this.attrMapList = attrlist;
-//        this.entryMapList = entrylist;
         heightScalingConstant = chart.heightScalingConstant;
-//        colWidth = chart.userWidth * attrlist.size();
+        this.attributeName = attrName;
     }
 
     //temp
@@ -72,8 +68,8 @@ public class AttributeCell extends JComponent {
         return attributeName;
     }
 
-    public void setDomain(AttributeDomain ad) {
-        domain = ad;
+    public void setName(String name) {
+        attributeName = name;
     }
 
     public double getOverallRatio() { // return overallRatio;
@@ -108,7 +104,7 @@ public class AttributeCell extends JComponent {
     }
 
     //-sets the entry list for the cell
-    public void setEntryList(String name, Vector list) {
+    public void setEntryList(String name, Vector<ChartEntry> list) {
         attributeName = name;
         entryList = list;
         Dimension dim =
@@ -131,8 +127,8 @@ public class AttributeCell extends JComponent {
     public double[] getWeights() {
         double[] weights = new double[entryList.size()];
         int i = 0;
-        for (Iterator it = entryList.iterator(); it.hasNext();) {
-            AttributeValue value = ((ChartEntry) it.next()).attributeValue(attributeName);
+        for (Iterator<ChartEntry> it = entryList.iterator(); it.hasNext();) {
+            AttributeValue value = it.next().attributeValue(attributeName);
             if (value != null) {
                 weights[i] = value.weight();
             } else {
@@ -145,14 +141,14 @@ public class AttributeCell extends JComponent {
 
     public JPopupMenu getDomainPopup() {
         if (domainPopup == null) {
-            makeHelpPopups(domain);
+            makeHelpPopups(getDomain());
         }
         return domainPopup;
     }
 
     public JPopupMenu getEntryPopup() {
         if (entryPopup == null) {
-            makeHelpPopups(domain);
+            makeHelpPopups(getDomain());
         }
         return entryPopup;
     }
@@ -264,7 +260,11 @@ public class AttributeCell extends JComponent {
     }
 
     AttributeDomain getDomain() {
-        return domain;
+        return getData().getDomain();
+    }
+
+    public AttributePrimitiveData getData() {
+        return chart.getAttribute(attributeName).getPrimitive();
     }
 
     public int getColWidth() {

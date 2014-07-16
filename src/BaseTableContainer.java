@@ -60,6 +60,11 @@ public class BaseTableContainer extends Box implements ActionListener {
     JPopupMenu popAttribute;
     int highlight = -1;
 
+    public AttributeData getData() {
+        if (chart == null) return null;
+        return chart.getAttribute(name);
+    }
+
     public BaseTableContainer(JComponent table, ValueChart chart) {
         this(table, null, chart, -1);
     }
@@ -94,9 +99,9 @@ public class BaseTableContainer extends Box implements ActionListener {
                 AttributeCell ac = (AttributeCell) table;
                 JPanel graph = null;
                 if (ac.getDomain().getType() == AttributeDomain.DISCRETE) {
-                    graph = ac.makeDiscGraph(ac.domain);
+                    graph = ac.makeDiscGraph(ac.getDomain());
                 } else {
-                    graph = ac.makeContGraph(ac.domain);
+                    graph = ac.makeContGraph(ac.getDomain());
                 }
                 add(graph);
 
@@ -317,7 +322,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         }
     }
 
-    private void updateHeadersRecursively() {
+    public void updateHeadersRecursively() {
         updateHeader();
         if (table instanceof TablePane) {
             Iterator it;
@@ -1003,7 +1008,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     	
         // TODO
     	if (("Value Function Analysis").equals(ae.getActionCommand())) {
-            ((AttributeCell) table).makeUtility(((AttributeCell) table).domain, true);
+            ((AttributeCell) table).makeUtility(((AttributeCell) table).getDomain(), true);
         }  
     	/* else if (("Set Color...").equals(ae.getActionCommand())) {
             new ColorSelection(table, chart, header);
@@ -1034,6 +1039,18 @@ public class BaseTableContainer extends Box implements ActionListener {
                 } else {
                     header.setShowSmallText(false);
                 }
+            }
+        }
+    }
+    public void updateSize() {
+        if (getData() == null)
+            return;
+        setExactSize(getWidth(), (int) Math.round(getData().getWeight() * chart.mainPane.getHeight()));
+        // abstract
+        if (!(table instanceof AttributeCell)) {
+            for (Iterator<BaseTableContainer> it = ((TablePane) table).getRows(); it.hasNext();) {
+                BaseTableContainer comp = it.next();
+                comp.updateSize();
             }
         }
     }
