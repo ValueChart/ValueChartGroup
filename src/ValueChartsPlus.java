@@ -39,8 +39,16 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
     JPanel pnlButtons;
     private boolean hasSuperUser = false;
     JPopupMenu popAttribute;
+    
+    JRadioButton btnVC;
+    JRadioButton btnXML;
+    JLabel warning;
 
     public ValueChartsPlus(){  
+        warning = new JLabel("WARNING: SuperUser file not in directory");
+        warning.setForeground(Color.red);
+        warning.setAlignmentX(LEFT_ALIGNMENT);
+
         //Set up the File List
         listModel = new DefaultListModel<String>(); 
         lstFiles = new JList<String>(listModel);
@@ -50,7 +58,7 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
         scrList = new JScrollPane(lstFiles);
       
         scrList.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        setList();
+        setListXML();
 
         popAttribute = new JPopupMenu();
 
@@ -75,16 +83,28 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
         pnlButtons.add(Box.createRigidArea(new Dimension(10, 0)));
         pnlButtons.add(btnCancel);        
  
+        btnVC = new JRadioButton("Select VC files (obsolete)");
+        btnVC.addActionListener(this);
+        btnVC.setActionCommand("btnVC");
+        btnXML = new JRadioButton("Select XML files");
+        btnXML.addActionListener(this);
+        btnXML.setActionCommand("btnXML");
+        ButtonGroup btnGrp = new ButtonGroup();
+        btnGrp.add(btnVC);
+        btnGrp.add(btnXML);
+        btnXML.setSelected(true);
+        JPanel pnlRadio = new JPanel();
+        pnlRadio.setLayout(new BoxLayout(pnlRadio, BoxLayout.Y_AXIS));
+        pnlRadio.add(btnXML);
+        pnlRadio.add(btnVC);
+        
         //Layout all panels
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        add(pnlRadio);
         scrList.setAlignmentX(LEFT_ALIGNMENT);
         add(scrList);
-        if (!hasSuperUser) {
-            JLabel warning = new JLabel("WARNING: SuperUser.vc file not in directory");
-            warning.setForeground(Color.red);
-            warning.setAlignmentX(LEFT_ALIGNMENT);
-            add(warning);
-        }
+
+        add(warning);
         add(Box.createRigidArea(new Dimension(0,5)));
         pnlButtons.setAlignmentX(LEFT_ALIGNMENT);
         add(pnlButtons);
@@ -99,16 +119,22 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
             frame.setVisible(false);
         	getList();   
     //    	chart = new ValueChart(vc_files);
-        	con = new ConstructionView(ConstructionView.FROM_VC);
-    		con.filename = "SuperUser.vc";
-    		con.list = vc_files;
-    		con.setInit(false);
-    		filename = "SuperUser.vc";
-    		noOfEntries = countEntries(filename); 
-    		if (noOfEntries > 10)
-    			con.setDisplayType(ConstructionView.SIDE_DISPLAY);
+        	if (btnVC.isSelected()) {
+            	con = new ConstructionView(ConstructionView.FROM_VC);
+        		con.filename = "SuperUser.vc";
+        		filename = "SuperUser.vc";
+        	} else {
+                con = new ConstructionView(ConstructionView.FROM_XML);
+                con.filename = "SuperUser.xml";
+                filename = "SuperUser.xml";
+        	}
+        	con.list = vc_files;
+        	con.setInit(false);
+    		//noOfEntries = countEntries(filename); 
+//    		if (noOfEntries > 10)
+//    			con.setDisplayType(ConstructionView.SIDE_DISPLAY);
     		con.showChart(true);
-    		con.filename = "SuperUser.vc";	//temp holder for a new filename    
+    		con.filename = filename;	//temp holder for a new filename    
         } else if ("btnCancel".equals(e.getActionCommand())) {
             if (chart == null)
                 System.exit(0);
@@ -116,6 +142,10 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
                 frame.dispose();
         } else if (e.getActionCommand().equals("Select All")) {
         	lstFiles.setSelectionInterval(0, listModel.size());
+        } else if (e.getActionCommand().equals("btnVC")) {
+            setListVC();
+        } else if (e.getActionCommand().equals("btnXML")) {
+            setListXML();
         }
 	}
     
@@ -129,11 +159,14 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
           String file = listModel.getElementAt(idx[i]);
           vc_files.add(file);
         }
-        vc_files.add("SuperUser.vc");
+        if (btnVC.isSelected())
+            vc_files.add("SuperUser.vc");
+        else
+            vc_files.add("SuperUser.xml");
     }
  
     //List all the vc files
-    void setList() {
+    void setListVC() {
         hasSuperUser = false;
         vc_files = new ArrayList<String>();
         // String[] filenames;
@@ -162,6 +195,42 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
         lstFiles.revalidate();
 
         lstFiles.setSelectedIndex(0);
+        
+        warning.setVisible(!hasSuperUser);
+    }
+    
+  //List all the XML files
+    void setListXML() {
+        hasSuperUser = false;
+        vc_files = new ArrayList<String>();
+        // String[] filenames;
+        File f = new File(".");
+        String files[] = f.list();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].endsWith(".xml")) {
+                if (files[i].equals("SuperUser.xml"))
+                    hasSuperUser = true;
+                else
+                    vc_files.add(files[i]);
+            }
+        }
+        lstFiles.setEnabled(true);
+        listModel.clear();
+        // sort the list
+        for (int i = 0; i < vc_files.size(); i++)
+            listModel.addElement(vc_files.get(i).toString());
+        int numItems = listModel.getSize();
+        String[] a = new String[numItems];
+        for (int i = 0; i < numItems; i++) {
+            a[i] = listModel.getElementAt(i);
+        }
+        sortArray(a);
+        lstFiles.setListData(a);
+        lstFiles.revalidate();
+
+        lstFiles.setSelectedIndex(0);
+        
+        warning.setVisible(!hasSuperUser);
     }
 	
 	//Get the names of the VC files from all the participants
@@ -183,22 +252,26 @@ public class ValueChartsPlus extends JPanel implements ActionListener{
     }     
     
 	//Count number of alternatives
-    public int countEntries(String name){
+    public int countEntries(String name, boolean isXML){
     	int count=0;
-    	try{
-    		FileReader fr = new FileReader(name);
-    		BufferedReader br = new BufferedReader(fr);
-    		StreamTokenizer st = new StreamTokenizer(br);
-    		st.whitespaceChars(',', ',');
-    		while(st.nextToken() != StreamTokenizer.TT_EOF) {
-    			if(st.ttype==StreamTokenizer.TT_WORD)
-    				if(st.sval.equals("entry")){
-    					count++;
-    				}
-    		}
-    		fr.close();    		
-    	}catch(Exception e) {
-    		System.out.println("Exception: " + e);
+    	if (!isXML) {
+        	try{
+        		FileReader fr = new FileReader(name);
+        		BufferedReader br = new BufferedReader(fr);
+        		StreamTokenizer st = new StreamTokenizer(br);
+        		st.whitespaceChars(',', ',');
+        		while(st.nextToken() != StreamTokenizer.TT_EOF) {
+        			if(st.ttype==StreamTokenizer.TT_WORD)
+        				if(st.sval.equals("entry")){
+        					count++;
+        				}
+        		}
+        		fr.close();    		
+        	}catch(Exception e) {
+        		System.out.println("Exception: " + e);
+        	}
+    	} else {
+    	    
     	}
     	return count;    	
     }

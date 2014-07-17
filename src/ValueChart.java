@@ -138,7 +138,10 @@ public class ValueChart extends JPanel {
         setDisplayType(type);
     	             
 		 try {
-			 doReadAll(users);
+		     if (con.type == ConstructionView.FROM_VC)
+		         doReadAll(users);
+		     else
+		         doReadAllXML(users);
 		 } catch (IOException e) {
 //		     System.out.println("Error in file: "+ filename +" "+ e.getMessage());
 			 System.out.println("Error in file: " + e.getMessage());
@@ -161,7 +164,10 @@ public class ValueChart extends JPanel {
             resizeHandler = new ResizeHandler();
             addComponentListener(resizeHandler);
             try {
-                read(initReader);
+                if (con.type == ConstructionView.FROM_VC)
+                    read(initReader);
+                else
+                    readXML();
             } catch (IOException e) {
                 System.out.println("Error in input: " + e.getMessage());
             }
@@ -363,8 +369,38 @@ public class ValueChart extends JPanel {
         }
     }
     
+    private void readXML() throws IOException {
+        try {
+            doreadXML();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       //bulding the construction view straight from vc
+        if (!con.init) {
+            setConst();
+            con.setInit(true);
+        }
+        con.setChart(this);
+//        set prim obj list for rolling up the absolute tree        
+        prims = new HashMap<String, BaseTableContainer>();
+        setPrims(mainPane); 
+        for (BaseTableContainer btc : prims.values()) {
+            btc.setRollUp();
+            if (mainPane.getDepth() <= 2) {
+                btc.setWidth(headerWidth*3/2);
+                btc.repaint();
+            }
+        }
+        ((BaseTableContainer) mainPane.rowList.get(0)).setAbstractRatios();
+        setConnectingFields();
+        if (isNew) {
+            menuOptions.setSelectedItems();
+        }
+    }
+    
     public void newConst() {
-        con = new ConstructionView(ConstructionView.FROM_VC);
+        con = new ConstructionView( (con.type == ConstructionView.FROM_VC ? 
+                                    ConstructionView.FROM_VC : ConstructionView.FROM_XML));
         setConst();
     }
 
@@ -435,6 +471,18 @@ public class ValueChart extends JPanel {
             }
         }
         
+        renderMainPane();
+    }
+    
+    private void doreadXML() throws IOException {
+        chartData = XMLParser.parseSaveFile(this, filename);
+        mainPane = new TablePane();
+        renderMainPaneAttributes();
+        mainPane.adjustAttributesForDepth(mainPane.getDepth());
+        renderMainPane();
+    }
+        
+    public void renderMainPane() { 
 
         mainPane.fillInEntries(chartData.getEntryList());
 
@@ -574,6 +622,8 @@ public class ValueChart extends JPanel {
         }
         alignDisplayPanel();
     }
+    
+    
      private void readAttributes(ScanfReader scanReader,
             AttributeData attr, HashMap<String, Color> colorList)
             throws IOException {
@@ -704,6 +754,8 @@ public class ValueChart extends JPanel {
     private void doReadAllXML(ArrayList users) throws IOException {
         
         for(Object aFile : users){
+            String name = aFile.toString();
+            if (name.equals("SuperUser.xml")) continue;
             ChartData data = XMLParser.parseSaveFile(this, aFile.toString());
             IndividualAttributeMaps attrMaps = XMLParser.readUserAttributeFile(aFile.toString());
             if(!attrMaps.attributeWeightMap.isEmpty()){
@@ -711,8 +763,8 @@ public class ValueChart extends JPanel {
             }       
             listOfAttributeMaps.add(attrMaps); 
             
-            IndividualEntryMap iem = new IndividualEntryMap(filename, data.getEntryList());
-            listOfEntryMaps.put(filename,iem);
+            IndividualEntryMap iem = new IndividualEntryMap(name, data.getEntryList());
+            listOfEntryMaps.put(name,iem);
         }
         
         // add elements to al, including duplicates

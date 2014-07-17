@@ -94,7 +94,8 @@ public class Users extends JComponent{
         
         public void mouseMoved(MouseEvent me){
             legend.setToolTipText("<html><blockquote><left><font size=\"4\">" + getLegendName() +"</left></blockquote></html>");
-            Color userColor = GroupActions.getUserColorFromAttributeMap(userLegendPnl.chart, getLegendName() + ".vc" );
+            Color userColor = GroupActions.getUserColorFromAttributeMap(userLegendPnl.chart, getLegendName() + 
+                                                                        (userLegendPnl.chart.con.type == ConstructionView.FROM_VC ? ".vc" : ".xml") );
             if (userLegendPnl.groupActions != null) {
                 userLegendPnl.groupActions.setUserColorInAttributeMap( getLegendName(), userColor);
                 userLegendPnl.chart.updateAll();              

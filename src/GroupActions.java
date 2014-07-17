@@ -227,7 +227,9 @@ public class GroupActions extends JPanel implements ActionListener {
     
     public void setUserColorInAttributeMap(String user, Color color){
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
-    		if(!user.equals(a.userName.substring(0, a.userName.length()-3))){    			
+    		if(!user.equals(
+    		        (chart.con.type == ConstructionView.FROM_VC ? a.userName.substring(0, a.userName.length()-3) :
+    		            a.userName.substring(0, a.userName.length()-4)) )){    			
     			a.userColor = Color.GRAY; 
     			chart.setMouseOver(a.userName);
     		}
@@ -295,8 +297,7 @@ public class GroupActions extends JPanel implements ActionListener {
 				chart.showAverageWeights(true);
 			else
 				chart.showAverageWeights(false);
-			chart.mainPane.updateSizesAndHeights();
-			chart.updateMainPane();
+			chart.updateAll();
 		}
 		else if("showAverageScores".equals(ae.getActionCommand())){
             if (showAverageScores.isSelected())
@@ -330,6 +331,7 @@ public class GroupActions extends JPanel implements ActionListener {
 	            HeaderLabel.DISAGREE_MAX = 33;
 	            chart.setCriteriaHightlight(CriteriaStatistics.SCORE);
 	        }
+		    chart.mainPane.updateSizesAndHeights();
             chart.updateMainPane();
             
 		}

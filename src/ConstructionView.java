@@ -19,7 +19,8 @@ public class ConstructionView extends JPanel implements ChangeListener, ActionLi
 	private static final long serialVersionUID = 1L;
 	static final int 	NEW_FILE = 1,
 						FROM_DATAFILE = 2,
-						FROM_VC = 3;
+						FROM_VC = 3, 
+						FROM_XML = 4;
 	static final int	DEFAULT_DISPLAY = 1,
 						SIDE_DISPLAY = 2,
 						SEPARATE_DISPLAY = 3;
@@ -203,7 +204,7 @@ public class ConstructionView extends JPanel implements ChangeListener, ActionLi
         frame.pack();
         //ValueChart.createMenu();
         //frame.setJMenuBar(ValueChart.menubar);
-        if (type==FROM_VC)
+        if (type==FROM_VC || type == FROM_XML)
         	frame.setVisible(false);
         else
         	frame.setVisible(true);        

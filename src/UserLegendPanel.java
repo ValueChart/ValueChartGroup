@@ -18,14 +18,20 @@ public class UserLegendPanel extends JPanel {
         chart = ch;
         groupActions = groupAct;
         
-        populateUsers();
+        if (chart.con.type == ConstructionView.FROM_VC)
+            populateUsers();
+        else
+            populateUsersXML();
     }
     
     public UserLegendPanel(ValueChart ch, BoxPlotGraph box) {
         chart = ch;        
         boxPlot = box;
         
-        populateUsers();
+        if (chart.con.type == ConstructionView.FROM_VC)
+            populateUsers();
+        else
+            populateUsersXML();
     }
     
     private void populateUsers() {
@@ -42,6 +48,27 @@ public class UserLegendPanel extends JPanel {
             userLegend.setLegendColor(GroupActions.getUserColorFromAttributeMap(chart, users.get(i)));
             userLegend.setLegendFont(font);
             userLegend.setLegendName(users.get(i).substring(0,users.get(i).length()-3));                 
+            add(userLegend.legend);
+        }
+        
+        if (groupActions != null)
+            add(Box.createVerticalGlue());
+    }
+    
+    private void populateUsersXML() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        
+        Vector<String> users = new Vector<String>();
+        for(int i = 0; i<chart.users.size(); i++){
+            if(!chart.users.get(i).equals("SuperUser.xml"))
+                users.addElement(chart.users.get(i));           
+        }   
+        
+        for(int i = 0 ; i < users.size() ; i++){
+            Users userLegend = new Users(this);
+            userLegend.setLegendColor(GroupActions.getUserColorFromAttributeMap(chart, users.get(i)));
+            userLegend.setLegendFont(font);
+            userLegend.setLegendName(users.get(i).substring(0,users.get(i).length()-4));                 
             add(userLegend.legend);
         }
         

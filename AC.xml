@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ValueCharts problem="Hotel">
+<Colors>
+<Color b="94" g="102" name="area" r="1"/>
+<Color b="207" g="169" name="skytrain-distance" r="103"/>
+<Color b="13" g="0" name="size" r="103"/>
+<Color b="28" g="26" name="internet-access" r="227"/>
+<Color b="79" g="196" name="rate" r="254"/>
+</Colors>
+<Criteria>
+<Criterion name="Hotel" type="abstract">
+<Criterion name="location" type="abstract">
+<Criterion name="area" type="primitive" weight="0.2770000000000001">
+<Domain type="discrete">
+<DiscreteValue x="nightlife" y="0.0"/>
+<DiscreteValue x="beach" y="0.5"/>
+<DiscreteValue x="airport" y="1.0"/>
+</Domain>
+</Criterion>
+<Criterion name="skytrain-distance" type="primitive" weight="0.12250000000000003">
+<Domain type="continuous" unit="blocks">
+<ContinuousValue x="1.0" y="1.0"/>
+<ContinuousValue x="3.0" y="0.8899999856948853"/>
+<ContinuousValue x="5.0" y="0.8899999856948853"/>
+<ContinuousValue x="7.0" y="0.30000001192092896"/>
+<ContinuousValue x="9.0" y="0.0"/>
+</Domain>
+</Criterion>
+</Criterion>
+<Criterion name="room" type="abstract">
+<Criterion name="size" type="primitive" weight="0.07250000000000002">
+<Domain type="continuous" unit="sq-ft">
+<ContinuousValue x="200.0" y="0.0"/>
+<ContinuousValue x="250.0" y="0.38499999046325684"/>
+<ContinuousValue x="300.0" y="0.8899999856948853"/>
+<ContinuousValue x="350.0" y="0.8999999761581421"/>
+<ContinuousValue x="400.0" y="1.0"/>
+</Domain>
+</Criterion>
+<Criterion name="internet-access" type="primitive" weight="0.20822895622895582">
+<Domain type="discrete">
+<DiscreteValue x="none" y="0.0"/>
+<DiscreteValue x="lowspeed" y="0.03500000014901161"/>
+<DiscreteValue x="highspeed" y="1.0"/>
+</Domain>
+</Criterion>
+</Criterion>
+<Criterion name="rate" type="primitive" weight="0.3207710437710437">
+<Domain type="continuous" unit="CAD">
+<ContinuousValue x="100.0" y="1.0"/>
+<ContinuousValue x="125.0" y="0.8700000047683716"/>
+<ContinuousValue x="150.0" y="0.824999988079071"/>
+<ContinuousValue x="200.0" y="0.35499998927116394"/>
+<ContinuousValue x="250.0" y="0.0"/>
+</Domain>
+</Criterion>
+</Criterion>
+</Criteria>
+<Alternatives>
+<Alternative name="Sheraton">
+<AlternativeValue criterion="rate" value="125.0"/>
+<AlternativeValue criterion="internet-access" value="lowspeed"/>
+<AlternativeValue criterion="area" value="nightlife"/>
+<AlternativeValue criterion="size" value="300.0"/>
+<AlternativeValue criterion="skytrain-distance" value="7.0"/>
+</Alternative>
+<Alternative name="Hilton">
+<AlternativeValue criterion="rate" value="100.0"/>
+<AlternativeValue criterion="internet-access" value="lowspeed"/>
+<AlternativeValue criterion="area" value="nightlife"/>
+<AlternativeValue criterion="size" value="200.0"/>
+<AlternativeValue criterion="skytrain-distance" value="2.0"/>
+</Alternative>
+<Alternative name="Shangri-la">
+<AlternativeValue criterion="rate" value="150.0"/>
+<AlternativeValue criterion="internet-access" value="highspeed"/>
+<AlternativeValue criterion="area" value="beach"/>
+<AlternativeValue criterion="size" value="250.0"/>
+<AlternativeValue criterion="skytrain-distance" value="2.0"/>
+</Alternative>
+<Alternative name="Radisson">
+<AlternativeValue criterion="rate" value="130.0"/>
+<AlternativeValue criterion="internet-access" value="highspeed"/>
+<AlternativeValue criterion="area" value="airport"/>
+<AlternativeValue criterion="size" value="200.0"/>
+<AlternativeValue criterion="skytrain-distance" value="8.0"/>
+</Alternative>
+<Alternative name="Hyatt">
+<AlternativeValue criterion="rate" value="100.0"/>
+<AlternativeValue criterion="internet-access" value="none"/>
+<AlternativeValue criterion="area" value="airport"/>
+<AlternativeValue criterion="size" value="225.0"/>
+<AlternativeValue criterion="skytrain-distance" value="1.0"/>
+</Alternative>
+<Alternative name="Rosewood">
+<AlternativeValue criterion="rate" value="110.0"/>
+<AlternativeValue criterion="internet-access" value="none"/>
+<AlternativeValue criterion="area" value="beach"/>
+<AlternativeValue criterion="size" value="275.0"/>
+<AlternativeValue criterion="skytrain-distance" value="1.0"/>
+</Alternative>
+</Alternatives>
+</ValueCharts>
