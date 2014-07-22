@@ -165,7 +165,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         // value: y-coord
         DefaultCategoryDataset userPlot = new DefaultCategoryDataset();
         for (IndividualAttributeMaps iam : listOfAttributeMaps) {
-            if (!iam.userName.equals(user + ".vc")) continue;
+            if (!Users.removeExtension(iam.userName).equals(user)) continue;
             
             AttributeDomain dom = iam.attributeDomainMap.get(attributeName);
             if (dom != null) {
@@ -210,6 +210,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
         for (IndividualAttributeMaps iam : listOfAttributeMaps) {
         	DefaultCategoryDataset userPlot = new DefaultCategoryDataset();
             String user = iam.userName;
+            user = Users.removeExtension(user);
             Color userColor = GroupActions.getUserColorFromAttributeMap(chart, user);
             
             AttributeDomain dom = iam.attributeDomainMap.get(attributeName);
@@ -263,7 +264,7 @@ public class BoxPlotGraph extends JFrame implements ActionListener {
             maxLabels = new LinkedHashMap<String, Pair<Double, String>>();
             
             for (IndividualAttributeMaps iam : listOfAttributeMaps) {
-                String user = iam.userName.split(".vc")[0];
+                String user = Users.removeExtension(iam.userName);
                 AttributeDomain dom = iam.attributeDomainMap.get(attributeName);
                 if (dom != null) {
                     double[] wts = dom.getWeights();

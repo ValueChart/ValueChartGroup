@@ -47,7 +47,7 @@ public class UserLegendPanel extends JPanel {
             Users userLegend = new Users(this);
             userLegend.setLegendColor(GroupActions.getUserColorFromAttributeMap(chart, users.get(i)));
             userLegend.setLegendFont(font);
-            userLegend.setLegendName(users.get(i).substring(0,users.get(i).length()-3));                 
+            userLegend.setLegendName(Users.removeExtension(users.get(i)));                 
             add(userLegend.legend);
         }
         
@@ -68,7 +68,7 @@ public class UserLegendPanel extends JPanel {
             Users userLegend = new Users(this);
             userLegend.setLegendColor(GroupActions.getUserColorFromAttributeMap(chart, users.get(i)));
             userLegend.setLegendFont(font);
-            userLegend.setLegendName(users.get(i).substring(0,users.get(i).length()-4));                 
+            userLegend.setLegendName(Users.removeExtension(users.get(i)));                 
             add(userLegend.legend);
         }
         

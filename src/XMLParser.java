@@ -33,7 +33,7 @@ public class XMLParser {
     public static void readDescriptions(ValueChart chart) {
         // read description file
         try {
-            String descFile = chart.filename.substring(0,chart.filename.length()-3) + ".xml";
+            String descFile = Users.removeExtension(chart.filename) + ".xml";
             File xmlFile = new File(descFile);
             if (xmlFile.exists() && !xmlFile.isDirectory()) {
 //                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

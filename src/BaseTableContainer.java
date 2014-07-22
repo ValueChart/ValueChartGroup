@@ -155,7 +155,7 @@ public class BaseTableContainer extends Box implements ActionListener {
         
         popAttribute = new JPopupMenu();
 
-        JMenuItem menuItem = new JMenuItem("Value Function Analysis");
+        JMenuItem menuItem = new JMenuItem("Score Function Analysis");
         
         menuItem.addActionListener(this);
         popAttribute.add(menuItem);
@@ -1007,7 +1007,7 @@ public class BaseTableContainer extends Box implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
     	
         // TODO
-    	if (("Value Function Analysis").equals(ae.getActionCommand())) {
+    	if (("Score Function Analysis").equals(ae.getActionCommand())) {
             ((AttributeCell) table).makeUtility(((AttributeCell) table).getDomain(), true);
         }  
     	/* else if (("Set Color...").equals(ae.getActionCommand())) {

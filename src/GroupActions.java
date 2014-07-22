@@ -218,7 +218,7 @@ public class GroupActions extends JPanel implements ActionListener {
     	Color aColor = Color.BLACK;
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
     		
-    		if(filename.equals(a.userName)){
+    		if(filename.equals(a.userName) || Users.removeExtension(a.userName).equals(filename)){
     			aColor = a.userColor;
     		}
     	}
@@ -227,9 +227,7 @@ public class GroupActions extends JPanel implements ActionListener {
     
     public void setUserColorInAttributeMap(String user, Color color){
     	for(IndividualAttributeMaps a : chart.listOfAttributeMaps){
-    		if(!user.equals(
-    		        (chart.con.type == ConstructionView.FROM_VC ? a.userName.substring(0, a.userName.length()-3) :
-    		            a.userName.substring(0, a.userName.length()-4)) )){    			
+    		if(!user.equals(Users.removeExtension(a.userName))){    			
     			a.userColor = Color.GRAY; 
     			chart.setMouseOver(a.userName);
     		}

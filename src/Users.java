@@ -94,8 +94,7 @@ public class Users extends JComponent{
         
         public void mouseMoved(MouseEvent me){
             legend.setToolTipText("<html><blockquote><left><font size=\"4\">" + getLegendName() +"</left></blockquote></html>");
-            Color userColor = GroupActions.getUserColorFromAttributeMap(userLegendPnl.chart, getLegendName() + 
-                                                                        (userLegendPnl.chart.con.type == ConstructionView.FROM_VC ? ".vc" : ".xml") );
+            Color userColor = GroupActions.getUserColorFromAttributeMap(userLegendPnl.chart, getLegendName());
             if (userLegendPnl.groupActions != null) {
                 userLegendPnl.groupActions.setUserColorInAttributeMap( getLegendName(), userColor);
                 userLegendPnl.chart.updateAll();              
@@ -113,5 +112,13 @@ public class Users extends JComponent{
             }
         }
         
+    }
+    
+    public static String removeExtension(String user) {
+        try {
+            return user.substring(0, user.lastIndexOf('.'));
+        } catch (Exception ex){
+            return user;
+        }
     }
 }
